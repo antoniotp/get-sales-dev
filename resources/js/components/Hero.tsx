@@ -65,7 +65,7 @@ const Hero = () => {
                                     <MessageSquare size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-sm">Ventas automáticas</h3>
+                                    <h3 className="font-medium text-sm dark:text-gray-900">Ventas automáticas</h3>
                                     <p className="text-xs text-gray-500 mt-1">Aumenta tus ventas un 35% con agentes
                                         especializados</p>
                                 </div>

@@ -37,12 +37,12 @@ const Navigation = () => {
                     <Link
                         href={route('login')}
                     >
-                        <Button variant="outline" className="px-4 dark:text-gray-950">Iniciar Sesión</Button>
+                        <Button variant="outline" className="px-4 dark:text-white">Iniciar Sesión</Button>
                     </Link>
                     <Link
                         href={route('register')}
                     >
-                        <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4">Registrarse</Button>
+                        <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4 dark:text-white">Registrarse</Button>
                     </Link>
                 </>
             )}

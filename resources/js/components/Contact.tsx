@@ -136,6 +136,7 @@ const Contact = () => {
                                     placeholder="¿Cómo podemos ayudarte?"
                                     rows={4}
                                     required
+                                    className="dark:bg-white dark:text-gray-950"
                                 />
                             </div>
 

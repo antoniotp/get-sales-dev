@@ -110,4 +110,50 @@ class Organization extends Model
 
         return $organizationUser ? $organizationUser->role : null;
     }
+
+    /**
+     * Get the organization subscriptions.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(OrganizationSubscription::class);
+    }
+
+    /**
+     * Get the current active subscription.
+     */
+    public function currentSubscription(): ?OrganizationSubscription
+    {
+        return $this->subscriptions()->active()->first();
+    }
+
+    /**
+     * Check if the organization has an active subscription.
+     */
+    public function hasActiveSubscription(): bool
+    {
+        return $this->currentSubscription() !== null;
+    }
+
+    /**
+     * Get subscription limits.
+     */
+    public function getSubscriptionLimits(): array
+    {
+        $subscription = $this->currentSubscription()?->subscription;
+
+        if (!$subscription) {
+            return [
+                'max_chatbots' => 0,
+                'max_messages_per_month' => 0,
+                'features' => [],
+            ];
+        }
+
+        return [
+            'max_chatbots' => $subscription->max_chatbots,
+            'max_messages_per_month' => $subscription->max_messages_per_month,
+            'features' => $subscription->features ?? [],
+        ];
+    }
 }

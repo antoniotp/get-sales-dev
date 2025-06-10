@@ -156,4 +156,37 @@ class Organization extends Model
             'features' => $subscription->features ?? [],
         ];
     }
+
+    /**
+     * Get the chatbots associated with the organization.
+     */
+    public function chatbots(): HasMany
+    {
+        return $this->hasMany(Chatbot::class);
+    }
+
+    /**
+     * Get only active chatbots for the organization.
+     */
+    public function activeChatbots(): HasMany
+    {
+        return $this->chatbots()->active();
+    }
+
+    /**
+     * Check if the organization has any active chatbots.
+     */
+    public function hasActiveChatbots(): bool
+    {
+        return $this->activeChatbots()->exists();
+    }
+
+    /**
+     * Get the count of active chatbots for the organization.
+     */
+    public function getActiveChatbotsCount(): int
+    {
+        return $this->activeChatbots()->count();
+    }
+
 }

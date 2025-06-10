@@ -1,12 +1,16 @@
 <?php
 
 use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\Webhooks\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('home');
 })->name('home');
+Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify']);
+Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

@@ -2,10 +2,16 @@
 
 namespace App\Services\WhatsApp;
 
+use App\Models\ChatbotChannel;
+use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Support\Facades\Log;
 
 class WebhookHandlerService
 {
+    private ?ChatbotChannel $chatbotChannel = null;
+    private ?Conversation $conversation = null;
+
     /**
      * Process the incoming webhook payload.
      *
@@ -17,7 +23,20 @@ class WebhookHandlerService
             return;
         }
 
-        $message = $payload['entry'][0]['changes'][0]['value']['messages'][0];
+        $value = $payload['entry'][0]['changes'][0]['value'];
+        $message = $value['messages'][0];
+
+        // Identify the channel and the conversation before process the message
+        if (!$this->identifyChatbotChannel($value['metadata']['phone_number_id'])) {
+            Log::error('WhatsApp channel not found for phone number ID: ' . $value['metadata']['phone_number_id']);
+            return;
+        }
+
+        if (!$this->createOrUpdateConversation($value, $message)) {
+            Log::error('Could not create or update conversation for message', ['message' => $message]);
+            return;
+        }
+
 
         match ($message['type']) {
             'text' => $this->handleTextMessage($message),
@@ -28,13 +47,88 @@ class WebhookHandlerService
     }
 
     /**
+     * Identify the chatbot channel for the incoming message.
+     */
+    private function identifyChatbotChannel(string $phoneNumberId): bool
+    {
+        $this->chatbotChannel = ChatbotChannel::where('status', 1)
+            ->whereJsonContains('credentials->phone_number_id', $phoneNumberId)
+            ->first();
+
+        return $this->chatbotChannel !== null;
+    }
+
+    /**
+     * Create or update the conversation for the incoming message.
+     *
+     * @param array<string, mixed> $value
+     * @param array<string, mixed> $message
+     */
+    private function createOrUpdateConversation(array $value, array $message): bool
+    {
+        try {
+            $contact = $value['contacts'][0] ?? null;
+
+            $this->conversation = Conversation::firstOrCreate(
+                [
+                    'chatbot_channel_id' => $this->chatbotChannel->id,
+                    'external_conversation_id' => $message['from'],
+                ],
+                [
+                    'contact_name' => $contact ? ($contact['profile']['name'] ?? null) : null,
+                    'contact_phone' => $message['from'],
+                    'status' => 1,
+                    'mode' => 'ai',
+                    'last_message_at' => now(),
+                ]
+            );
+
+            // Update last_message_at
+            if (!$this->conversation->wasRecentlyCreated) {
+                $this->conversation->update(['last_message_at' => now()]);
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error creating/updating conversation', [
+                'error' => $e->getMessage(),
+                'message' => $message
+            ]);
+            return false;
+        }
+    }
+
+
+    /**
      * Handle a text message type.
      *
      * @param array<string, mixed> $message
      */
     private function handleTextMessage(array $message): void
     {
-        // Implementar lógica para mensajes de texto
+        try {
+            $messageData = [
+                'conversation_id' => $this->conversation->id,
+                'external_message_id' => $message['id'],
+                'type' => 'incoming',
+                'content' => $message['text']['body'],
+                'content_type' => 'text',
+                'sender_type' => 'contact',
+                'metadata' => [
+                    'timestamp' => $message['timestamp'],
+                    'from' => $message['from'],
+                ],
+            ];
+
+            Message::create($messageData);
+
+        } catch (\Exception $e) {
+            Log::error('Error saving text message', [
+                'error' => $e->getMessage(),
+                'message' => $message
+            ]);
+        }
+
     }
 
     /**

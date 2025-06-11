@@ -40,20 +40,34 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
         }
     }, [selectedChat])
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!newMessage.trim() || !selectedChat) return
 
-        const message: Message = {
-            id: messages.length + 1,
-            content: newMessage,
-            sender: 'You',
-            senderId: 'me',
-            timestamp: new Date().toISOString(),
+        try {
+            // Send message to backend
+            const response = await axios.post(route('chats.messages.store', { conversation: selectedChat.id }), {
+                content: newMessage,
+                content_type: 'text',
+            });
+
+            // Add the new message to the messages array
+            setMessages([...messages, response.data.message]);
+
+            // Update the selected chat's last message
+            setSelectedChat({
+                ...selectedChat,
+                lastMessage: newMessage,
+                lastMessageTime: new Date().toISOString(),
+            });
+
+            // Clear the input
+            setNewMessage('');
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            // Here you might want to show an error toast/notification
         }
 
-        setMessages([...messages, message])
-        setNewMessage('')
     }
 
     return (

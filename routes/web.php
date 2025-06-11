@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
     Route::get('/chats', [ChatController::class, 'index'])->name('chats');
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
+    Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])
+        ->name('chats.messages.store');
 });
 
 require __DIR__.'/settings.php';

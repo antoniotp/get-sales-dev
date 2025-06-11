@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Chat;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -88,6 +89,42 @@ class ChatController extends Controller
         return response()->json([
             'messages' => $messages,
         ]);
+    }
 
+    public function storeMessage(Conversation $conversation, Request $request): JsonResponse
+    {
+        // Validate request
+        $validated = $request->validate([
+            'content' => 'required|string',
+            'content_type' => 'required|in:text,image,audio,video,document,location',
+        ]);
+
+        // Create the message
+        $message = $conversation->messages()->create([
+            'type' => 'outgoing',
+            'content' => $validated['content'],
+            'content_type' => $validated['content_type'],
+            'sender_type' => 'human',
+            'sender_user_id' => auth()->id(), // Assuming user is authenticated
+        ]);
+
+        // Update conversation's last_message_at
+        $conversation->update([
+            'last_message_at' => now(),
+        ]);
+
+        // Return the created message with the same format as getMessages
+        return response()->json([
+            'message' => [
+                'id' => $message->id,
+                'content' => $message->content,
+                'sender' => $message->senderUser?->name ?? 'You',
+                'senderId' => $message->sender_user_id,
+                'timestamp' => $message->created_at->toIso8601String(),
+                'type' => $message->type,
+                'contentType' => $message->content_type,
+                'mediaUrl' => $message->media_url,
+            ],
+        ]);
     }
 }

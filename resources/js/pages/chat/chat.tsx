@@ -20,6 +20,10 @@ interface Message {
     sender: string
     senderId: number | string
     timestamp: string
+    type: 'incoming' | 'outgoing'
+    contentType: string
+    mediaUrl?: string
+
 }
 
 export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
@@ -30,7 +34,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
 
     useEffect(() => {
         if (selectedChat) {
-            axios.get(route('chats.messages', selectedChat.id )).then((response) => {
+            axios.get(route('chats.messages', { conversation: selectedChat.id })).then((response) => {
                 setMessages(response.data.messages)
             })
         }
@@ -111,16 +115,26 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                             {messages.map((message) => (
                                 <div
                                     key={message.id}
-                                    className={`mb-4 flex ${message.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
+                                    className={`mb-4 flex ${message.type === 'outgoing' ? 'justify-end' : 'justify-start'}`}
                                 >
                                     <div
                                         className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                                            message.senderId === 'me'
+                                            message.type === 'outgoing'
                                                 ? 'bg-blue-500 text-white'
                                                 : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
                                         }`}
                                     >
-                                        <p>{message.content}</p>
+                                        {message.contentType === 'text' ? (
+                                            <p>{message.content}</p>
+                                        ) : message.contentType === 'image' && message.mediaUrl ? (
+                                            <img
+                                                src={message.mediaUrl}
+                                                alt="Message media"
+                                                className="max-w-full rounded"
+                                            />
+                                        ) : (
+                                            <p>{message.content}</p>
+                                        )}
                                         <span className="mt-1 text-xs opacity-70">
                       {format(new Date(message.timestamp), 'HH:mm')}
                     </span>

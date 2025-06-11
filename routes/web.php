@@ -17,7 +17,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
     Route::get('/chats', [ChatController::class, 'index'])->name('chats');
-    Route::get('/chats/{chatId}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
+    Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
 });
 
 require __DIR__.'/settings.php';

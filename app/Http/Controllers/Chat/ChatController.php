@@ -3,86 +3,91 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ChatController extends Controller
 {
-    private function getFakeChats(): array
-    {
-        return [
-            [
-                'id' => 1,
-                'name' => 'John Doe',
-                'avatar' => 'J',
-                'lastMessage' => 'Hey, how are you?',
-                'lastMessageTime' => Carbon::now()->subMinutes(5)->toIso8601String(),
-                'unreadCount' => 2,
-            ],
-            [
-                'id' => 2,
-                'name' => 'Diane Smith',
-                'avatar' => 'D',
-                'lastMessage' => 'The project is going great!',
-                'lastMessageTime' => Carbon::now()->subHours(1)->toIso8601String(),
-                'unreadCount' => 0,
-            ],
-        ];
-    }
-
-    private function getFakeMessages($chatId): array
-    {
-        $messages = [
-            1 => [
-                [
-                    'id' => 1,
-                    'content' => 'Hey, how are you?',
-                    'sender' => 'John Doe',
-                    'senderId' => 1,
-                    'timestamp' => Carbon::now()->subMinutes(5)->toIso8601String(),
-                ],
-                [
-                    'id' => 2,
-                    'content' => "I'm doing great! How about you?",
-                    'sender' => 'You',
-                    'senderId' => 'me',
-                    'timestamp' => Carbon::now()->subMinutes(4)->toIso8601String(),
-                ],
-            ],
-            2 => [
-                [
-                    'id' => 1,
-                    'content' => 'The project is going great!',
-                    'sender' => 'Jane Smith',
-                    'senderId' => 2,
-                    'timestamp' => Carbon::now()->subHours(1)->toIso8601String(),
-                ],
-                [
-                    'id' => 2,
-                    'content' => 'That sounds awesome!',
-                    'sender' => 'You',
-                    'senderId' => 'me',
-                    'timestamp' => Carbon::now()->subMinutes(55)->toIso8601String(),
-                ],
-            ],
-        ];
-
-        return $messages[$chatId] ?? [];
-    }
-
     public function index(): Response
     {
+        // Get current organization (hardcoded for now, later from session)
+        $organizationId = 1;
+
+        // Get the current chatbot (hardcoded for now, later from user selection)
+        $chatbotId = 1;
+
+        $conversations = Conversation::query()
+            ->select([
+                'conversations.*',
+            ])
+            ->with(['latestMessage', 'chatbotChannel.chatbot'])
+            ->whereHas('chatbotChannel.chatbot', function ($query) use ($organizationId, $chatbotId) {
+                $query->where('chatbots.organization_id', $organizationId)
+                    ->where('chatbots.id', $chatbotId);
+            })
+            ->orderBy('last_message_at', 'desc')
+            ->get()
+            ->map(function ($conversation) {
+                return [
+                    'id' => $conversation->id,
+                    'name' => $conversation->contact_name ?? $conversation->contact_phone,
+                    'avatar' => $conversation->contact_avatar ?? substr($conversation->contact_name ?? 'U', 0, 1),
+                    'lastMessage' => $conversation->latestMessage->first()?->content ?? '',
+                    'lastMessageTime' => $conversation->last_message_at?->toIso8601String(),
+                    'unreadCount' => $conversation->messages()
+                        ->whereNull('read_at')
+                        ->where('type', 'incoming')
+                        ->count(),
+                ];
+            });
+
         return Inertia::render('chat/chat', [
-            'chats' => $this->getFakeChats(),
+            'chats' => $conversations,
         ]);
+
     }
 
-    public function getMessages($chatId): JsonResponse
+    public function getMessages( Conversation $conversation ): JsonResponse
     {
+        // Verify if the user has access to this conversation
+        $organizationId = 1; // Hardcoded for now
+
+        if (!$conversation->chatbotChannel->chatbot->where('organization_id', $organizationId)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $messages = $conversation->messages()
+            ->with(['senderUser'])
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->map(function ($message) {
+                return [
+                    'id' => $message->id,
+                    'content' => $message->content,
+                    'sender' => $message->sender_type === 'contact'
+                        ? ($message->conversation->contact_name ?? $message->conversation->contact_phone)
+                        : ($message->senderUser?->name ?? 'AI'),
+                    'senderId' => $message->sender_type === 'contact'
+                        ? 'contact'
+                        : ($message->sender_user_id ?? 'ai'),
+                    'timestamp' => $message->created_at->toIso8601String(),
+                    'type' => $message->type,
+                    'contentType' => $message->content_type,
+                    'mediaUrl' => $message->media_url,
+                ];
+            });
+
+        // Mark messages as read
+        $conversation->messages()
+            ->whereNull('read_at')
+            ->where('type', 'incoming')
+            ->update(['read_at' => now()]);
+
         return response()->json([
-            'messages' => $this->getFakeMessages($chatId),
+            'messages' => $messages,
         ]);
+
     }
 }

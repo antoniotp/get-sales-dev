@@ -2,6 +2,7 @@
 
 namespace App\Services\WhatsApp;
 
+use App\Events\NewWhatsAppMessage;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -120,7 +121,10 @@ class WebhookHandlerService
                 ],
             ];
 
-            Message::create($messageData);
+            $newMessage = Message::create($messageData);
+
+            // Dispatch the event for real-time updates
+            event(new NewWhatsAppMessage($newMessage));
 
         } catch (\Exception $e) {
             Log::error('Error saving text message', [

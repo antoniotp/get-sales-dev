@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { useRoute } from 'ziggy-js'
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
 
 interface Chat {
     id: number
@@ -37,6 +39,31 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
             axios.get(route('chats.messages', { conversation: selectedChat.id })).then((response) => {
                 setMessages(response.data.messages)
             })
+
+            const echo = new Echo({
+                broadcaster: 'pusher',
+                key: import.meta.env.VITE_PUSHER_APP_KEY,
+                cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+                forceTLS: true
+            });
+
+            echo.channel(`chat.conversation.${selectedChat.id}`)
+                .listen('.message.received', (e: { message: Message }) => {
+                    setMessages(prevMessages => [...prevMessages, e.message]);
+
+                    // Actualizar el último mensaje y la hora en la lista de chats
+                    const updatedChat = {
+                        ...selectedChat,
+                        lastMessage: e.message.content,
+                        lastMessageTime: e.message.timestamp
+                    };
+                    setSelectedChat(updatedChat);
+                });
+
+            return () => {
+                echo.leave(`chat.conversation.${selectedChat.id}`);
+            };
+
         }
     }, [selectedChat])
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Chat;
 
+use App\Events\MessageSent;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
@@ -112,6 +113,9 @@ class ChatController extends Controller
         $conversation->update([
             'last_message_at' => now(),
         ]);
+
+        // Dispatch the MessageSent event
+        event(new MessageSent($message));
 
         // Return the created message with the same format as getMessages
         return response()->json([

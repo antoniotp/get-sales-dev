@@ -28,97 +28,91 @@ interface Message {
 
 }
 
-let echo = null
-
 export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
     const [chats, setChats] = useState<Chat[]>(initialChats);
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [newMessage, setNewMessage] = useState('')
+    const [echo, setEcho] = useState<Echo | null>(null);
     const route = useRoute();
 
     useEffect(() => {
-        // Configurar Echo para escuchar nuevas conversaciones
-        echo = new Echo({
+        const echoInstance = new Echo({
             broadcaster: 'pusher',
             key: import.meta.env.VITE_PUSHER_APP_KEY,
             cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
             forceTLS: true
         });
+        setEcho(echoInstance);
+
+        // Clean Echo when unmount
+        return () => {
+            echoInstance.disconnect();
+        };
     }, []);
 
+    // Manejar nuevas conversaciones y mensajes
     useEffect(() => {
+        if (!echo) return;
 
-        // Escuchar nuevas conversaciones
-        echo.channel('chat.organization.1') // Por ahora hardcoded como en el controller
-            .listen('.conversation.created', (e: { conversation: Chat }) => {
+        // Suscribirse al canal de la organización para nuevas conversaciones
+        const orgChannel = echo.channel('chat.organization.1');
+        orgChannel.listen('.conversation.created', (e: { conversation: Chat }) => {
+            setChats(prevChats => {
+                const exists = prevChats.some(chat => chat.id === e.conversation.id);
+                if (!exists) {
+                    return [e.conversation, ...prevChats];
+                }
+                return prevChats;
+            });
+        });
+
+        // Suscribirse a los canales de cada chat para mensajes nuevos
+        const chatChannels = chats.map(chat => {
+            const channel = echo.channel(`chat.conversation.${chat.id}`);
+            channel.listen('.message.received', (e: { message: Message }) => {
+                // Actualizar la lista de mensajes si es el chat seleccionado
+                if (selectedChat?.id === chat.id) {
+                    setMessages(prevMessages => [...prevMessages, e.message]);
+                }
+
+                // Actualizar la información del chat en la lista
                 setChats(prevChats => {
-                    // Verificar si la conversación ya existe
-                    const exists = prevChats.some(chat => chat.id === e.conversation.id);
-                    if (!exists) {
-                        // Agregar la nueva conversación al inicio de la lista
-                        return [e.conversation, ...prevChats];
-                    }
-                    return prevChats;
+                    return prevChats.map(prevChat => {
+                        if (prevChat.id === chat.id) {
+                            return {
+                                ...prevChat,
+                                lastMessage: e.message.content,
+                                lastMessageTime: e.message.timestamp,
+                                unreadCount: selectedChat?.id === chat.id
+                                    ? prevChat.unreadCount
+                                    : prevChat.unreadCount + 1
+                            };
+                        }
+                        return prevChat;
+                    });
                 });
             });
+            return `chat.conversation.${chat.id}`;
+        });
 
-        // Escuchar mensajes nuevos para actualizar la lista de chats
-        if (chats.length > 0) {
-            chats.forEach(chat => {
-                echo.channel(`chat.conversation.${chat.id}`)
-                    .listen('.message.received', (e: { message: Message }) => {
-                        setChats(prevChats => {
-                            return prevChats.map(prevChat => {
-                                if (prevChat.id === chat.id) {
-                                    return {
-                                        ...prevChat,
-                                        lastMessage: e.message.content,
-                                        lastMessageTime: e.message.timestamp,
-                                        unreadCount: prevChat.unreadCount + 1
-                                    };
-                                }
-                                return prevChat;
-                            });
-                        });
-                    });
-            });
-        }
-
-        // Cleanup function
+        // Limpiar suscripciones
         return () => {
             echo.leave('chat.organization.1');
-            chats.forEach(chat => {
-                echo.leave(`chat.conversation.${chat.id}`);
-            });
+            chatChannels.forEach(channel => echo.leave(channel));
         };
-    }, [chats]);
+    }, [echo, chats, selectedChat]);
 
+    // Cargar mensajes cuando se selecciona un chat
     useEffect(() => {
         if (selectedChat) {
-            axios.get(route('chats.messages', { conversation: selectedChat.id })).then((response) => {
-                setMessages(response.data.messages)
-            })
-
-            echo.channel(`chat.conversation.${selectedChat.id}`)
-                .listen('.message.received', (e: { message: Message }) => {
-                    setMessages(prevMessages => [...prevMessages, e.message]);
-
-                    // Actualizar el último mensaje y la hora en la lista de chats
-                    const updatedChat = {
-                        ...selectedChat,
-                        lastMessage: e.message.content,
-                        lastMessageTime: e.message.timestamp
-                    };
-                    setSelectedChat(updatedChat);
+            axios.get(route('chats.messages', { conversation: selectedChat.id }))
+                .then((response) => {
+                    setMessages(response.data.messages);
                 });
-
-            return () => {
-                echo.leave(`chat.conversation.${selectedChat.id}`);
-            };
-
         }
-    }, [selectedChat])
+    }, [selectedChat]);
+
 
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault()

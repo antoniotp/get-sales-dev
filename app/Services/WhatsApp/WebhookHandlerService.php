@@ -2,6 +2,7 @@
 
 namespace App\Services\WhatsApp;
 
+use App\Events\NewWhatsAppConversation;
 use App\Events\NewWhatsAppMessage;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
@@ -83,6 +84,12 @@ class WebhookHandlerService
                     'last_message_at' => now(),
                 ]
             );
+
+            // Dispatch the event if a conversation was created
+            if ($this->conversation->wasRecentlyCreated) {
+                Log::info('New conversation created', ['conversation' => $this->conversation]);
+                event(new NewWhatsAppConversation($this->conversation));
+            }
 
             // Update last_message_at
             if (!$this->conversation->wasRecentlyCreated) {

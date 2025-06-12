@@ -28,24 +28,77 @@ interface Message {
 
 }
 
+let echo = null
+
 export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
+    const [chats, setChats] = useState<Chat[]>(initialChats);
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [newMessage, setNewMessage] = useState('')
     const route = useRoute();
 
     useEffect(() => {
+        // Configurar Echo para escuchar nuevas conversaciones
+        echo = new Echo({
+            broadcaster: 'pusher',
+            key: import.meta.env.VITE_PUSHER_APP_KEY,
+            cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+            forceTLS: true
+        });
+    }, []);
+
+    useEffect(() => {
+
+        // Escuchar nuevas conversaciones
+        echo.channel('chat.organization.1') // Por ahora hardcoded como en el controller
+            .listen('.conversation.created', (e: { conversation: Chat }) => {
+                setChats(prevChats => {
+                    // Verificar si la conversación ya existe
+                    const exists = prevChats.some(chat => chat.id === e.conversation.id);
+                    if (!exists) {
+                        // Agregar la nueva conversación al inicio de la lista
+                        return [e.conversation, ...prevChats];
+                    }
+                    return prevChats;
+                });
+            });
+
+        // Escuchar mensajes nuevos para actualizar la lista de chats
+        if (chats.length > 0) {
+            chats.forEach(chat => {
+                echo.channel(`chat.conversation.${chat.id}`)
+                    .listen('.message.received', (e: { message: Message }) => {
+                        setChats(prevChats => {
+                            return prevChats.map(prevChat => {
+                                if (prevChat.id === chat.id) {
+                                    return {
+                                        ...prevChat,
+                                        lastMessage: e.message.content,
+                                        lastMessageTime: e.message.timestamp,
+                                        unreadCount: prevChat.unreadCount + 1
+                                    };
+                                }
+                                return prevChat;
+                            });
+                        });
+                    });
+            });
+        }
+
+        // Cleanup function
+        return () => {
+            echo.leave('chat.organization.1');
+            chats.forEach(chat => {
+                echo.leave(`chat.conversation.${chat.id}`);
+            });
+        };
+    }, [chats]);
+
+    useEffect(() => {
         if (selectedChat) {
             axios.get(route('chats.messages', { conversation: selectedChat.id })).then((response) => {
                 setMessages(response.data.messages)
             })
-
-            const echo = new Echo({
-                broadcaster: 'pusher',
-                key: import.meta.env.VITE_PUSHER_APP_KEY,
-                cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-                forceTLS: true
-            });
 
             echo.channel(`chat.conversation.${selectedChat.id}`)
                 .listen('.message.received', (e: { message: Message }) => {
@@ -107,7 +160,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                         <h2 className="text-lg font-semibold">Chats</h2>
                     </div>
                     <div className="h-[calc(100%-4rem)] overflow-y-auto">
-                        {initialChats.map((chat) => (
+                        {chats.map((chat) => (
                             <div
                                 key={chat.id}
                                 onClick={() => setSelectedChat(chat)}

@@ -1,11 +1,10 @@
 import ChatLayout from '@/layouts/chat/layout'
 import { Head } from '@inertiajs/react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { useRoute } from 'ziggy-js'
 import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
 
 interface Chat {
     id: number
@@ -25,7 +24,6 @@ interface Message {
     type: 'incoming' | 'outgoing'
     contentType: string
     mediaUrl?: string
-
 }
 
 export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
@@ -33,11 +31,25 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [newMessage, setNewMessage] = useState('')
-    const [echo, setEcho] = useState<Echo | null>(null);
+    const [echo, setEcho] = useState<Echo<'pusher'> | null>(null);
     const route = useRoute();
 
+    // Ref para auto-scroll a los mensajes
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll al último mensaje
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // Scroll al cargar mensajes o recibir nuevos
     useEffect(() => {
-        const echoInstance = new Echo({
+        scrollToBottom();
+    }, [messages]);
+
+    useEffect(() => {
+        const echoInstance = new Echo<'pusher'>({
             broadcaster: 'pusher',
             key: import.meta.env.VITE_PUSHER_APP_KEY,
             cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
@@ -111,7 +123,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                     setMessages(response.data.messages);
                 });
         }
-    }, [selectedChat]);
+    }, [selectedChat, route]);
 
 
     const handleSendMessage = async (e: React.FormEvent) => {
@@ -126,7 +138,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
             });
 
             // Add the new message to the messages array
-            setMessages([...messages, response.data.message]);
+            setMessages(prevMessages => [...prevMessages, response.data.message]);
 
             // Update the selected chat's last message
             setSelectedChat({
@@ -147,13 +159,13 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
     return (
         <ChatLayout>
             <Head title="Chat" />
-            <div className="flex h-full w-full">
+            <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                 {/* Chat List */}
-                <div className="w-1/3 border-r border-gray-200 dark:border-gray-700">
-                    <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+                <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+                    <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
                         <h2 className="text-lg font-semibold">Chats</h2>
                     </div>
-                    <div className="h-[calc(100%-4rem)] overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto">
                         {chats.map((chat) => (
                             <div
                                 key={chat.id}
@@ -163,23 +175,24 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                 }`}
                             >
                                 <div className="flex items-center space-x-4">
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500 text-white flex-shrink-0">
                                         {chat.avatar}
                                     </div>
-
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                         <div className="flex items-center justify-between">
                                             <h3 className="font-semibold">{chat.name}</h3>
-                                            <span className="text-sm text-gray-500">
-                        {format(new Date(chat.lastMessageTime), 'HH:mm')}
-                      </span>
+                                            <span className="text-sm text-gray-500 flex-shrink-0">
+                                                {format(new Date(chat.lastMessageTime), 'HH:mm')}
+                                            </span>
                                         </div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">{chat.lastMessage}</p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {chat.lastMessage}
+                                        </p>
                                     </div>
                                     {chat.unreadCount > 0 && (
-                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
-                      {chat.unreadCount}
-                    </span>
+                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white flex-shrink-0">
+                                            {chat.unreadCount}
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -190,7 +203,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                 {/* Chat Messages */}
                 {selectedChat ? (
                     <div className="flex w-2/3 flex-col">
-                        <div className="flex h-16 items-center border-b border-gray-200 px-4 dark:border-gray-700">
+                        <div className="flex h-16 items-center border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
                             <div className="flex items-center space-x-4">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
                                     {selectedChat.avatar}
@@ -199,7 +212,11 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                 <h3 className="font-semibold">{selectedChat.name}</h3>
                             </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
+
+                        <div
+                            ref={messagesContainerRef}
+                            className="flex-1 overflow-y-auto p-4 space-y-4"
+                        >
                             {messages.map((message) => (
                                 <div
                                     key={message.id}
@@ -213,7 +230,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                         }`}
                                     >
                                         {message.contentType === 'text' ? (
-                                            <p>{message.content}</p>
+                                            <p className="break-words whitespace-pre-wrap">{message.content}</p>
                                         ) : message.contentType === 'image' && message.mediaUrl ? (
                                             <img
                                                 src={message.mediaUrl}
@@ -221,16 +238,21 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                                 className="max-w-full rounded"
                                             />
                                         ) : (
-                                            <p>{message.content}</p>
+                                            <p className="break-words whitespace-pre-wrap">{message.content}</p>
                                         )}
-                                        <span className="mt-1 text-xs opacity-70">
-                      {format(new Date(message.timestamp), 'HH:mm')}
-                    </span>
+                                        <span className="mt-1 text-xs opacity-70 block">
+                                            {format(new Date(message.timestamp), 'HH:mm')}
+                                        </span>
                                     </div>
                                 </div>
                             ))}
+                            <div ref={messagesEndRef} />
                         </div>
-                        <form onSubmit={handleSendMessage} className="border-t border-gray-200 p-4 dark:border-gray-700">
+
+                        <form
+                            onSubmit={handleSendMessage}
+                            className="border-t border-gray-200 p-4 dark:border-gray-700 flex-shrink-0"
+                        >
                             <div className="flex space-x-4">
                                 <input
                                     type="text"
@@ -241,7 +263,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                 />
                                 <button
                                     type="submit"
-                                    className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none"
+                                    className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0"
                                 >
                                     Send
                                 </button>

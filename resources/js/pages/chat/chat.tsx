@@ -31,6 +31,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [newMessage, setNewMessage] = useState('')
+    const [isSending, setIsSending] = useState(false)
     const [echo, setEcho] = useState<Echo<'pusher'> | null>(null);
     const route = useRoute();
 
@@ -55,6 +56,7 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
             cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
             forceTLS: true
         });
+
         setEcho(echoInstance);
 
         // Clean Echo when unmount
@@ -125,10 +127,11 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
         }
     }, [selectedChat, route]);
 
-
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!newMessage.trim() || !selectedChat) return
+        if (!newMessage.trim() || !selectedChat || isSending) return
+
+        setIsSending(true) // Deshabilitar el botón
 
         try {
             // Send message to backend
@@ -152,8 +155,9 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
         } catch (error) {
             console.error('Failed to send message:', error);
             // Here you might want to show an error toast/notification
+        } finally {
+            setIsSending(false) // Rehabilitar el botón
         }
-
     }
 
     return (
@@ -208,7 +212,6 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
                                     {selectedChat.avatar}
                                 </div>
-
                                 <h3 className="font-semibold">{selectedChat.name}</h3>
                             </div>
                         </div>
@@ -259,13 +262,15 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                     placeholder="Type a message..."
-                                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800"
+                                    disabled={isSending}
+                                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <button
                                     type="submit"
-                                    className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0"
+                                    disabled={isSending}
+                                    className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
                                 >
-                                    Send
+                                    {isSending ? 'Sending...' : 'Send'}
                                 </button>
                             </div>
                         </form>

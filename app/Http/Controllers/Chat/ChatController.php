@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Events\MessageSent;
+use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
@@ -116,6 +117,7 @@ class ChatController extends Controller
 
         // Dispatch the MessageSent event
         event(new MessageSent($message));
+        event(new NewWhatsAppMessage($message));
 
         // Return the created message with the same format as getMessages
         return response()->json([

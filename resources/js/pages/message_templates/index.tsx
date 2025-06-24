@@ -1,0 +1,108 @@
+import AppLayout from '@/layouts/app-layout'
+import MessageTemplateLayout from '@/layouts/message_templates/layout'
+import { Head } from '@inertiajs/react'
+import type { BreadcrumbItem } from '@/types'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card } from "@/components/ui/card"
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { DropdownMenu, DropdownMenuLabel, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
+import {Button} from "@/components/ui/button";
+import { MoreHorizontal } from 'lucide-react';
+import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+
+interface Template {
+    id: number;
+    name: string;
+    status: string;
+    category: string;
+    language: string;
+}
+
+interface TemplatesProps {
+    allTemplates: Template[];
+    activeTemplates: Template[];
+    deletedTemplates: Template[];
+}
+
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Message templates management',
+        href: '/messages_templates',
+    },
+];
+
+const TemplateTable = ({ templates }: { templates: Template[] }) => (
+    <Table>
+        <TableCaption>A list of your templates.</TableCaption>
+        <TableHeader>
+            <TableRow>
+                <TableHead className="w-[100px]">Name</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Language</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+        </TableHeader>
+        <TableBody>
+            {templates.length > 0 ? (
+                templates.map((template) => (
+                    <TableRow key={template.id}>
+                        <TableCell className="font-medium">{template.name}</TableCell>
+                        <TableCell>{template.status}</TableCell>
+                        <TableCell>{template.category}</TableCell>
+                        <TableCell>{template.language}</TableCell>
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-8 w-8 p-0">
+                                        <span className="sr-only">Open menu</span>
+                                        <MoreHorizontal />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem>Delete</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                ))
+            ) : (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center">No templates found</TableCell>
+                </TableRow>
+            )}
+        </TableBody>
+    </Table>
+);
+
+export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Message templates | List" />
+            <MessageTemplateLayout>
+                <div className="flex h-[calc(100vh-14rem)] w-full overflow-hidden">
+                    <Card className="w-full p-3">
+                        <Tabs defaultValue="template_library" className="w-full">
+                            <TabsList>
+                                <TabsTrigger value="template_library">Template Library</TabsTrigger>
+                                <TabsTrigger value="active_templates">Active</TabsTrigger>
+                                <TabsTrigger value="deleted_templates">Deleted</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="template_library">
+                                <TemplateTable templates={allTemplates} />
+                            </TabsContent>
+                            <TabsContent value="active_templates">
+                                <TemplateTable templates={activeTemplates} />
+                            </TabsContent>
+                            <TabsContent value="deleted_templates">
+                                <TemplateTable templates={deletedTemplates} />
+                            </TabsContent>
+                        </Tabs>
+                    </Card>
+                </div>
+            </MessageTemplateLayout>
+        </AppLayout>
+    )
+}

@@ -38,6 +38,7 @@ class MessageTemplateController extends Controller
         // Only active templates
         $activeTemplates = (clone $baseQuery)
             ->active()
+            ->withoutTrashed()
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -53,6 +54,8 @@ class MessageTemplateController extends Controller
                 'name' => $template->name,
                 'category' => $template->category->name,
                 'status' => $template->status,
+                'platformStatus' => $template->platform_status,
+                'isDeleted' => (int)$template->trashed(),
                 'language' => $template->language,
             ];
         };

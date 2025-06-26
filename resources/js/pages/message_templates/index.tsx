@@ -1,13 +1,15 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
 import { Head, Link , useForm } from '@inertiajs/react'
+import { useMemo } from 'react';
 import type { BreadcrumbItem } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
 import {Button} from "@/components/ui/button";
-import { MoreHorizontal } from 'lucide-react';
+import { Badge } from '@/components/ui/badge'
+import { BadgeCheckIcon, DeleteIcon, MoreHorizontal } from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 interface Template {
@@ -15,6 +17,8 @@ interface Template {
     name: string;
     status: string;
     category: string;
+    platformStatus: number;
+    isDeleted: number;
     language: string;
 }
 
@@ -48,15 +52,44 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
             });
         }
     };
+
+    const getLocalStatus = useMemo(
+        () => (template: Template) => {
+            if (template.isDeleted) return (
+                <Badge
+                    className=""
+                    variant="destructive"
+                >
+                    <DeleteIcon />
+                    Deleted
+                </Badge>
+            );
+            return template.platformStatus === 1 ? (
+                <Badge className="bg-blue-500 text-white dark:bg-blue-600">
+                    <BadgeCheckIcon />
+                    Active
+                </Badge>
+            ) : (
+                <Badge className="bg-yellow-500 text-white dark:bg-yellow-600">
+                    <BadgeCheckIcon />
+                    Inactive
+                </Badge>
+            );
+        },
+        [],
+    );
+
+
     return (
         <Table>
             <TableCaption>A list of your templates.</TableCaption>
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">Name</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Platform Status</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Language</TableHead>
+                    <TableHead>Active</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -68,23 +101,26 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                             <TableCell>{template.status}</TableCell>
                             <TableCell>{template.category}</TableCell>
                             <TableCell>{template.language}</TableCell>
-                            <TableCell className="text-right">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Open menu</span>
-                                            <MoreHorizontal />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem asChild>
-                                            <Link href={route('message-templates.edit', template.id)}>Edit</Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleDelete(template.id)}>Delete</DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
+                            <TableCell>{getLocalStatus(template)}</TableCell>
+                            {!template.isDeleted && (
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Open menu</span>
+                                                <MoreHorizontal />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuItem asChild>
+                                                <Link href={route('message-templates.edit', template.id)}>Edit</Link>
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            )}
                         </TableRow>
                     ))
                 ) : (

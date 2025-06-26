@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/message_templates', [MessageTemplateController::class, 'store'])->name('message-templates.store');
     Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
+    Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
 });
 
 require __DIR__.'/settings.php';

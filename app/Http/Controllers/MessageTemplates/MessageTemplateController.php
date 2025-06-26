@@ -127,4 +127,12 @@ class MessageTemplateController extends Controller
         return redirect()->route('message-templates.index')
             ->with('success', 'Template updated successfully.');
     }
+
+    public function destroy(MessageTemplate $template)
+    {
+        $template->delete(); // This will soft delete the template
+
+        return redirect()->route('message-templates.index')
+            ->with('success', 'Template deleted successfully.');
+    }
 }

@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
-import { Head, Link } from '@inertiajs/react'
+import { Head, Link , useForm } from '@inertiajs/react'
 import type { BreadcrumbItem } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
@@ -31,53 +31,71 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const TemplateTable = ({ templates }: { templates: Template[] }) => (
-    <Table>
-        <TableCaption>A list of your templates.</TableCaption>
-        <TableHeader>
-            <TableRow>
-                <TableHead className="w-[100px]">Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Language</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-        </TableHeader>
-        <TableBody>
-            {templates.length > 0 ? (
-                templates.map((template) => (
-                    <TableRow key={template.id}>
-                        <TableCell className="font-medium">{template.name}</TableCell>
-                        <TableCell>{template.status}</TableCell>
-                        <TableCell>{template.category}</TableCell>
-                        <TableCell>{template.language}</TableCell>
-                        <TableCell className="text-right">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0">
-                                        <span className="sr-only">Open menu</span>
-                                        <MoreHorizontal />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem asChild>
-                                        <Link href={`/message_templates/${template.id}/edit`}>Edit</Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>Delete</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                    </TableRow>
-                ))
-            ) : (
+const TemplateTable = ({ templates }: { templates: Template[] }) => {
+    const { delete: inertiaDelete } = useForm(); // Destructure delete method from useForm
+
+    const handleDelete = (templateId: number) => {
+        if (confirm('Are you sure you want to delete this template?')) {
+            inertiaDelete(route('message-templates.destroy', templateId), { // Use inertiaDelete for DELETE request
+                onSuccess: () => {
+                    // Optionally, you can add some feedback here,
+                    // Inertia will automatically re-render the page with updated data.
+                },
+                onError: (errors) => {
+                    console.error('Error deleting template:', errors);
+                    alert('Failed to delete template.');
+                }
+            });
+        }
+    };
+    return (
+        <Table>
+            <TableCaption>A list of your templates.</TableCaption>
+            <TableHeader>
                 <TableRow>
-                    <TableCell colSpan={5} className="text-center">No templates found</TableCell>
+                    <TableHead className="w-[100px]">Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Language</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-            )}
-        </TableBody>
-    </Table>
-);
+            </TableHeader>
+            <TableBody>
+                {templates.length > 0 ? (
+                    templates.map((template) => (
+                        <TableRow key={template.id}>
+                            <TableCell className="font-medium">{template.name}</TableCell>
+                            <TableCell>{template.status}</TableCell>
+                            <TableCell>{template.category}</TableCell>
+                            <TableCell>{template.language}</TableCell>
+                            <TableCell className="text-right">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Open menu</span>
+                                            <MoreHorizontal />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuItem asChild>
+                                            <Link href={route('message-templates.edit', template.id)}>Edit</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleDelete(template.id)}>Delete</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">No templates found</TableCell>
+                    </TableRow>
+                )}
+            </TableBody>
+        </Table>
+    )
+}
 
 export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
     return (

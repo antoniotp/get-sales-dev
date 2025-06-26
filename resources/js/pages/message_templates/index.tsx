@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
-import { Head } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import type { BreadcrumbItem } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
@@ -27,7 +27,7 @@ interface TemplatesProps {
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Message templates management',
-        href: '/messages_templates',
+        href: route('message-templates.index'),
     },
 ];
 
@@ -61,7 +61,9 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => (
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuItem>Edit</DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link href={`/message_templates/${template.id}/edit`}>Edit</Link>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem>Delete</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -84,6 +86,12 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
             <MessageTemplateLayout>
                 <div className="flex h-[calc(100vh-14rem)] w-full overflow-hidden">
                     <Card className="w-full p-3">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-2xl font-bold">Message Templates</h2>
+                            <Link href={route('message-templates.create')}>
+                                <Button>Create Template</Button>
+                            </Link>
+                        </div>
                         <Tabs defaultValue="template_library" className="w-full">
                             <TabsList>
                                 <TabsTrigger value="template_library">Template Library</TabsTrigger>

@@ -21,7 +21,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])
         ->name('chats.messages.store');
-    Route::get('/message_templates', [ MessageTemplateController::class, 'index'])->name('message_templates.index');
+    Route::get('/message_templates', [ MessageTemplateController::class, 'index'])->name('message-templates.index');
+    Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->name('message-templates.create');
+    Route::post('/message_templates', [MessageTemplateController::class, 'store'])->name('message-templates.store');
+    Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');
+    Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
 });
 
 require __DIR__.'/settings.php';

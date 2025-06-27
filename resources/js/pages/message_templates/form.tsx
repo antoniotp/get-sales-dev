@@ -61,13 +61,19 @@ interface Template {
     body_content: string;
     footer_content?: string;
     button_config?: never[];
-    variables_schema?: never[];
+    variables_count: number;
+    variables_schema: Array<{ placeholder: string; example?: string }> | null;
 }
 
 interface Props {
     categories: Category[];
     template: Template | null;
 }
+
+const variableSchemaItem = z.object({
+    placeholder: z.string(),
+    example: z.string().optional(),
+});
 
 const formSchema = z.object({
     name: z.string().min(1, 'Template name is required'),
@@ -85,7 +91,7 @@ const formSchema = z.object({
             return false;
         }
     }, "Invalid button configuration format"),
-    variables_schema: z.array(z.any()).optional(), // Consider refining this schema later
+    variables_schema: z.array(variableSchemaItem).nullable(),
 });
 
 type TemplateFormValues = z.infer<typeof formSchema>;
@@ -97,7 +103,6 @@ export default function TemplateForm({ categories, template }: Props) {
         post,
         put,
         processing,
-        errors: inertiaErrors,
     } = useInertiaForm<TemplateFormValues>(
         template
             ? { // Editing an existing template
@@ -126,6 +131,12 @@ export default function TemplateForm({ categories, template }: Props) {
 
     const [localButtonConfig, setLocalButtonConfig] = useState(() => JSON.stringify(inertiaData.button_config || [], null, 2));
     const [localVariablesSchema, setLocalVariablesSchema] = useState(() => JSON.stringify(inertiaData.variables_schema || [], null, 2));
+    const [variablePlaceholders, setVariablePlaceholders] = useState<Array<{ placeholder: string; example: string }>>(
+        template?.variables_schema?.map(item => ({
+            placeholder: item.placeholder,
+            example: item.example || '' // Ensure that the example is always a string
+        })) || []
+    );
 
     const form = useForm<TemplateFormValues>({
         resolver: zodResolver(formSchema),
@@ -167,6 +178,76 @@ export default function TemplateForm({ categories, template }: Props) {
                 },
             });
         }
+    };
+
+    function generateInputsForPlaceholders(template: string) {
+        console.log("body content: ", template);
+        //count and extract unique placeholders
+        const varRegex = /\{\{(\d+)}}/g;
+        const uniqueVars = new Set<string>();
+        let match;
+        while ((match = varRegex.exec(template)) !== null) {
+            uniqueVars.add(match[1]); // match[1] contains the number without braces
+        }
+        console.log("uniqueVars: ", uniqueVars);
+        console.log( "uniqueVars.size: ", uniqueVars.size);
+
+        // Convert uniqueVars to sorted array for consistent ordering
+        const sortedVars = Array.from(uniqueVars).sort((a, b) => parseInt(a) - parseInt(b));
+
+        // Create new variablePlaceholders array based on uniqueVars
+        const newVariablePlaceholders = sortedVars.map(varNumber => {
+            // Check if this variable already exists in current variablePlaceholders
+            const existing = variablePlaceholders.find(vp => vp.placeholder === `{{${varNumber}}}`);
+
+            return {
+                placeholder: `{{${varNumber}}}`,
+                example: existing?.example || '' // Keep existing example or empty string
+            };
+        });
+
+        // Update the state
+        setVariablePlaceholders(newVariablePlaceholders);
+
+        // Update the form's variables_schema field
+        const newVariablesSchema = newVariablePlaceholders.map(vp => ({
+            placeholder: vp.placeholder,
+            example: vp.example
+        }));
+
+        // Update form field
+        form.setValue('variables_schema', newVariablesSchema);
+
+        // Update Inertia data
+        setInertiaData(prev => ({
+            ...prev,
+            variables_schema: newVariablesSchema
+        }));
+
+        // Update local JSON representation
+        setLocalVariablesSchema(JSON.stringify(newVariablesSchema, null, 2));
+    }
+
+    // Function to handle example input changes
+    const handleExampleChange = (placeholder: string, example: string) => {
+        const updatedPlaceholders = variablePlaceholders.map(vp =>
+            vp.placeholder === placeholder ? { ...vp, example } : vp
+        );
+
+        setVariablePlaceholders(updatedPlaceholders);
+
+        // Update form and Inertia data
+        const newVariablesSchema = updatedPlaceholders.map(vp => ({
+            placeholder: vp.placeholder,
+            example: vp.example
+        }));
+
+        form.setValue('variables_schema', newVariablesSchema);
+        setInertiaData(prev => ({
+            ...prev,
+            variables_schema: newVariablesSchema
+        }));
+        setLocalVariablesSchema(JSON.stringify(newVariablesSchema, null, 2));
     };
 
     return (
@@ -348,6 +429,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                                             placeholder="Enter message content with variables like {{1}}, {{2}}. E.g., Hello {{1}}, your order {{2}} has shipped."
                                                             className="min-h-[120px]"
                                                             {...field}
+                                                            onBlur={(e) => generateInputsForPlaceholders(e.target.value)}
                                                         />
                                                     </FormControl>
                                                     <FormDescription>
@@ -357,6 +439,30 @@ export default function TemplateForm({ categories, template }: Props) {
                                                 </FormItem>
                                             )}
                                         />
+
+                                        {/* Dynamic Variable Inputs */}
+                                        {variablePlaceholders.length > 0 && (
+                                            <div className="space-y-4">
+                                                <Label className="text-sm font-medium">Variable Examples</Label>
+                                                <FormDescription>
+                                                    Provide example values for each variable to help users understand what data should be passed.
+                                                </FormDescription>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {variablePlaceholders.map((variable) => (
+                                                        <div key={variable.placeholder} className="space-y-2">
+                                                            <Label className="text-sm text-muted-foreground">
+                                                                {variable.placeholder}
+                                                            </Label>
+                                                            <Input
+                                                                placeholder={`Example for ${variable.placeholder}`}
+                                                                value={variable.example}
+                                                                onChange={(e) => handleExampleChange(variable.placeholder, e.target.value)}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
 
                                         {/* Footer Content */}
                                         <FormField
@@ -411,6 +517,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                                                 field.onChange(parsed);
                                                                 form.clearErrors('button_config')
                                                             } catch (error) {
+                                                                console.log("Error: ", error );
                                                                 // Restaurar el valor anterior en caso de JSON inválido
                                                                 setLocalButtonConfig(JSON.stringify(inertiaData.button_config || [], null, 2));
                                                                 // Establecer error en el formulario
@@ -426,48 +533,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                     <FormDescription>
                                                         Enter a JSON array for button configuration. Supports `reply`, `url`, and `call` types.
                                                         URL buttons can use variables. Refer to Meta's documentation for exact structure.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-
-                                        {/* Variables Schema */}
-                                        <FormField
-                                            control={form.control}
-                                            name="variables_schema"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <Label htmlFor="variables_schema_raw">Variables Schema (JSON)</Label>
-                                                    <Textarea
-                                                        id="variables_schema_raw"
-                                                        value={localVariablesSchema}
-                                                        onChange={(e) => setLocalVariablesSchema(e.target.value)}
-                                                        onBlur={(e) => {
-                                                            try {
-                                                                const parsed = e.target.value.trim() ? JSON.parse(e.target.value) : [];
-                                                                setInertiaData(prev => ({
-                                                                    ...prev,
-                                                                    variables_schema: parsed
-                                                                }));
-                                                                // Actualizar el valor del formulario
-                                                                field.onChange(parsed);
-                                                                form.clearErrors('variables_schema')
-                                                            } catch (error) {
-                                                                // Restaurar el valor anterior en caso de JSON inválido
-                                                                setLocalVariablesSchema(JSON.stringify(inertiaData.variables_schema || [], null, 2));
-                                                                // Establecer error en el formulario
-                                                                form.setError('variables_schema', {
-                                                                    type: 'manual',
-                                                                    message: 'Invalid JSON format'
-                                                                });
-                                                            }
-                                                        }}
-                                                        placeholder={`[\n  {\n    "name": "customer_name",\n    "type": "text",\n    "description": "Customer's first name"\n  },\n  {\n    "name": "order_id",\n    "type": "number",\n    "description": "Unique order identifier"\n  }\n]`}
-                                                        className="min-h-[150px] font-mono"
-                                                    />
-                                                    <FormDescription>
-                                                        {"Define the schema for your template variables (`{{1}}`, `{{2}}`, etc.). This helps in understanding and validating the data. Currently, this field is for informational purposes."}
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>

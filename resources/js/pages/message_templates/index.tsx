@@ -138,7 +138,7 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Message templates | List" />
             <MessageTemplateLayout>
-                <div className="flex h-[calc(100vh-14rem)] w-full overflow-hidden">
+                <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <Card className="w-full p-3">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-2xl font-bold">Message Templates</h2>

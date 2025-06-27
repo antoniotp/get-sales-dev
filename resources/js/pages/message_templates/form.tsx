@@ -83,7 +83,6 @@ const formSchema = z.object({
     header_content: z.string().optional(),
     body_content: z.string().min(1, 'Message content is required'),
     footer_content: z.string().optional(),
-    // button_config: z.array(z.any()).optional(), // Consider refining this schema later
     button_config: z.array(z.any()).refine((data) => {
         try {
             return Array.isArray(data);
@@ -130,7 +129,6 @@ export default function TemplateForm({ categories, template }: Props) {
     );
 
     const [localButtonConfig, setLocalButtonConfig] = useState(() => JSON.stringify(inertiaData.button_config || [], null, 2));
-    const [localVariablesSchema, setLocalVariablesSchema] = useState(() => JSON.stringify(inertiaData.variables_schema || [], null, 2));
     const [variablePlaceholders, setVariablePlaceholders] = useState<Array<{ placeholder: string; example: string }>>(
         template?.variables_schema?.map(item => ({
             placeholder: item.placeholder,
@@ -163,7 +161,6 @@ export default function TemplateForm({ categories, template }: Props) {
                 },
                 onError: (errors) => {
                     console.error('Error at updating:', errors);
-                    // Los errores de validación del servidor se manejarán por Inertia
                 },
             });
         } else {
@@ -223,9 +220,6 @@ export default function TemplateForm({ categories, template }: Props) {
             ...prev,
             variables_schema: newVariablesSchema
         }));
-
-        // Update local JSON representation
-        setLocalVariablesSchema(JSON.stringify(newVariablesSchema, null, 2));
     }
 
     // Function to handle example input changes
@@ -247,24 +241,22 @@ export default function TemplateForm({ categories, template }: Props) {
             ...prev,
             variables_schema: newVariablesSchema
         }));
-        setLocalVariablesSchema(JSON.stringify(newVariablesSchema, null, 2));
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`${template ? 'Edit' : 'Create'} Message Template`} />
             <MessageTemplateLayout>
-                <div className="flex h-[calc(100vh-14rem)] w-full overflow-hidden">
-                    <div className="w-full pb-12 overflow-auto">
+                <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
+                    <div className="w-full overflow-auto pb-12">
+                        <h2 className="text-2xl font-bold">{template ? 'Update Template' : 'Create Template'}</h2>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                                 {/* Basic Information */}
                                 <Card className="p-4">
                                     <CardHeader>
                                         <CardTitle>Basic Information</CardTitle>
-                                        <CardDescription>
-                                            Define the core properties of your message template.
-                                        </CardDescription>
+                                        <CardDescription>Define the core properties of your message template.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
                                         <FormField
@@ -277,21 +269,29 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         <Input placeholder="my_awesome_template" {...field} />
                                                     </FormControl>
                                                     <FormDescription>
-                                                        A unique name for your template (e.g., `account_update`, `order_confirmation`). Use lowercase letters, numbers, and underscores.
+                                                        A unique name for your template (e.g., `account_update`, `order_confirmation`). Use lowercase
+                                                        letters, numbers, and underscores.
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Use md:grid-cols-2 for responsiveness */}
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            {' '}
+                                            {/* Use md:grid-cols-2 for responsiveness */}
                                             <FormField
                                                 control={form.control}
                                                 name="category_id"
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Category</FormLabel>
-                                                        <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value ? field.value.toString() : ''}> {/* Ensure defaultValue handles 0 or null */}
+                                                        <Select
+                                                            onValueChange={(value) => field.onChange(Number(value))}
+                                                            defaultValue={field.value ? field.value.toString() : ''}
+                                                        >
+                                                            {' '}
+                                                            {/* Ensure defaultValue handles 0 or null */}
                                                             <FormControl>
                                                                 <SelectTrigger>
                                                                     <SelectValue placeholder="Select a category" />
@@ -312,7 +312,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                     </FormItem>
                                                 )}
                                             />
-
                                             <FormField
                                                 control={form.control}
                                                 name="language"
@@ -332,9 +331,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                                                 {/* Add more languages as needed based on Meta's supported locales */}
                                                             </SelectContent>
                                                         </Select>
-                                                        <FormDescription>
-                                                            The language of your template content.
-                                                        </FormDescription>
+                                                        <FormDescription>The language of your template content.</FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -349,12 +346,9 @@ export default function TemplateForm({ categories, template }: Props) {
                                 <Card className="p-4">
                                     <CardHeader>
                                         <CardTitle>Template Content</CardTitle>
-                                        <CardDescription>
-                                            Craft the message that will be sent to your users.
-                                        </CardDescription>
+                                        <CardDescription>Craft the message that will be sent to your users.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-
                                         {/* Header Type */}
                                         <FormField
                                             control={form.control}
@@ -369,7 +363,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                                             className="flex flex-row space-x-4"
                                                         >
                                                             {['none', 'text', 'image', 'video', 'document'].map((type) => (
-                                                                <FormItem key={type} className="flex items-center space-x-3 space-y-0">
+                                                                <FormItem key={type} className="flex items-center space-y-0 space-x-3">
                                                                     <FormControl>
                                                                         <RadioGroupItem value={type} />
                                                                     </FormControl>
@@ -408,8 +402,8 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         </FormControl>
                                                         <FormDescription>
                                                             {form.watch('header_type') === 'text'
-                                                                ? "Enter the text for your header. Variables are not allowed in text headers."
-                                                                : "Provide the public URL for your image (JPG/PNG), video (MP4), or document (PDF)."}
+                                                                ? 'Enter the text for your header. Variables are not allowed in text headers.'
+                                                                : 'Provide the public URL for your image (JPG/PNG), video (MP4), or document (PDF).'}
                                                         </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
@@ -433,7 +427,9 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         />
                                                     </FormControl>
                                                     <FormDescription>
-                                                        {"This is the main content of your message. Use `{{1}}`, `{{2}}`, etc., for dynamic content variables."}
+                                                        {
+                                                            'This is the main content of your message. Use `{{1}}`, `{{2}}`, etc., for dynamic content variables.'
+                                                        }
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
@@ -447,12 +443,10 @@ export default function TemplateForm({ categories, template }: Props) {
                                                 <FormDescription>
                                                     Provide example values for each variable to help users understand what data should be passed.
                                                 </FormDescription>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                     {variablePlaceholders.map((variable) => (
                                                         <div key={variable.placeholder} className="space-y-2">
-                                                            <Label className="text-sm text-muted-foreground">
-                                                                {variable.placeholder}
-                                                            </Label>
+                                                            <Label className="text-sm text-muted-foreground">{variable.placeholder}</Label>
                                                             <Input
                                                                 placeholder={`Example for ${variable.placeholder}`}
                                                                 value={variable.example}
@@ -490,9 +484,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                 <Card className="p-4">
                                     <CardHeader>
                                         <CardTitle>Advanced Configuration</CardTitle>
-                                        <CardDescription>
-                                            Configure interactive buttons and define your template variables.
-                                        </CardDescription>
+                                        <CardDescription>Configure interactive buttons and define your template variables.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
                                         {/* Button Configuration */}
@@ -509,21 +501,21 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         onBlur={(e) => {
                                                             try {
                                                                 const parsed = e.target.value.trim() ? JSON.parse(e.target.value) : [];
-                                                                setInertiaData(prev => ({
+                                                                setInertiaData((prev) => ({
                                                                     ...prev,
-                                                                    button_config: parsed
+                                                                    button_config: parsed,
                                                                 }));
                                                                 // Actualizar el valor del formulario
                                                                 field.onChange(parsed);
-                                                                form.clearErrors('button_config')
+                                                                form.clearErrors('button_config');
                                                             } catch (error) {
-                                                                console.log("Error: ", error );
+                                                                console.log('Error: ', error);
                                                                 // Restaurar el valor anterior en caso de JSON inválido
                                                                 setLocalButtonConfig(JSON.stringify(inertiaData.button_config || [], null, 2));
                                                                 // Establecer error en el formulario
                                                                 form.setError('button_config', {
                                                                     type: 'manual',
-                                                                    message: 'Invalid JSON format'
+                                                                    message: 'Invalid JSON format',
                                                                 });
                                                             }
                                                         }}
@@ -531,8 +523,8 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         className="min-h-[150px] font-mono"
                                                     />
                                                     <FormDescription>
-                                                        Enter a JSON array for button configuration. Supports `reply`, `url`, and `call` types.
-                                                        URL buttons can use variables. Refer to Meta's documentation for exact structure.
+                                                        Enter a JSON array for button configuration. Supports `reply`, `url`, and `call` types. URL
+                                                        buttons can use variables. Refer to Meta's documentation for exact structure.
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
@@ -542,15 +534,11 @@ export default function TemplateForm({ categories, template }: Props) {
                                 </Card>
 
                                 <div className="flex justify-end space-x-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => window.history.back()}
-                                    >
+                                    <Button type="button" variant="outline" onClick={() => window.history.back()}>
                                         Cancel
                                     </Button>
                                     <Button type="submit" disabled={processing}>
-                                        {processing ? 'Saving...' : (template ? 'Update Template' : 'Create Template')}
+                                        {processing ? 'Saving...' : template ? 'Update Template' : 'Create Template'}
                                     </Button>
                                 </div>
                             </form>
@@ -559,5 +547,5 @@ export default function TemplateForm({ categories, template }: Props) {
                 </div>
             </MessageTemplateLayout>
         </AppLayout>
-    )
+    );
 }

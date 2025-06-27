@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsAppServiceInterface;
 use App\Models\ChatbotChannel;
+use App\Models\MessageTemplate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -48,5 +49,128 @@ class WhatsAppService implements WhatsAppServiceInterface
             Log::error('WhatsApp message sending failed for channel ' . $channel->id . ': ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    public function submitTemplateForReview(MessageTemplate $template): array
+    {
+        try {
+            $channel = $template->chatbotChannel;
+
+            if ($channel->channel->slug !== 'whatsapp' || !$channel->status) {
+                throw new \Exception('Invalid or inactive WhatsApp channel');
+            }
+
+            $credentials = $channel->credentials;
+            Log::info('Submitting WhatsApp template for review: ' . $template->name);
+
+            // Prepare button configuration if exists
+            $components = [];
+
+            // Add header component if not 'none'
+            if ($template->header_type !== 'none' && !empty($template->header_content)) {
+                $components[] = [
+                    'type' => 'HEADER',
+                    'format' => strtoupper($template->header_type),
+                    'text' => $template->header_type === 'text' ? $template->header_content : null,
+                    'example' => $template->header_type !== 'text' ? ['header_handle' => [0 => $template->header_content]] : null
+                ];
+            }
+
+            // Add body component (required)
+            $components[] = [
+                'type' => 'BODY',
+                'text' => $template->body_content,
+                'example' => [
+                    'body_text' => $this->extractVariableExamples($template)
+                ]
+            ];
+
+            // Add footer component if exists
+            if (!empty($template->footer_content)) {
+                $components[] = [
+                    'type' => 'FOOTER',
+                    'text' => $template->footer_content
+                ];
+            }
+
+            // Add buttons if configured
+            if (!empty($template->button_config)) {
+                $buttons = [];
+                foreach ($template->button_config as $button) {
+                    $buttons[] = [
+                        'type' => $button['type'] ?? 'QUICK_REPLY',
+                        'text' => $button['text'] ?? 'Button'
+                    ];
+                }
+
+                if (!empty($buttons)) {
+                    $components[] = [
+                        'type' => 'BUTTONS',
+                        'buttons' => $buttons
+                    ];
+                }
+            }
+
+            // Submit template to WhatsApp API
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $credentials['access_token'],
+            ])->post($channel->webhook_url . '/message_templates', [
+                'name' => $template->name,
+                'category' => $template->category->name,
+                'language' => $template->language,
+                'components' => $components
+            ]);
+
+            if (!$response->successful()) {
+                throw new \Exception('Failed to submit WhatsApp template: ' . $response->body());
+            }
+
+            Log::info('WhatsApp template submitted successfully');
+
+            // Update template with external ID if provided in response
+            $responseData = $response->json();
+            if (isset($responseData['id'])) {
+                $template->update([
+                    'external_template_id' => $responseData['id']
+                ]);
+            }
+
+            // Update last activity
+            $channel->update(['last_activity_at' => now()]);
+
+            return $responseData;
+        } catch (\Exception $e) {
+            Log::error('WhatsApp template submission failed for template ' . $template->id . ': ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Extract example values for variables in the template
+     */
+    private function extractVariableExamples(MessageTemplate $template): array
+    {
+        $examples = [];
+        $variablesSchema = $template->variables_schema ?? [];
+
+        // If we have a schema with examples, use those
+        if (!empty($variablesSchema)) {
+            foreach ($variablesSchema as $variable) {
+                if (isset($variable['example'])) {
+                    $examples[] = $variable['example'];
+                } else {
+                    // Default example if not specified
+                    $examples[] = 'Example';
+                }
+            }
+        } else {
+            // Count variables in the body content ({{1}}, {{2}}, etc.)
+            $count = $template->variables_count;
+            for ($i = 0; $i < $count; $i++) {
+                $examples[] = 'Example ' . ($i + 1);
+            }
+        }
+
+        return $examples;
     }
 }

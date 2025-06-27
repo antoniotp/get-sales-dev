@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\MessageTemplates;
 
+use App\Events\MessageTemplateCreated;
 use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
 use App\Models\MessageTemplateCategory;
@@ -103,10 +104,13 @@ class MessageTemplateController extends Controller
         $validated['platform_status'] = 1;
         $validated['variables_count'] = substr_count($validated['body_content'], '{{');
 
-        MessageTemplate::create($validated);
+        $template = MessageTemplate::create($validated);
+
+        // Dispatch event to trigger template submission for review
+        event(new MessageTemplateCreated($template));
 
         return redirect()->route('message-templates.index')
-            ->with('success', 'Template created successfully.');
+            ->with('success', 'Template created successfully and submitted for review.');
     }
 
     public function update(Request $request, MessageTemplate $template)

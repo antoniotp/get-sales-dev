@@ -153,18 +153,35 @@ class WhatsAppService implements WhatsAppServiceInterface
         $examples = [];
         $variablesSchema = $template->variables_schema ?? [];
 
-        // If we have a schema with examples, use those
+        // If we have a schema with the new format, use those
         if (!empty($variablesSchema)) {
-            foreach ($variablesSchema as $variable) {
-                if (isset($variable['example'])) {
+            // Check if it's the new JSON format with placeholder and example
+            if (is_array($variablesSchema) && isset($variablesSchema[0]['placeholder']) && isset($variablesSchema[0]['example'])) {
+                // Sort by placeholder number to maintain order ({{1}}, {{2}}, {{3}}, etc.)
+                usort($variablesSchema, function($a, $b) {
+                    // Extract number from placeholder {{1}}, {{2}}, etc.
+                    $numA = (int) preg_replace('/[^0-9]/', '', $a['placeholder']);
+                    $numB = (int) preg_replace('/[^0-9]/', '', $b['placeholder']);
+                    return $numA <=> $numB;
+                });
+
+                // Extract examples in the correct order
+                foreach ($variablesSchema as $variable) {
                     $examples[] = $variable['example'];
-                } else {
-                    // Default example if not specified
-                    $examples[] = 'Example';
+                }
+            } else {
+                // Legacy format - check if it has 'example' key directly
+                foreach ($variablesSchema as $variable) {
+                    if (isset($variable['example'])) {
+                        $examples[] = $variable['example'];
+                    } else {
+                        // Default example if not specified
+                        $examples[] = 'Example';
+                    }
                 }
             }
         } else {
-            // Count variables in the body content ({{1}}, {{2}}, etc.)
+            // Fallback: Count variables in the body content ({{1}}, {{2}}, etc.)
             $count = $template->variables_count;
             for ($i = 0; $i < $count; $i++) {
                 $examples[] = 'Example ' . ($i + 1);

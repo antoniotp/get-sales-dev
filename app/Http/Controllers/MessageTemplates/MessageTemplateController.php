@@ -65,6 +65,10 @@ class MessageTemplateController extends Controller
             'allTemplates' => $allTemplates->map($mapTemplate),
             'activeTemplates' => $activeTemplates->map($mapTemplate),
             'deletedTemplates' => $deletedTemplates->map($mapTemplate),
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ]
         ]);
     }
 
@@ -110,7 +114,7 @@ class MessageTemplateController extends Controller
         event(new MessageTemplateCreated($template));
 
         return redirect()->route('message-templates.index')
-            ->with('success', 'Template created successfully and submitted for review.');
+            ->with('success', 'Template created successfully and submitted for review. You will be notified once it is approved.');
     }
 
     public function update(Request $request, MessageTemplate $template)

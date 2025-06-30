@@ -1,16 +1,17 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
-import { Head, Link , useForm } from '@inertiajs/react'
-import { useMemo } from 'react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react'
+import { useMemo, useEffect } from 'react';
 import type { BreadcrumbItem } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge'
 import { BadgeCheckIcon, DeleteIcon, MoreHorizontal } from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner'
 
 interface Template {
     id: number;
@@ -26,6 +27,16 @@ interface TemplatesProps {
     allTemplates: Template[];
     activeTemplates: Template[];
     deletedTemplates: Template[];
+}
+
+interface FlashMessages {
+    success?: string;
+    error?: string;
+}
+
+interface PageProps {
+    flash: FlashMessages;
+    [key: string]: never|FlashMessages;
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -78,7 +89,6 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
         },
         [],
     );
-
 
     return (
         <Table>
@@ -134,6 +144,17 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
 }
 
 export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
+    const { props } = usePage<PageProps>();
+
+    // display the flash messages
+    useEffect(() => {
+        if (props.flash?.success) {
+            toast.success(props.flash.success);
+        } else if (props.flash?.error) {
+            toast.error(props.flash.error);
+        }
+    }, [props.flash]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Message templates | List" />

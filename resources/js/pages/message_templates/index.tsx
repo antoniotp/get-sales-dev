@@ -9,7 +9,15 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge'
-import { BadgeCheckIcon, DeleteIcon, MoreHorizontal } from 'lucide-react';
+import {
+    DeleteIcon,
+    MoreHorizontal,
+    Clock,
+    CheckCircle,
+    XCircle,
+    PauseCircle,
+    Ban
+} from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner'
 
@@ -64,25 +72,74 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
         }
     };
 
+    // Function to render platform status badge with appropriate color and icon
+    const getPlatformStatusBadge = useMemo(
+        () => (status: string) => {
+            const statusLower = status.toLowerCase();
+
+            switch (statusLower) {
+                case 'pending':
+                    return (
+                        <Badge className="bg-yellow-500 text-white dark:bg-yellow-600">
+                            <Clock className="w-3 h-3 mr-1" />
+                            Pending
+                        </Badge>
+                    );
+                case 'approved':
+                    return (
+                        <Badge className="bg-green-500 text-white dark:bg-green-600">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Approved
+                        </Badge>
+                    );
+                case 'rejected':
+                    return (
+                        <Badge className="bg-red-500 text-white dark:bg-red-600">
+                            <XCircle className="w-3 h-3 mr-1" />
+                            Rejected
+                        </Badge>
+                    );
+                case 'paused':
+                    return (
+                        <Badge className="bg-orange-500 text-white dark:bg-orange-600">
+                            <PauseCircle className="w-3 h-3 mr-1" />
+                            Paused
+                        </Badge>
+                    );
+                case 'disabled':
+                    return (
+                        <Badge className="bg-gray-500 text-white dark:bg-gray-600">
+                            <Ban className="w-3 h-3 mr-1" />
+                            Disabled
+                        </Badge>
+                    );
+                default:
+                    return (
+                        <Badge variant="secondary">
+                            {status}
+                        </Badge>
+                    );
+            }
+        },
+        [],
+    );
+
     const getLocalStatus = useMemo(
         () => (template: Template) => {
             if (template.isDeleted) return (
-                <Badge
-                    className=""
-                    variant="destructive"
-                >
-                    <DeleteIcon />
+                <Badge variant="destructive">
+                    <DeleteIcon className="w-3 h-3 mr-1" />
                     Deleted
                 </Badge>
             );
             return template.platformStatus === 1 ? (
-                <Badge className="bg-blue-500 text-white dark:bg-blue-600">
-                    <BadgeCheckIcon />
+                <Badge className="bg-green-500 text-white dark:bg-green-600">
+                    <CheckCircle className="w-3 h-3 mr-1" />
                     Active
                 </Badge>
             ) : (
-                <Badge className="bg-yellow-500 text-white dark:bg-yellow-600">
-                    <BadgeCheckIcon />
+                <Badge className="bg-gray-500 text-white dark:bg-gray-600">
+                    <XCircle className="w-3 h-3 mr-1" />
                     Inactive
                 </Badge>
             );
@@ -108,7 +165,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     templates.map((template) => (
                         <TableRow key={template.id}>
                             <TableCell className="font-medium">{template.name}</TableCell>
-                            <TableCell>{template.status}</TableCell>
+                            <TableCell>{getPlatformStatusBadge(template.status)}</TableCell>
                             <TableCell>{template.category}</TableCell>
                             <TableCell>{template.language}</TableCell>
                             <TableCell>{getLocalStatus(template)}</TableCell>
@@ -146,7 +203,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
 export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
     const { props } = usePage<PageProps>();
 
-    // display the flash messages
+    // Display the flash messages
     useEffect(() => {
         if (props.flash?.success) {
             toast.success(props.flash.success);
@@ -167,7 +224,7 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
                                 <Button>Create Template</Button>
                             </Link>
                         </div>
-                        <Tabs defaultValue="template_library" className="w-full">
+                        <Tabs defaultValue="template_library" className="w-full overflow-auto">
                             <TabsList>
                                 <TabsTrigger value="template_library">Template Library</TabsTrigger>
                                 <TabsTrigger value="active_templates">Active</TabsTrigger>

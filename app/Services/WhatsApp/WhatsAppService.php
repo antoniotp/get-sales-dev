@@ -18,14 +18,18 @@ class WhatsAppService implements WhatsAppServiceInterface
             }
 
             $credentials = $channel->credentials;
+            $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
+            $accessToken = $credentials['phone_number_access_token'];
+
             Log::info('Sending WhatsApp message to ' . $to);
             Log::info('Message: ' . $message);
-            Log::info( 'Credentials: ' . $credentials['access_token']);
-            Log::info( 'Webhook url: ' . $channel->webhook_url);
+            Log::info('Access token: ' . $accessToken);
+            Log::info('API URL: ' . $apiUrl);
+
             // Send a message using the channel-specific credentials
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $credentials['access_token'],
-            ])->post($channel->webhook_url . '/messages', [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ])->post($apiUrl . '/messages', [
                 'messaging_product' => 'whatsapp',
                 'recipient_type' => 'individual',
                 'to' => $to,
@@ -61,7 +65,12 @@ class WhatsAppService implements WhatsAppServiceInterface
             }
 
             $credentials = $channel->credentials;
+            $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'template');
+            $accessToken = $credentials['whatsapp_business_access_token'];
+
             Log::info('Submitting WhatsApp template for review: ' . $template->name);
+            Log::info('Access token: ' . $accessToken);
+            Log::info('API URL: ' . $apiUrl);
 
             // Prepare button configuration if exists
             $components = [];
@@ -113,8 +122,8 @@ class WhatsAppService implements WhatsAppServiceInterface
 
             // Submit template to WhatsApp API
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $credentials['access_token'],
-            ])->post($channel->webhook_url . '/message_templates', [
+                'Authorization' => 'Bearer ' . $accessToken,
+            ])->post($apiUrl . '/message_templates', [
                 'name' => $template->name,
                 'category' => $template->category->name,
                 'language' => $template->language,
@@ -143,6 +152,24 @@ class WhatsAppService implements WhatsAppServiceInterface
             Log::error('WhatsApp template submission failed for template ' . $template->id . ': ' . $e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Build API URL based on operation type
+     */
+    private function buildApiUrl(string $baseUrl, array $credentials, string $operationType): string
+    {
+        $baseUrl = rtrim($baseUrl, '/');
+
+        if ($operationType === 'message') {
+            // For messages, use phone_number_id
+            return $baseUrl . '/' . $credentials['phone_number_id'];
+        } elseif ($operationType === 'template') {
+            // For templates, use whatsapp_business_account_id
+            return $baseUrl . '/' . $credentials['whatsapp_business_account_id'];
+        }
+
+        throw new \Exception('Invalid operation type: ' . $operationType);
     }
 
     /**

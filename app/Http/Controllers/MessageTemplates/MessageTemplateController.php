@@ -75,7 +75,8 @@ class MessageTemplateController extends Controller
     public function create(): Response
     {
         return Inertia::render('message_templates/form', [
-            'categories' => MessageTemplateCategory::all(['id', 'name']),
+            'categories' => MessageTemplateCategory::query()->select(['id', 'name'])
+                ->active()->get(),
             'template' => null,
         ]);
     }
@@ -83,7 +84,8 @@ class MessageTemplateController extends Controller
     public function edit(MessageTemplate $template): Response
     {
         return Inertia::render('message_templates/form', [
-            'categories' => MessageTemplateCategory::all(['id', 'name']),
+            'categories' => MessageTemplateCategory::query()->select(['id', 'name'])
+                ->active()->get(),
             'template' => $template->load('category'),
         ]);
     }

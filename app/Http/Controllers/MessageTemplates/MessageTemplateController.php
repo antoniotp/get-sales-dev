@@ -137,6 +137,10 @@ class MessageTemplateController extends Controller
 
         $template->update($validated);
 
+
+        // Dispatch event to trigger template submission for review
+        event(new MessageTemplateCreated($template));
+
         return redirect()->route('message-templates.index')
             ->with('success', 'Template updated successfully.');
     }

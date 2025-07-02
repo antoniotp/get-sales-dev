@@ -9,12 +9,22 @@ use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageTemplate;
+use App\Models\MessageTemplateCategory;
 use Illuminate\Support\Facades\Log;
 
 class WebhookHandlerService
 {
     private ?ChatbotChannel $chatbotChannel = null;
     private ?Conversation $conversation = null;
+
+    /**
+     * WhatsApp category to internal category mapping
+     */
+    private const WHATSAPP_CATEGORY_MAPPING = [
+        'UTILITY' => 'utility',
+        'MARKETING' => 'marketing',
+        'AUTHENTICATION' => 'authentication',
+    ];
 
     /**
      * Process the incoming webhook payload.
@@ -34,6 +44,7 @@ class WebhookHandlerService
         match ($field) {
             'messages' => $this->handleMessageWebhook($value),
             'message_template_status_update' => $this->handleTemplateStatusUpdate($value),
+            'template_category_update' => $this->handleTemplateCategoryUpdate($value),
             default => Log::info('Unhandled webhook field type', ['field' => $field, 'value' => $value]),
         };
     }
@@ -128,6 +139,76 @@ class WebhookHandlerService
 
         } catch (\Exception $e) {
             Log::error('Error handling template status update', [
+                'error' => $e->getMessage(),
+                'payload' => $value
+            ]);
+        }
+    }
+
+    /**
+     * Handle template category update webhook events.
+     *
+     * @param array<string, mixed> $value
+     */
+    private function handleTemplateCategoryUpdate(array $value): void
+    {
+        try {
+            $templateId = $value['message_template_id'] ?? null;
+            $templateName = $value['message_template_name'] ?? null;
+            $templateLanguage = $value['message_template_language'] ?? null;
+            $whatsappCategory = $value['new_category'] ?? null;
+
+            if (!$templateId || !$whatsappCategory) {
+                Log::warning('Incomplete template category update payload', $value);
+                return;
+            }
+
+            $template = MessageTemplate::where('external_template_id', $templateId)->first();
+
+            if (!$template) {
+                Log::warning('Template not found for category update', [
+                    'external_template_id' => $templateId,
+                    'template_name' => $templateName,
+                    'language' => $templateLanguage,
+                    'new_category' => $whatsappCategory
+                ]);
+                return;
+            }
+
+            // Map WhatsApp category to internal category
+            $internalCategorySlug = self::WHATSAPP_CATEGORY_MAPPING[strtoupper($whatsappCategory)] ?? strtolower($whatsappCategory);
+
+            $category = MessageTemplateCategory::where('slug', $internalCategorySlug)
+                ->active()
+                ->first();
+
+            if (!$category) {
+                Log::warning('Internal category not found for WhatsApp category', [
+                    'whatsapp_category' => $whatsappCategory,
+                    'internal_category_slug' => $internalCategorySlug,
+                    'template_id' => $template->id
+                ]);
+                return;
+            }
+
+            $oldCategoryId = $template->category_id;
+            $template->update(['category_id' => $category->id]);
+
+            Log::info('Template category updated', [
+                'template_id' => $template->id,
+                'external_template_id' => $templateId,
+                'template_name' => $templateName,
+                'old_category_id' => $oldCategoryId,
+                'new_category_id' => $category->id,
+                'whatsapp_category' => $whatsappCategory,
+                'internal_category_slug' => $internalCategorySlug
+            ]);
+
+            // Dispatch event for real-time updates
+    //            event(new WhatsAppTemplateCategoryUpdate($template, $category, $whatsappCategory));
+
+        } catch (\Exception $e) {
+            Log::error('Error handling template category update', [
                 'error' => $e->getMessage(),
                 'payload' => $value
             ]);

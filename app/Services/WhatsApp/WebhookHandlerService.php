@@ -4,9 +4,11 @@ namespace App\Services\WhatsApp;
 
 use App\Events\NewWhatsAppConversation;
 use App\Events\NewWhatsAppMessage;
+//use App\Events\WhatsAppTemplateStatusUpdate;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\MessageTemplate;
 use Illuminate\Support\Facades\Log;
 
 class WebhookHandlerService
@@ -21,11 +23,32 @@ class WebhookHandlerService
      */
     public function process(array $payload): void
     {
-        if (!isset($payload['entry'][0]['changes'][0]['value']['messages'][0])) {
+        if (!isset($payload['entry'][0]['changes'][0]['value'])) {
             return;
         }
 
         $value = $payload['entry'][0]['changes'][0]['value'];
+        $field = $payload['entry'][0]['changes'][0]['field'] ?? null;
+
+        // Handle different webhook types
+        match ($field) {
+            'messages' => $this->handleMessageWebhook($value),
+            'message_template_status_update' => $this->handleTemplateStatusUpdate($value),
+            default => Log::info('Unhandled webhook field type', ['field' => $field, 'value' => $value]),
+        };
+    }
+
+    /**
+     * Handle message webhook events.
+     *
+     * @param array<string, mixed> $value
+     */
+    private function handleMessageWebhook(array $value): void
+    {
+        if (!isset($value['messages'][0])) {
+            return;
+        }
+
         $message = $value['messages'][0];
 
         // Identify the channel and the conversation before process the message
@@ -39,13 +62,76 @@ class WebhookHandlerService
             return;
         }
 
-
         match ($message['type']) {
             'text' => $this->handleTextMessage($message),
             'image' => $this->handleImageMessage($message),
             'document' => $this->handleDocumentMessage($message),
             default => $this->handleUnsupportedMessage($message),
         };
+    }
+
+    /**
+     * Handle message template status update webhook events.
+     *
+     * @param array<string, mixed> $value
+     */
+    private function handleTemplateStatusUpdate(array $value): void
+    {
+        try {
+            $templateId = $value['message_template_id'] ?? null;
+            $templateName = $value['message_template_name'] ?? null;
+            $templateLanguage = $value['message_template_language'] ?? null;
+            $newStatus = strtolower($value['event'] ?? ''); // Convert APPROVED to approved
+            $rejectedReason = $value['reason'] !== 'NONE' ? $value['reason'] : null;
+
+            if (!$templateId || !$newStatus) {
+                Log::warning('Incomplete template status update payload', $value);
+                return;
+            }
+
+            $template = MessageTemplate::where('external_template_id', $templateId)->first();
+
+            if (!$template) {
+                Log::warning('Template not found for status update', [
+                    'external_template_id' => $templateId,
+                    'template_name' => $templateName,
+                    'language' => $templateLanguage
+                ]);
+                return;
+            }
+
+            // Update template status
+            $updateData = [
+                'status' => $newStatus,
+                'rejected_reason' => $rejectedReason,
+            ];
+
+            // Set approved_at timestamp if status is approved
+            if ($newStatus === 'approved') {
+                $updateData['approved_at'] = now();
+                $updateData['rejected_reason'] = null; // Clear any previous rejection reason
+            }
+
+            $template->update($updateData);
+
+            Log::info('Template status updated', [
+                'template_id' => $template->id,
+                'external_template_id' => $templateId,
+                'template_name' => $templateName,
+                'old_status' => $template->getOriginal('status'),
+                'new_status' => $newStatus,
+                'rejected_reason' => $rejectedReason
+            ]);
+
+            // Dispatch event for real-time updates
+    //            event(new WhatsAppTemplateStatusUpdate($template, $newStatus, $rejectedReason));
+
+        } catch (\Exception $e) {
+            Log::error('Error handling template status update', [
+                'error' => $e->getMessage(),
+                'payload' => $value
+            ]);
+        }
     }
 
     /**
@@ -106,7 +192,6 @@ class WebhookHandlerService
         }
     }
 
-
     /**
      * Handle a text message type.
      *
@@ -139,7 +224,6 @@ class WebhookHandlerService
                 'message' => $message
             ]);
         }
-
     }
 
     /**

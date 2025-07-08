@@ -9,7 +9,7 @@ const Testimonials = () => {
       name: "Carlos Ramírez",
       role: "Dueño de Tienda Online",
       company: "TecnoShop",
-      quote: "Desde que implementamos WhatsAgents, nuestras ventas por WhatsApp aumentaron un 45%. Los agentes son profesionales y conocen perfectamente nuestros productos.",
+      quote: "Desde que implementamos GetAlert, nuestras ventas por WhatsApp aumentaron un 45%. Los agentes son profesionales y conocen perfectamente nuestros productos.",
       rating: 5,
       image: "https://randomuser.me/api/portraits/men/32.jpg"
     },
@@ -41,7 +41,7 @@ const Testimonials = () => {
             Lo que dicen nuestros <span className="text-brandBlue">clientes</span>
           </h2>
           <p className="text-lg text-gray-600">
-            Empresas de diversos sectores han transformado su estrategia de ventas con WhatsAgents.
+            Empresas de diversos sectores han transformado su estrategia de ventas con GetAlert.
           </p>
         </div>
 

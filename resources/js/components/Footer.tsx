@@ -8,12 +8,12 @@ const Footer = () => {
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div>
-            <h3 className="font-heading text-xl font-bold text-white mb-6">WhatsAgents</h3>
+            <h3 className="font-heading text-xl font-bold text-white mb-6">GetAlert</h3>
             <p className="text-gray-400 mb-6">
               Conectamos empresas con agentes profesionales para maximizar ventas a través de WhatsApp Business.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="bg-gray-800 hover:bg-brandBlue p-2 rounded-full transition-colors">
+              {/*<a href="#" className="bg-gray-800 hover:bg-brandBlue p-2 rounded-full transition-colors">
                 <Facebook size={18} />
               </a>
               <a href="#" className="bg-gray-800 hover:bg-brandBlue p-2 rounded-full transition-colors">
@@ -24,7 +24,7 @@ const Footer = () => {
               </a>
               <a href="#" className="bg-gray-800 hover:bg-brandBlue p-2 rounded-full transition-colors">
                 <Linkedin size={18} />
-              </a>
+              </a>*/}
             </div>
           </div>
 
@@ -58,12 +58,12 @@ const Footer = () => {
               <li>
                 <a href="/policies" className="text-gray-400 hover:text-white transition-colors">Política de privacidad</a>
               </li>
-              <li>
+              {/*<li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">Política de cookies</a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">FAQ</a>
-              </li>
+              </li>*/}
             </ul>
           </div>
 
@@ -87,7 +87,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
-            © 2025 WhatsAgents. Todos los derechos reservados.
+            © 2025 GetAlert. Todos los derechos reservados.
           </p>
 
           <div className="flex items-center">

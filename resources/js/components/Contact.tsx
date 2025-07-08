@@ -45,7 +45,7 @@ const Contact = () => {
                             ¿Listo para <span className="text-brandBlue">potenciar tus ventas</span>?
                         </h2>
                         <p className="mb-8 text-lg text-gray-600">
-                            Contáctanos hoy mismo para una demostración gratuita de cómo WhatsAgents puede transformar tu negocio.
+                            Contáctanos hoy mismo para una demostración gratuita de cómo GetAlert puede transformar tu negocio.
                         </p>
 
                         <div className="mb-8 space-y-6 dark:text-gray-950">
@@ -55,7 +55,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Llámanos</h3>
-                                    <p className="text-gray-600">+34 900 123 456</p>
+                                    <p className="text-gray-600">+34 666 632 755</p>
                                 </div>
                             </div>
 
@@ -65,7 +65,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Email</h3>
-                                    <p className="text-gray-600">info@whatsagents.com</p>
+                                    <p className="text-gray-600">hello@aiscreener.io</p>
                                 </div>
                             </div>
 
@@ -75,7 +75,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Oficina</h3>
-                                    <p className="text-gray-600">Calle Gran Vía 50, Madrid, España</p>
+                                    <p className="text-gray-600">Roseti 2052, 4to J (1425), CABA, Buenos Aires, Argentina</p>
                                 </div>
                             </div>
 
@@ -85,7 +85,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">WhatsApp</h3>
-                                    <p className="text-gray-600">+34 600 123 456</p>
+                                    <p className="text-gray-600">+34 666 632 755</p>
                                 </div>
                             </div>
                         </div>

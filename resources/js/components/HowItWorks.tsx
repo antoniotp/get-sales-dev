@@ -31,7 +31,7 @@ const HowItWorks = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Cómo funciona <span className="text-brandBlue">WhatsAgents</span>
+              Cómo funciona <span className="text-brandBlue">GetAlert</span>
             </h2>
             <p className="text-lg text-gray-600 mb-10">
               Configurar nuestra plataforma es fácil y rápido. En solo 4 simples pasos podrás tener agentes de ventas profesionales atendiendo a tus clientes a través de WhatsApp.
@@ -69,13 +69,13 @@ const HowItWorks = () => {
 
           <div className="relative">
             <div className="bg-gradient-to-br from-brandBlue/10 to-whatsapp/10 rounded-2xl overflow-hidden shadow-xl p-8">
-              <img 
-                src="https://images.unsplash.com/photo-1596524430615-b46475ddff6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                alt="WhatsApp Business Dashboard" 
+              <img
+                src="https://images.unsplash.com/photo-1596524430615-b46475ddff6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="WhatsApp Business Dashboard"
                 className="rounded-xl shadow-lg border border-white/20"
               />
             </div>
-            
+
             <div className="absolute -z-10 top-10 -right-10 h-[300px] w-[300px] bg-brandBlue/5 rounded-full blur-3xl"></div>
             <div className="absolute -z-10 bottom-10 -left-10 h-[300px] w-[300px] bg-whatsapp/5 rounded-full blur-3xl"></div>
           </div>

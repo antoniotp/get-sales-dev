@@ -13,7 +13,7 @@ const Navigation = () => {
     <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 shadow-sm">
       <div className="container-custom py-4 px-4 flex items-center justify-between">
         <div className="flex items-center">
-            <Link href={route('home')} className={"font-heading text-xl font-bold text-brandBlue"}>WhatsAgents</Link>
+            <Link href={route('home')} className={"font-heading text-xl font-bold text-brandBlue"}>GetAlert</Link>
         </div>
 
         {/* Desktop Navigation */}

@@ -29,7 +29,7 @@ export default function Policies() {
                                 <section className="mb-10">
                                     <h2 className="text-2xl font-semibold mb-4">1. Introducción</h2>
                                     <p>
-                                        En Grupo Jobo S.A. (en adelante, "la Empresa"), nos comprometemos a proteger la privacidad y los datos personales de nuestros usuarios y clientes. Esta Política de Privacidad describe cómo recopilamos, utilizamos, compartimos y protegemos la información personal en el contexto de nuestros servicios que integran la plataforma WhatsApp Business proporcionada por Meta Platforms, Inc. (en adelante, "Meta").
+                                        En Grupo Jobo SA (comercialmente "Get Alert", en adelante, "la Empresa", nos comprometemos a proteger la privacidad y los datos personales de nuestros usuarios y clientes. Esta Política de Privacidad describe cómo recopilamos, utilizamos, compartimos y protegemos la información personal en el contexto de nuestros servicios que integran la plataforma WhatsApp Business proporcionada por Meta Platforms, Inc. (en adelante, "Meta").
 
                                     </p>
                                 </section>
@@ -124,7 +124,7 @@ export default function Policies() {
                                         </li>
                                         <li><strong>Revocación del consentimiento: </strong>retirar su consentimiento en cualquier momento.</li>
                                     </p>
-                                    <p>Para ejercer estos derechos, el usuario puede contactarnos a través de <a className="text-blue-800" href={'mailto:pgomez@jobomas.com'}>pgomez@jobomas.com</a>.
+                                    <p>Para ejercer estos derechos, el usuario puede contactarnos a través de <a className="text-blue-800" href={'mailto:getalert@aiscreener.io'}>getalert@aiscreener.io</a>.
                                     </p>
                                 </section>
 
@@ -192,8 +192,8 @@ export default function Policies() {
                                         Si tiene preguntas o inquietudes sobre esta Política de Privacidad o sobre nuestras prácticas de tratamiento de datos, puede contactarnos en:
                                     </p>
                                     <p className="mt-3">
-                                        <li><strong>Correo electrónico: </strong>pgomez@jobomas.com</li>
-                                        <li><strong>Dirección postal: </strong>Roseti 2052, (1425) Ciudad de Buenos Aires, Argentina.</li>
+                                        <li><strong>Correo electrónico: </strong>getalert@aiscreener.io</li>
+                                        <li><strong>Dirección postal: </strong>Roseti 2052, 4to J (1425), CABA, Buenos Aires, Argentina</li>
                                         <li><strong>Fecha de entrada en vigor: </strong>01 de Mayo de 2025</li>
                                     </p>
                                 </section>

@@ -35,7 +35,21 @@ interface NewConversationEvent {
     conversation: Chat
 }
 
-export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
+interface ChannelInfo {
+    phone_number: string
+}
+
+const formatUSPhoneNumber = (phone: string): string => {
+    const cleaned = phone.replace(/\D/g, '');
+    const match = cleaned.match(/^1?(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+        return `+1 (${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return phone;
+};
+
+
+export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat[], channelInfo: ChannelInfo }) {
     const [chats, setChats] = useState<Chat[]>(initialChats)
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
@@ -352,6 +366,9 @@ export default function Chat({ chats: initialChats }: { chats: Chat[] }) {
                 <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
                     <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
                         <h2 className="text-lg font-semibold">Chats</h2>
+                        <p className="text-sm text-gray-900 mt-1">
+                            Messages Received on : <strong>{formatUSPhoneNumber(channelInfo.phone_number)}</strong>
+                        </p>
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         {chats.length > 0 ? (

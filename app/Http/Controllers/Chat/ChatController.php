@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Chat;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
+use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,6 +21,8 @@ class ChatController extends Controller
 
         // Get the current chatbot (hardcoded for now, later from user selection)
         $chatbotId = 1;
+
+        $chatbotChannel = ChatbotChannel::where('chatbot_id', $chatbotId)->first();
 
         $conversations = Conversation::query()
             ->select([
@@ -48,6 +51,7 @@ class ChatController extends Controller
 
         return Inertia::render('chat/chat', [
             'chats' => $conversations,
+            'channelInfo' => $chatbotChannel->credentials,
         ]);
 
     }

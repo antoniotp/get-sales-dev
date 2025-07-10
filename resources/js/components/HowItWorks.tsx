@@ -1,40 +1,39 @@
-
 import { CheckCircle2 } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
     {
       number: "01",
-      title: "Registra tu cuenta",
-      description: "Crea una cuenta en nuestra plataforma y completa el registro con tus datos básicos."
+      title: "Register your account",
+      description: "Create an account on our platform and complete the registration with your basic information."
     },
     {
       number: "02",
-      title: "Conecta WhatsApp Business",
-      description: "Vincula tu número de WhatsApp Business siguiendo nuestro proceso guiado de integración."
+      title: "Connect WhatsApp Business",
+      description: "Link your WhatsApp Business number following our guided integration process."
     },
     {
       number: "03",
-      title: "Configura tus preferencias",
-      description: "Define tus productos, precios, scripts de venta y reglas de atención al cliente."
+      title: "Configure your preferences",
+      description: "Define your products, prices, sales scripts, and customer service rules."
     },
     {
       number: "04",
-      title: "Activa tus agentes",
-      description: "Selecciona el número de agentes que necesitas y comienza a recibir ventas."
+      title: "Activate your agents",
+      description: "Select the number of agents you need and start receiving sales."
     }
   ];
 
   return (
-    <section id="como-funciona" className="section-padding">
+    <section id="how-it-works" className="section-padding">
       <div className="container-custom">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Cómo funciona <span className="text-brandBlue">GetAlert</span>
+              How <span className="text-brandBlue">GetAlert</span> works
             </h2>
             <p className="text-lg text-gray-600 mb-10">
-              Configurar nuestra plataforma es fácil y rápido. En solo 4 simples pasos podrás tener agentes de ventas profesionales atendiendo a tus clientes a través de WhatsApp.
+              Setting up our platform is easy and fast. In just 4 simple steps you can have professional sales agents serving your customers through WhatsApp.
             </p>
 
             <div className="space-y-8">
@@ -54,15 +53,15 @@ const HowItWorks = () => {
             <div className="mt-12 space-y-4">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="text-whatsapp mt-1 shrink-0" />
-                <p>Sin necesidad de instalaciones complejas ni conocimientos técnicos</p>
+                <p>No need for complex installations or technical knowledge</p>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="text-whatsapp mt-1 shrink-0" />
-                <p>Soporte técnico incluido durante todo el proceso</p>
+                <p>Technical support included throughout the entire process</p>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="text-whatsapp mt-1 shrink-0" />
-                <p>Capacitación inicial gratuita para maximizar resultados</p>
+                <p>Free initial training to maximize results</p>
               </div>
             </div>
           </div>

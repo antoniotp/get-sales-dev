@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -18,11 +17,11 @@ const Navigation = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="/#inicio" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Inicio</a>
-          <a href="/#funciones" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Funciones</a>
-          <a href="/#como-funciona" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Cómo Funciona</a>
-          <a href="/#testimonios" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Testimonios</a>
-          <a href="/#contacto" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Contacto</a>
+          <a href="/#home" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Home</a>
+          <a href="/#features" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Features</a>
+          <a href="/#how-it-works" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">How It Works</a>
+          <a href="/#testimonials" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Testimonials</a>
+          <a href="/#contact" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Contact</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -37,12 +36,12 @@ const Navigation = () => {
                     <Link
                         href={route('login')}
                     >
-                        <Button variant="outline" className="px-4 dark:text-white">Iniciar Sesión</Button>
+                        <Button variant="outline" className="px-4 dark:text-white">Login</Button>
                     </Link>
                     <Link
                         href={route('register')}
                     >
-                        <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4 dark:text-white">Registrarse</Button>
+                        <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4 dark:text-white">Register</Button>
                     </Link>
                 </>
             )}
@@ -64,43 +63,43 @@ const Navigation = () => {
         <div className="md:hidden bg-white border-t py-4 px-4">
           <div className="flex flex-col space-y-4">
             <a
-              href="#inicio"
+              href="#home"
               className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Inicio
+              Home
             </a>
             <a
-              href="#funciones"
+              href="#features"
               className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Funciones
+              Features
             </a>
             <a
-              href="#como-funciona"
+              href="#how-it-works"
               className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Cómo Funciona
+              How It Works
             </a>
             <a
-              href="#testimonios"
+              href="#testimonials"
               className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Testimonios
+              Testimonials
             </a>
             <a
-              href="#contacto"
+              href="#contact"
               className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Contacto
+              Contact
             </a>
             <div className="flex flex-col gap-2 pt-4">
-              <Button variant="outline" className="w-full">Iniciar Sesión</Button>
-              <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Registrarse</Button>
+              <Button variant="outline" className="w-full">Login</Button>
+              <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Register</Button>
             </div>
           </div>
         </div>

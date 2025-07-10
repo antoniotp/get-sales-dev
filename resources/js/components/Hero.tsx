@@ -1,9 +1,8 @@
-import { Button } from '@/components/ui/button';
 import { MessageSquare, Users, LineChart } from 'lucide-react';
 
 const Hero = () => {
     return (
-        <section id="inicio" className="pt-32 pb-20 md:pt-40 md:pb-32 px-4">
+        <section id="home" className="pt-32 pb-20 md:pt-40 md:pb-32 px-4">
             <div className="container-custom">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div className="flex flex-col space-y-8">
@@ -11,24 +10,24 @@ const Hero = () => {
                             <div
                                 className="bg-whatsapp/10 text-whatsapp inline-flex items-center px-4 py-2 rounded-full mb-4">
                                 <MessageSquare size={16} className="mr-2" />
-                                <span className="text-sm font-medium">Potencia tu WhatsApp Business</span>
+                                <span className="text-sm font-medium">Power up your WhatsApp Business</span>
                             </div>
                             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4">
-                                Maximiza tus ventas con <span className="text-brandBlue">agentes</span> en WhatsApp
+                                Maximize your sales with <span className="text-brandBlue">agents</span> on WhatsApp
                             </h1>
                             <p className="text-lg text-gray-600 mb-8">
-                                Conecta tu cuenta de WhatsApp Business y permite que agentes profesionales vendan por
-                                ti. Aumenta conversiones, mejora la atención al cliente y escala tu negocio sin
-                                complicaciones.
+                                Connect your WhatsApp Business account and let professional agents sell for you.
+                                Increase conversions, improve customer service, and scale your business without
+                                complications.
                             </p>
 
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <a href="#" className="btn-primary text-base py-6 px-8 flex items-center gap-2">
-                                    <span>Comenzar ahora</span>
+                                    <span>Get started now</span>
                                 </a>
-                                <a href="#contacto"
+                                <a href="#contact"
                                    className="btn-outline text-center py-6 px-8 inline-flex items-center justify-center gap-2">
-                                    <span>Contáctanos</span>
+                                    <span>Contact us</span>
                                 </a>
                             </div>
                         </div>
@@ -36,15 +35,15 @@ const Hero = () => {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4">
                             <div className="flex items-center gap-2">
                                 <Users className="text-brandBlue" />
-                                <span className="text-sm font-medium">Agentes cualificados</span>
+                                <span className="text-sm font-medium">Qualified agents</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="text-whatsapp" />
-                                <span className="text-sm font-medium">Respuesta rápida</span>
+                                <span className="text-sm font-medium">Quick response</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <LineChart className="text-brandBlue" />
-                                <span className="text-sm font-medium">Más conversiones</span>
+                                <span className="text-sm font-medium">More conversions</span>
                             </div>
                         </div>
                     </div>
@@ -53,7 +52,7 @@ const Hero = () => {
                         <div className="relative z-10">
                             <img
                                 src="https://images.unsplash.com/photo-1556157382-97eda2d62296?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                                alt="WhatsApp Business Agentes"
+                                alt="WhatsApp Business Agents"
                                 className="rounded-lg shadow-2xl w-full"
                             />
                         </div>
@@ -65,9 +64,9 @@ const Hero = () => {
                                     <MessageSquare size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-sm dark:text-gray-900">Ventas automáticas</h3>
-                                    <p className="text-xs text-gray-500 mt-1">Aumenta tus ventas un 35% con agentes
-                                        especializados</p>
+                                    <h3 className="font-medium text-sm dark:text-gray-900">Automatic sales</h3>
+                                    <p className="text-xs text-gray-500 mt-1">Increase your sales by 35% with
+                                        specialized agents</p>
                                 </div>
                             </div>
                         </div>

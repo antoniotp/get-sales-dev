@@ -1,4 +1,3 @@
-
 import { Users, MessageSquare, BarChart3, UserCheck, Clock, ShieldCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -6,45 +5,45 @@ const Features = () => {
   const featuresData = [
     {
       icon: <Users className="h-10 w-10 text-brandBlue" />,
-      title: "Agentes Profesionales",
-      description: "Conecta con agentes especializados en ventas a través de WhatsApp que representarán tu negocio."
+      title: "Professional Agents",
+      description: "Connect with sales specialists through WhatsApp who will represent your business."
     },
     {
       icon: <MessageSquare className="h-10 w-10 text-whatsapp" />,
-      title: "Integración con WhatsApp Business",
-      description: "Conecta fácilmente tu cuenta de WhatsApp Business y comienza a operar en minutos."
+      title: "WhatsApp Business Integration",
+      description: "Easily connect your WhatsApp Business account and start operating in minutes."
     },
     {
       icon: <Clock className="h-10 w-10 text-brandBlue" />,
-      title: "Atención 24/7",
-      description: "Tus clientes recibirán atención en cualquier momento del día, mejorando su experiencia."
+      title: "24/7 Support",
+      description: "Your customers will receive attention at any time of day, improving their experience."
     },
     {
       icon: <BarChart3 className="h-10 w-10 text-whatsapp" />,
-      title: "Analíticas Detalladas",
-      description: "Métricas en tiempo real sobre conversiones, tiempo de respuesta y satisfacción del cliente."
+      title: "Detailed Analytics",
+      description: "Real-time metrics on conversions, response time, and customer satisfaction."
     },
     {
       icon: <UserCheck className="h-10 w-10 text-brandBlue" />,
-      title: "Personalización de Mensajes",
-      description: "Adapta los mensajes y el tono de comunicación según tu marca y tipo de clientes."
+      title: "Message Personalization",
+      description: "Adapt messages and communication tone according to your brand and customer type."
     },
     {
       icon: <ShieldCheck className="h-10 w-10 text-whatsapp" />,
-      title: "Seguridad Garantizada",
-      description: "Todas las conversaciones son seguras y cumplen con las normativas de protección de datos."
+      title: "Guaranteed Security",
+      description: "All conversations are secure and comply with data protection regulations."
     }
   ];
 
   return (
-    <section id="funciones" className="section-padding bg-gray-50">
+    <section id="features" className="section-padding bg-gray-50">
       <div className="container-custom">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 dark:text-gray-950">
-            Todo lo que necesitas para <span className="text-brandBlue">potenciar tus ventas</span>
+            Everything you need to <span className="text-brandBlue">boost your sales</span>
           </h2>
           <p className="text-lg text-gray-600">
-            Nuestro sistema te proporciona todas las herramientas necesarias para convertir conversaciones de WhatsApp en ventas exitosas.
+            Our system provides you with all the necessary tools to convert WhatsApp conversations into successful sales.
           </p>
         </div>
 

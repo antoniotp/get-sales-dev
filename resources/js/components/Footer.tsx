@@ -1,5 +1,4 @@
-
-import { Facebook, Twitter, Instagram, Linkedin, MessageSquare } from "lucide-react";
+import { /*Facebook, Twitter, Instagram, Linkedin,*/ MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Footer = () => {
@@ -10,7 +9,7 @@ const Footer = () => {
           <div>
             <h3 className="font-heading text-xl font-bold text-white mb-6">GetAlert</h3>
             <p className="text-gray-400 mb-6">
-              Conectamos empresas con agentes profesionales para maximizar ventas a través de WhatsApp Business.
+              We connect businesses with professional agents to maximize sales through WhatsApp Business.
             </p>
             <div className="flex space-x-4">
               {/*<a href="#" className="bg-gray-800 hover:bg-brandBlue p-2 rounded-full transition-colors">
@@ -29,22 +28,22 @@ const Footer = () => {
           </div>
 
           <div>
-            <h3 className="font-heading font-bold text-lg mb-6">Enlaces útiles</h3>
+            <h3 className="font-heading font-bold text-lg mb-6">Useful Links</h3>
             <ul className="space-y-3">
               <li>
-                <a href="/#inicio" className="text-gray-400 hover:text-white transition-colors">Inicio</a>
+                <a href="/#home" className="text-gray-400 hover:text-white transition-colors">Home</a>
               </li>
               <li>
-                <a href="/#funciones" className="text-gray-400 hover:text-white transition-colors">Funciones</a>
+                <a href="/#features" className="text-gray-400 hover:text-white transition-colors">Features</a>
               </li>
               <li>
-                <a href="/#como-funciona" className="text-gray-400 hover:text-white transition-colors">Cómo funciona</a>
+                <a href="/#how-it-works" className="text-gray-400 hover:text-white transition-colors">How it works</a>
               </li>
               <li>
-                <a href="/#testimonios" className="text-gray-400 hover:text-white transition-colors">Testimonios</a>
+                <a href="/#testimonials" className="text-gray-400 hover:text-white transition-colors">Testimonials</a>
               </li>
               <li>
-                <a href="/#contacto" className="text-gray-400 hover:text-white transition-colors">Contacto</a>
+                <a href="/#contact" className="text-gray-400 hover:text-white transition-colors">Contact</a>
               </li>
             </ul>
           </div>
@@ -53,13 +52,13 @@ const Footer = () => {
             <h3 className="font-heading font-bold text-lg mb-6">Legal</h3>
             <ul className="space-y-3">
               <li>
-                <a href="/policies" className="text-gray-400 hover:text-white transition-colors">Términos y condiciones</a>
+                <a href="/policies" className="text-gray-400 hover:text-white transition-colors">Terms and conditions</a>
               </li>
               <li>
-                <a href="/policies" className="text-gray-400 hover:text-white transition-colors">Política de privacidad</a>
+                <a href="/policies" className="text-gray-400 hover:text-white transition-colors">Privacy policy</a>
               </li>
               {/*<li>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">Política de cookies</a>
+                <a href="#" className="text-gray-400 hover:text-white transition-colors">Cookie policy</a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">FAQ</a>
@@ -70,16 +69,16 @@ const Footer = () => {
           <div>
             <h3 className="font-heading font-bold text-lg mb-6">Newsletter</h3>
             <p className="text-gray-400 mb-4">
-              Suscríbete para recibir noticias y actualizaciones.
+              Subscribe to receive news and updates.
             </p>
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Tu email"
+                placeholder="Your email"
                 className="bg-gray-800 rounded-md px-4 py-2 text-white flex-grow focus:outline-none focus:ring-2 focus:ring-brandBlue"
               />
               <Button className="bg-brandBlue hover:bg-brandBlue/90">
-                Enviar
+                Send
               </Button>
             </div>
           </div>
@@ -87,11 +86,11 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
-            © 2025 GetAlert. Todos los derechos reservados.
+            © 2025 GetAlert. All rights reserved.
           </p>
 
           <div className="flex items-center">
-            <span className="text-gray-500 text-sm mr-2">¿Prefieres hablar directamente?</span>
+            <span className="text-gray-500 text-sm mr-2">Prefer to talk directly?</span>
             <a
               href="https://wa.me/34600123456"
               className="inline-flex items-center gap-2 bg-whatsapp/20 hover:bg-whatsapp text-whatsapp hover:text-white px-4 py-2 rounded-md transition-colors"

@@ -20,7 +20,7 @@ class ChatController extends Controller
         $organizationId = 1;
 
         // Get the current chatbot (hardcoded for now, later from user selection)
-        $chatbotId = 1;
+        $chatbotId = 2;
 
         $chatbotChannel = ChatbotChannel::where('chatbot_id', $chatbotId)->first();
 
@@ -39,7 +39,7 @@ class ChatController extends Controller
                 return [
                     'id' => $conversation->id,
                     'name' => $conversation->contact_name ?? $conversation->contact_phone,
-                    'avatar' => $conversation->contact_avatar ?? substr($conversation->contact_name ?? 'U', 0, 1),
+                    'avatar' => $conversation->contact_avatar ?? mb_substr($conversation->contact_name ?? 'U', 0, 1),
                     'lastMessage' => $conversation->latestMessage->first()?->content ?? '',
                     'lastMessageTime' => $conversation->last_message_at?->toIso8601String(),
                     'unreadCount' => $conversation->messages()

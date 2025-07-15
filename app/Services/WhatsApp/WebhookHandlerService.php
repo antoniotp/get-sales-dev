@@ -33,6 +33,11 @@ class WebhookHandlerService
      */
     public function process(array $payload): void
     {
+        if ( isset($payload['verification_key']) && $payload['verification_key'] === 'FghGj4#kdls&gdhpdFDaks' ) {
+            $payload = json_decode( $payload['original_payload'], true );
+            Log::info( 'Reassigned forwarded payload to original payload' );
+            Log::info( 'Original payload: ' . print_r( $payload, true ) );
+        }
         if (!isset($payload['entry'][0]['changes'][0]['value'])) {
             return;
         }

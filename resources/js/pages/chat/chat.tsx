@@ -48,6 +48,13 @@ const formatUSPhoneNumber = (phone: string): string => {
     return phone;
 };
 
+const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
+    return [...chats].sort((a, b) => {
+        const timeA = new Date(a.lastMessageTime).getTime();
+        const timeB = new Date(b.lastMessageTime).getTime();
+        return timeB - timeA; // Descendente (más reciente primero)
+    });
+};
 
 export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat[], channelInfo: ChannelInfo }) {
     const [chats, setChats] = useState<Chat[]>(initialChats)
@@ -122,7 +129,8 @@ export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat
             setChats(prevChats => {
                 const exists = prevChats.some(chat => chat.id === e.conversation.id)
                 if (!exists) {
-                    return [e.conversation, ...prevChats]
+                    const updatedChats = [e.conversation, ...prevChats]
+                    return sortChatsByLastMessageTime(updatedChats)
                 }
                 return prevChats
             })
@@ -168,10 +176,9 @@ export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat
 
                     // Update chat list - this should always happen regardless of selected chat
                     setChats(prevChats => {
-                        return prevChats.map(prevChat => {
+                        const updatedChats = prevChats.map(prevChat => {
                             if (prevChat.id === e.message.conversationId) {
                                 const isCurrentChat = currentSelectedChat?.id === e.message.conversationId
-
                                 return {
                                     ...prevChat,
                                     lastMessage: e.message.content,
@@ -183,6 +190,7 @@ export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat
                             }
                             return prevChat
                         })
+                        return sortChatsByLastMessageTime(updatedChats)
                     })
                 })
 
@@ -259,9 +267,9 @@ export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat
             // Add message to current conversation
             setMessages(prevMessages => [...prevMessages, response.data.message])
 
-            // Update chat list
-            setChats(prevChats =>
-                prevChats.map(chat =>
+            // Update chat list and reorder
+            setChats(prevChats => {
+                const updatedChats = prevChats.map(chat =>
                     chat.id === selectedChat.id
                         ? {
                             ...chat,
@@ -270,8 +278,8 @@ export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat
                         }
                         : chat
                 )
-            )
-
+                return sortChatsByLastMessageTime(updatedChats)
+            })
         } catch (error) {
             console.error('Failed to send message:', error)
             // Restore message on error

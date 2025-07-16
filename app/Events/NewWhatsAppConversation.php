@@ -25,7 +25,7 @@ class NewWhatsAppConversation implements ShouldBroadcast
         $this->conversation = [
             'id' => $conversation->id,
             'name' => $conversation->contact_name ?? $conversation->contact_phone,
-            'avatar' => $conversation->contact_avatar ?? substr($conversation->contact_name ?? 'U', 0, 1),
+            'avatar' => $conversation->contact_avatar ?? mb_substr($conversation->contact_name ?? 'U', 0, 1),
             'lastMessage' => $conversation->latestMessage?->first()?->content ?? '',
             'lastMessageTime' => $conversation->last_message_at?->toIso8601String(),
             'unreadCount' => $conversation->messages()

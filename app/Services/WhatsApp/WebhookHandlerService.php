@@ -5,6 +5,7 @@ namespace App\Services\WhatsApp;
 use App\Events\NewWhatsAppConversation;
 use App\Events\NewWhatsAppMessage;
 //use App\Events\WhatsAppTemplateStatusUpdate;
+use App\Jobs\ProcessAIResponse;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
@@ -303,6 +304,12 @@ class WebhookHandlerService
 
             // Dispatch the event for real-time updates
             event(new NewWhatsAppMessage($newMessage));
+
+            // If conversation is in AI mode, dispatch job to process AI response
+            if ($this->conversation->mode === 'ai') {
+                Log::info('Processing AI response for message', ['message' => $newMessage]);
+                ProcessAIResponse::dispatch($newMessage)->onQueue('ai-responses');
+            }
 
         } catch (\Exception $e) {
             Log::error('Error saving text message', [

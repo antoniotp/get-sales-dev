@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('organization_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->text('system_prompt')->nullable();
+            $table->longText('system_prompt')->nullable();
             $table->tinyInteger('status')->default(1);
             $table->unsignedInteger('response_delay_min')->default(1);
             $table->unsignedInteger('response_delay_max')->default(5);

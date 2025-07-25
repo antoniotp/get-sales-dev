@@ -37,12 +37,26 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
+        $user = $request->user();
+        $currentOrganization = null;
 
+        if ( $user ) {
+            $currentOrganizationId = $request->session()->get('currentOrganizationId');
+            if ( $currentOrganizationId ) {
+                $currentOrganization = $user->organizations()->find($currentOrganizationId);
+            }
+
+            if ( !$currentOrganization) {
+                $currentOrganization = $user->organizations()->first();
+                if ( $currentOrganization ) {
+                    $request->session()->put('currentOrganizationId', $currentOrganization->id);
+                }
+            }
+        }
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
+            'quote' => ['message' => '', 'author' => ''],
             'auth' => [
                 'user' => $request->user(),
             ],
@@ -51,6 +65,10 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'organization' => $user ? [
+                'current' => $currentOrganization,
+                'list' => $user->organizations()->get(),
+            ] : null,
         ];
     }
 }

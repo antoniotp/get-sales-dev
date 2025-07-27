@@ -39,6 +39,16 @@ interface ChannelInfo {
     phone_number: string
 }
 
+interface Organization {
+    id: number;
+    name: string;
+}
+
+interface Organizations {
+    list: Organization[];
+    current: Organization;
+}
+
 const formatUSPhoneNumber = (phone: string): string => {
     const cleaned = phone.replace(/\D/g, '');
     const match = cleaned.match(/^1?(\d{3})(\d{3})(\d{4})$/);
@@ -56,7 +66,9 @@ const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
     });
 };
 
-export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat[], channelInfo: ChannelInfo }) {
+export default function Chat(
+    { chats: initialChats, channelInfo, organization }: { chats: Chat[], channelInfo: ChannelInfo, organization: Organizations }
+) {
     const [chats, setChats] = useState<Chat[]>(initialChats)
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
@@ -119,7 +131,7 @@ export default function Chat({ chats: initialChats, channelInfo }: { chats: Chat
     useEffect(() => {
         if (!echoRef.current) return
 
-        const channelName = 'chat.organization.1'
+        const channelName = 'chat.organization.' + organization.current.id
 
         if (activeChannelsRef.current.has(channelName)) return
 

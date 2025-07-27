@@ -16,6 +16,7 @@ class NewWhatsAppConversation implements ShouldBroadcast
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $conversation;
+    private $organizationId;
 
     /**
      * Create a new event instance.
@@ -33,6 +34,7 @@ class NewWhatsAppConversation implements ShouldBroadcast
                 ->where('type', 'incoming')
                 ->count(),
         ];
+        $this->organizationId = $conversation->chatbotChannel->chatbot->organization->id;
     }
 
     /**
@@ -54,8 +56,6 @@ class NewWhatsAppConversation implements ShouldBroadcast
 
     private function getOrganizationId(): int
     {
-        // Por ahora retornamos 1 (hardcoded como en ChatController)
-        // TODO: Implementar la lógica para obtener el organization_id correcto
-        return 1;
+        return $this->organizationId;
     }
 }

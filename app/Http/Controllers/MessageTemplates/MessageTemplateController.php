@@ -12,10 +12,14 @@ use Inertia\Response;
 
 class MessageTemplateController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         // Get current organization (hardcoded for now, later from session)
-        $organizationId = 1;
+        $organizationId = $request->session()->get('currentOrganizationId');
+
+        if (!$organizationId) {
+            abort(403, 'No organization available');
+        }
 
         // Get the current chatbot (hardcoded for now, later from user selection)
         $chatbotId = 1;

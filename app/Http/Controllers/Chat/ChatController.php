@@ -14,10 +14,14 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        // Get current organization (hardcoded for now, later from session)
-        $organizationId = 1;
+        // Get current organization from session
+        $organizationId = $request->session()->get('currentOrganizationId');
+
+        if (!$organizationId) {
+            abort(403, 'No organization available');
+        }
 
         // Get the current chatbot (hardcoded for now, later from user selection)
         $chatbotId = 2;
@@ -56,11 +60,16 @@ class ChatController extends Controller
 
     }
 
-    public function getMessages( Conversation $conversation ): JsonResponse
+    public function getMessages(Conversation $conversation, Request $request): JsonResponse
     {
-        // Verify if the user has access to this conversation
-        $organizationId = 1; // Hardcoded for now
+        // Get current organization from session
+        $organizationId = $request->session()->get('currentOrganizationId');
 
+        if (!$organizationId) {
+            return response()->json(['error' => 'No organization selected'], 403);
+        }
+
+        // Verify if the user has access to this conversation
         if (!$conversation->chatbotChannel->chatbot->where('organization_id', $organizationId)->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }

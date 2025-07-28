@@ -6,6 +6,8 @@ use App\Contracts\Services\AIServiceInterface;
 use App\Contracts\Services\WhatsAppServiceInterface;
 use App\Services\AI\ChatGPTService;
 use App\Services\WhatsApp\WhatsAppService;
+use App\Contracts\Services\Auth\RegistrationServiceInterface;
+use App\Services\Auth\RegistrationService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(RegistrationServiceInterface::class, RegistrationService::class);
     }
 
     /**

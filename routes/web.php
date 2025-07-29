@@ -13,7 +13,7 @@ Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify']);
 Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('dashboard', function () { return redirect()->route('chats'); })->name('dashboard');
     Route::get('/chats', [ChatController::class, 'index'])->name('chats');
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');

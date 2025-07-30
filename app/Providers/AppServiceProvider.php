@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Contracts\Services\AIServiceInterface;
+use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\WhatsAppServiceInterface;
 use App\Services\AI\ChatGPTService;
+use App\Services\Organization\OrganizationService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Contracts\Services\Auth\RegistrationServiceInterface;
 use App\Services\Auth\RegistrationService;
@@ -25,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(RegistrationServiceInterface::class, RegistrationService::class);
+        $this->app->bind(OrganizationServiceInterface::class, OrganizationService::class);
+
     }
 
     /**

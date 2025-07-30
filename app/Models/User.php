@@ -5,6 +5,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -24,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'last_organization_id',
     ];
 
     /**
@@ -120,4 +123,27 @@ class User extends Authenticatable
     {
         return $this->id === $organization->owner_id;
     }
+
+    /**
+     * Get the user's last selected organization.
+     */
+    public function lastOrganization(): BelongsTo
+    {
+        return $this->belongsTo(Organization::class, 'last_organization_id');
+    }
+
+    /**
+     * Get the organization to use as current (last selected or first available).
+     */
+    public function getCurrentOrganization(): Model
+    {
+        // First, try to get the last selected organization if it exists and the user still has access
+        if ($this->last_organization_id && $this->organizations()->where('organizations.id', $this->last_organization_id)->exists()) {
+            return $this->lastOrganization;
+        }
+
+        // Fallback to the first available organization
+        return $this->organizations()->first();
+    }
+
 }

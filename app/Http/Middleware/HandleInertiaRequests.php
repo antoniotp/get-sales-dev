@@ -2,8 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Foundation\Inspiring;
+use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -17,6 +18,10 @@ class HandleInertiaRequests extends Middleware
      * @var string
      */
     protected $rootView = 'app';
+
+    public function __construct( private OrganizationServiceInterface $organizationService)
+    {
+    }
 
     /**
      * Determines the current asset version.
@@ -41,17 +46,7 @@ class HandleInertiaRequests extends Middleware
         $currentOrganization = null;
 
         if ( $user ) {
-            $currentOrganizationId = $request->session()->get('currentOrganizationId');
-            if ( $currentOrganizationId ) {
-                $currentOrganization = $user->organizations()->find($currentOrganizationId);
-            }
-
-            if ( !$currentOrganization) {
-                $currentOrganization = $user->organizations()->first();
-                if ( $currentOrganization ) {
-                    $request->session()->put('currentOrganizationId', $currentOrganization->id);
-                }
-            }
+            $currentOrganization = $this->organizationService->getCurrentOrganization( $request, $user);
         }
         return [
             ...parent::share($request),

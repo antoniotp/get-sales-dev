@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Contracts\Services\Auth\RegistrationServiceInterface;
 use App\Models\User;
@@ -29,7 +30,7 @@ class RegisteredUserController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request, RegistrationServiceInterface $registrationService): RedirectResponse
+    public function store(Request $request, RegistrationServiceInterface $registrationService, OrganizationServiceInterface $organizationService): RedirectResponse
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -43,7 +44,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        $request->session()->put('currentOrganizationId', $user->organizations()->first()->id);
+        $firstOrganization = $user->organizations()->first();
+        if ($firstOrganization) {
+            $organizationService->setCurrentOrganization($request, $user, $firstOrganization->id);
+        }
+
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

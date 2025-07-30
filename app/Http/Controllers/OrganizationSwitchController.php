@@ -2,29 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use App\Models\Organization;
+use Inertia\Inertia;
 
 class OrganizationSwitchController extends Controller
 {
-    public function switch(Request $request)
+    public function switch(Request $request, OrganizationServiceInterface $organizationService)
     {
         $request->validate([
             'organization_id' => ['required', 'exists:organizations,id'],
         ]);
 
-        $organization = Organization::findOrFail($request->input('organization_id'));
+        $success = $organizationService->switchOrganization(
+            $request,
+            auth()->user(),
+            $request->integer('organization_id')
+        );
 
-        // Verify that user belongs to organization
-        if (!auth()->user()->organizations()->where('organization_id', $organization->id)->exists()) {
-            abort(403);
+        if (!$success) {
+            return response()->json([
+                'message' => 'You do not have access to this organization.'
+            ], 403);
         }
 
-        // Save the newly selected organization to the session
-        $request->session()->put('currentOrganizationId', $organization->id);
-
         // Redirect user to the previous page or dashboard
-        return Redirect::back();
+        return Inertia::location(route('chats'));
     }
 }

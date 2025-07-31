@@ -3,8 +3,10 @@ import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { Bot, Plus } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 interface Chatbot {
     id: number;
@@ -24,7 +26,27 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Agents', href: route('chatbots.index') },
 ];
 
+interface FlashMessages {
+    success?: string;
+    error?: string;
+}
+
+interface PageProps {
+    flash: FlashMessages;
+    [key: string]: never|FlashMessages;
+}
+
 export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndexProps) {
+    const { props } = usePage<PageProps>();
+    
+    useEffect(() => {
+        if (props.flash?.success) {
+            toast.success(props.flash.success);
+        } else if (props.flash?.error) {
+            toast.error(props.flash.error);
+        }
+    }, [props.flash]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Agents | List" />

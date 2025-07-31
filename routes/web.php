@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
 use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
@@ -14,7 +15,14 @@ Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
 
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
-    Route::get('dashboard', function () { return redirect()->route('chats'); })->name('dashboard');
+    Route::get('dashboard', function () { return redirect()->route('chatbots.index'); })->name('dashboard');
+    Route::get('/chatbots', [ChatbotController::class, 'index'])->name('chatbots.index');
+    Route::get('/chatbots/create', [ChatbotController::class, 'create'])->name('chatbots.create');
+    Route::post('/chatbots', [ChatbotController::class, 'store'])->name('chatbots.store');
+    Route::get('/chatbots/{chatbot}', [ChatbotController::class, 'show'])->name('chatbots.show');
+    Route::get('/chatbots/{chatbot}/edit', [ChatbotController::class, 'edit'])->name('chatbots.edit');
+    Route::put('/chatbots/{chatbot}', [ChatbotController::class, 'update'])->name('chatbots.update');
+    Route::delete('/chatbots/{chatbot}', [ChatbotController::class, 'destroy'])->name('chatbots.destroy');
     Route::get('/chats', [ChatController::class, 'index'])->name('chats');
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');

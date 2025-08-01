@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Head, Link, usePage, router } from '@inertiajs/react';
-import { Bot, Plus, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Bot, Plus, MoreHorizontal, Trash2, Settings, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -182,8 +182,9 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                         </span>
                         <div className="flex items-center space-x-2">
                             <Button variant="outline" size="sm" asChild>
-                                <Link href={route('chatbots.edit', chatbot.id)}>
-                                    View Details
+                                <Link href={route('chats', chatbot.id)}>
+                                    <MessageCircle className="mr-0 h-4 w-4" />
+                                    View Chats
                                 </Link>
                             </Button>
 
@@ -195,6 +196,12 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                    <DropdownMenuItem asChild>
+                                        <Link href={route('chatbots.edit', chatbot.id)} className="flex items-center">
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            View Details
+                                        </Link>
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={() => setShowDeleteDialog(true)}
                                         className="text-red-600 focus:text-red-600"

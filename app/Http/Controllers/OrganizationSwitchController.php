@@ -28,6 +28,6 @@ class OrganizationSwitchController extends Controller
         }
 
         // Redirect user to the previous page or dashboard
-        return Inertia::location(route('chats'));
+        return Inertia::location(route('chatbots.index'));
     }
 }

@@ -23,10 +23,10 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('/chatbots/{chatbot}/edit', [ChatbotController::class, 'edit'])->name('chatbots.edit');
     Route::put('/chatbots/{chatbot}', [ChatbotController::class, 'update'])->name('chatbots.update');
     Route::delete('/chatbots/{chatbot}', [ChatbotController::class, 'destroy'])->name('chatbots.destroy');
-    Route::get('/chats', [ChatController::class, 'index'])->name('chats');
+    Route::get('/chatbots/{chatbot}/chats', [ChatController::class, 'index'])->name('chats');
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');
-    Route::get('/message_templates', [ MessageTemplateController::class, 'index'])->name('message-templates.index');
+    Route::get('/chatbots/{chatbot}//message_templates', [ MessageTemplateController::class, 'index'])->name('message-templates.index');
     Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->name('message-templates.create');
     Route::post('/message_templates', [MessageTemplateController::class, 'store'])->name('message-templates.store');
     Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');

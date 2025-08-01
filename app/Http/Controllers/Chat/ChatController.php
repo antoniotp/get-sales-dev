@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Chat;
 
+use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
+use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
@@ -14,18 +16,26 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function index(Request $request): Response
+    public function __construct(private OrganizationServiceInterface $organizationService)
     {
-        // Get current organization from session
-        $organizationId = $request->session()->get('currentOrganizationId');
+    }
 
-        if (!$organizationId) {
+    public function index(Request $request, Chatbot $chatbot): Response
+    {
+        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
+
+        if (!$organization) {
             abort(403, 'No organization available');
         }
+        $organizationId = $organization->id;
 
-        // Get the current chatbot (hardcoded for now, later from user selection)
-        $chatbotId = 2;
+        if ( $chatbot->organization_id != $organizationId ) {
+            abort(403, 'Unauthorized');
+        }
 
+        $chatbotId = $chatbot->id;
+
+        //TODO: the following must be dynamic depending on messaging channel
         $chatbotChannel = ChatbotChannel::where('chatbot_id', $chatbotId)->first();
 
         $conversations = Conversation::query()

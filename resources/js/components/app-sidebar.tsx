@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Layers, /*LayoutGrid,*/ MessagesSquare } from 'lucide-react';
+import { /*Layers, LayoutGrid,*/ MessagesSquare } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -13,14 +13,14 @@ const mainNavItems: NavItem[] = [
         href: '/dashboard',
         icon: LayoutGrid,
     },*/{
-        title: 'Chats',
-        href: route('chats'),
+        title: 'Chatbots',
+        href: route('chatbots.index'),
         icon: MessagesSquare,
-    },{
+    },/*{
         title: 'Template Messages',
-        href: route('message-templates.index'),
+        href: route('message-templates.index',2),
         icon: Layers,
-    },
+    },*/
 ];
 
 const footerNavItems: NavItem[] = [];

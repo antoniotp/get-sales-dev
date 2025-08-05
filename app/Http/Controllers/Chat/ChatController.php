@@ -56,6 +56,7 @@ class ChatController extends Controller
                     'avatar' => $conversation->contact_avatar ?? mb_substr($conversation->contact_name ?? 'U', 0, 1),
                     'lastMessage' => $conversation->latestMessage->first()?->content ?? '',
                     'lastMessageTime' => $conversation->last_message_at?->toIso8601String(),
+                    'mode' => $conversation->mode ?? 'ai',
                     'unreadCount' => $conversation->messages()
                         ->whereNull('read_at')
                         ->where('type', 'incoming')
@@ -154,6 +155,39 @@ class ChatController extends Controller
                 'contentType' => $message->content_type,
                 'mediaUrl' => $message->media_url,
             ],
+        ]);
+    }
+
+    public function updateConversationMode(Conversation $conversation, Request $request): JsonResponse
+    {
+        // Validate request
+        $validated = $request->validate([
+            'mode' => 'required|in:ai,human',
+        ]);
+
+        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
+        if (!$organization) {
+            abort(403, 'No organization available');
+        }
+        $organizationId = $organization->id;
+
+        if (!$organizationId) {
+            return response()->json(['error' => 'No organization selected'], 403);
+        }
+
+        // Verify if the user has access to this conversation
+        if (!$conversation->chatbotChannel->chatbot->where('organization_id', $organizationId)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Update conversation mode
+        $conversation->update([
+            'mode' => $validated['mode'],
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'mode' => $conversation->mode,
         ]);
     }
 }

@@ -13,6 +13,7 @@ interface Chat {
     lastMessage: string
     lastMessageTime: string
     unreadCount: number
+    mode: 'ai' | 'human'
 }
 
 interface Message {
@@ -75,6 +76,7 @@ export default function Chat(
     const [newMessage, setNewMessage] = useState('')
     const [isSending, setIsSending] = useState(false)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+    const [conversationMode, setConversationMode] = useState<'ai' | 'human'>('ai')
 
     const route = useRoute()
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -253,6 +255,7 @@ export default function Chat(
         if (selectedChat?.id === chat.id) return
 
         setSelectedChat(chat)
+        setConversationMode(chat.mode)
         setMessages([]) // Clear previous messages immediately
         loadChatMessages(chat.id)
     }, [selectedChat?.id, loadChatMessages])
@@ -301,6 +304,42 @@ export default function Chat(
             setIsSending(false)
         }
     }, [newMessage, selectedChat, isSending, route])
+
+    const handleModeChange = useCallback(async (newMode: 'ai' | 'human') => {
+        if (!selectedChat || conversationMode === newMode) return
+
+        try {
+            const response = await axios.put(
+                route('chats.mode.update', { conversation: selectedChat.id }),
+                { mode: newMode }
+            )
+
+            if (response.data.success) {
+                setConversationMode(newMode)
+                // Update the chat in the list
+                setChats(prevChats =>
+                    prevChats.map(chat =>
+                        chat.id === selectedChat.id
+                            ? { ...chat, mode: newMode }
+                            : chat
+                    )
+                )
+            }
+        } catch (error) {
+            console.error('Failed to update conversation mode:', error)
+            // TODO: show error notification
+        }
+    }, [selectedChat, conversationMode, route])
+
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        setNewMessage(value)
+
+        // Auto-disable AI mode when user starts typing
+        if (value.length === 1 && conversationMode === 'ai') {
+            handleModeChange('human')
+        }
+    }, [conversationMode, handleModeChange])
 
     // Auto-scroll when new messages arrive
     useEffect(() => {
@@ -405,12 +444,30 @@ export default function Chat(
                 {selectedChat ? (
                     <div className="flex w-2/3 flex-col">
                         {/* Chat Header */}
-                        <div className="flex h-16 items-center border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
+                        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
                             <div className="flex items-center space-x-4">
                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
                                     {selectedChat.avatar}
                                 </div>
                                 <h3 className="font-semibold">{selectedChat.name}</h3>
+                            </div>
+
+                            <div className="flex items-center space-x-3">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    AI Response
+                                </span>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={conversationMode === 'ai'}
+                                        onChange={(e) => handleModeChange(e.target.checked ? 'ai' : 'human')}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                </label>
+                                <span className={`text-sm font-medium ${conversationMode === 'ai' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                    {conversationMode === 'ai' ? 'ON' : 'OFF'}
+                                </span>
                             </div>
                         </div>
 
@@ -444,7 +501,7 @@ export default function Chat(
                                 <input
                                     type="text"
                                     value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    onChange={handleInputChange} // Cambiar de onChange a handleInputChange
                                     placeholder="Type a message..."
                                     disabled={isSending}
                                     className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"

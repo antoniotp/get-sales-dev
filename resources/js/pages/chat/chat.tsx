@@ -354,8 +354,10 @@ export default function Chat(
             <div
                 key={chat.id}
                 onClick={() => handleChatSelect(chat)}
-                className={`cursor-pointer border-b border-gray-200 p-4 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800 transition-colors ${
-                    selectedChat?.id === chat.id ? 'bg-gray-50 dark:bg-gray-800' : ''
+                className={`cursor-pointer border-b border-gray-200 p-4 hover:bg-gray-200 dark:border-gray-700 dark:hover:bg-gray-600 transition-colors ${
+                    selectedChat?.id === chat.id
+                        ? 'bg-gray-300 dark:bg-gray-600 border-l-4 border-l-whatsapp'
+                        : 'border-l-4 border-transparent'
                 }`}
             >
                 <div className="flex items-center space-x-4">
@@ -366,7 +368,7 @@ export default function Chat(
                         <div className="flex items-center justify-between">
                             <h3 className="font-semibold truncate">{chat.name}</h3>
                             <span className="text-sm text-gray-500 flex-shrink-0">
-                                {format(new Date(chat.lastMessageTime), 'HH:mm')}
+                                {format(new Date(chat.lastMessageTime), 'yyyy-mm-dd HH:mm')}
                             </span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 truncate">

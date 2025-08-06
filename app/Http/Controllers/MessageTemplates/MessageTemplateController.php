@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\MessageTemplates;
 
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
+use App\DataTransferObjects\MessageTemplate\MessageTemplateData;
 use App\Events\MessageTemplateCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
@@ -63,17 +64,7 @@ class MessageTemplateController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $mapTemplate = function ($template) {
-            return [
-                'id' => $template->id,
-                'name' => $template->name,
-                'category' => $template->category->name,
-                'status' => $template->status,
-                'platformStatus' => $template->platform_status,
-                'isDeleted' => (int)$template->trashed(),
-                'language' => $template->language,
-            ];
-        };
+        $mapTemplate = fn(MessageTemplate $template) => MessageTemplateData::fromMessageTemplate($template)->toArray();
 
         return Inertia::render('message_templates/index', [
             'allTemplates' => $allTemplates->map($mapTemplate),

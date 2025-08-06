@@ -368,7 +368,7 @@ export default function Chat(
                         <div className="flex items-center justify-between">
                             <h3 className="font-semibold truncate">{chat.name}</h3>
                             <span className="text-sm text-gray-500 flex-shrink-0">
-                                {format(new Date(chat.lastMessageTime), 'yyyy-mm-dd HH:mm')}
+                                {format(new Date(chat.lastMessageTime), 'yyyy-MM-dd HH:mm')}
                             </span>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -412,7 +412,7 @@ export default function Chat(
                         <p className="break-words whitespace-pre-wrap">{message.content}</p>
                     )}
                     <span className="mt-1 text-xs opacity-70 block">
-                        {format(new Date(message.timestamp), 'HH:mm')}
+                        {format(new Date(message.timestamp), 'yyyy-MM-dd HH:mm')}
                     </span>
                 </div>
             </div>

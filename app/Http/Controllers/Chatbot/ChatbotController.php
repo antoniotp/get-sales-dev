@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chatbot;
 
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
+use App\DataTransferObjects\Chatbot\ChatbotData;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
 use Illuminate\Http\Request;
@@ -25,15 +26,7 @@ class ChatbotController extends Controller
             ->select(['id', 'name', 'description', 'status', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($chatbot) {
-                return [
-                    'id' => $chatbot->id,
-                    'name' => $chatbot->name,
-                    'description' => $this->truncateDescription($chatbot->description),
-                    'status' => $chatbot->status,
-                    'created_at' => $chatbot->created_at->format('M d, Y'),
-                ];
-            });
+            ->map(fn(Chatbot $chatbot) => ChatbotData::fromChatbot($chatbot, true)->toArray());
 
         return Inertia::render('chatbots/index', [
             'chatbots' => $chatbots,
@@ -44,6 +37,7 @@ class ChatbotController extends Controller
             ]
         ]);
     }
+
 
     /**
      * Show the form for creating a new chatbot.

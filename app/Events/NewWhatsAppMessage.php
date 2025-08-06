@@ -5,6 +5,7 @@ namespace App\Events;
 use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use App\DataTransferObjects\Chat\MessageData;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -15,24 +16,14 @@ class NewWhatsAppMessage implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $message;
+    public array $message;
 
     /**
      * Create a new event instance.
      */
     public function __construct(Message $message)
     {
-        $this->message = [
-            'id' => $message->id,
-            'content' => $message->content,
-            'sender' => $message->conversation->contact_name ?? $message->conversation->contact_phone,
-            'senderId' => 'contact',
-            'timestamp' => $message->created_at->toIso8601String(),
-            'type' => $message->type,
-            'contentType' => $message->content_type,
-            'mediaUrl' => $message->media_url,
-            'conversationId' => $message->conversation_id
-        ];
+        $this->message = MessageData::fromMessage($message)->toArray();
     }
 
     /**

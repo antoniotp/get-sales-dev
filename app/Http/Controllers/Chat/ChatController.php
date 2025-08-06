@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Chat;
 
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\DataTransferObjects\Chat\ConversationData;
+use App\DataTransferObjects\Chat\MessageData;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -77,22 +79,7 @@ class ChatController extends Controller
             ->with(['senderUser'])
             ->orderBy('created_at', 'asc')
             ->get()
-            ->map(function ($message) {
-                return [
-                    'id' => $message->id,
-                    'content' => $message->content,
-                    'sender' => $message->sender_type === 'contact'
-                        ? ($message->conversation->contact_name ?? $message->conversation->contact_phone)
-                        : ($message->senderUser?->name ?? 'AI'),
-                    'senderId' => $message->sender_type === 'contact'
-                        ? 'contact'
-                        : ($message->sender_user_id ?? 'ai'),
-                    'timestamp' => $message->created_at->toIso8601String(),
-                    'type' => $message->type,
-                    'contentType' => $message->content_type,
-                    'mediaUrl' => $message->media_url,
-                ];
-            });
+            ->map(fn(Message $message) => MessageData::fromMessage($message)->toArray());
 
         // Mark messages as read
         $conversation->messages()
@@ -133,16 +120,7 @@ class ChatController extends Controller
 
         // Return the created message with the same format as getMessages
         return response()->json([
-            'message' => [
-                'id' => $message->id,
-                'content' => $message->content,
-                'sender' => $message->senderUser?->name ?? 'You',
-                'senderId' => $message->sender_user_id,
-                'timestamp' => $message->created_at->toIso8601String(),
-                'type' => $message->type,
-                'contentType' => $message->content_type,
-                'mediaUrl' => $message->media_url,
-            ],
+            'message' => MessageData::fromMessage($message)->toArray(),
         ]);
     }
 

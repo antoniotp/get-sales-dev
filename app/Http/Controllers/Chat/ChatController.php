@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
+use App\DataTransferObjects\Chat\ConversationData;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
@@ -49,20 +50,7 @@ class ChatController extends Controller
             })
             ->orderBy('last_message_at', 'desc')
             ->get()
-            ->map(function ($conversation) {
-                return [
-                    'id' => $conversation->id,
-                    'name' => $conversation->contact_name ?? $conversation->contact_phone,
-                    'avatar' => $conversation->contact_avatar ?? mb_substr($conversation->contact_name ?? 'U', 0, 1),
-                    'lastMessage' => $conversation->latestMessage->first()?->content ?? '',
-                    'lastMessageTime' => $conversation->last_message_at?->toIso8601String(),
-                    'mode' => $conversation->mode ?? 'ai',
-                    'unreadCount' => $conversation->messages()
-                        ->whereNull('read_at')
-                        ->where('type', 'incoming')
-                        ->count(),
-                ];
-            });
+            ->map(fn(Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
 
         return Inertia::render('chat/chat', [
             'chats' => $conversations,

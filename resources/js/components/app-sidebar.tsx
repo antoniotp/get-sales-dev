@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Layers, /*LayoutGrid, */MessagesSquare } from 'lucide-react';
+import { Layers, /*LayoutGrid, */MessagesSquare, Settings } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -18,7 +18,7 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
-    const { component, props } = usePage();
+    const { props } = usePage();
     const chatbot = props.chatbot as { id: number };
 
     const chatbotNavItems: NavItem[] = [
@@ -32,9 +32,14 @@ export function AppSidebar() {
             href: route('message-templates.index', { chatbot: chatbot?.id || 0 }),
             icon: Layers,
         },
+        {
+            title: 'Integrations',
+            href: route('chatbots.integrations', { chatbot: chatbot?.id || 0 }),
+            icon: Settings,
+        },
     ];
 
-    const isChatbotContext = component.startsWith('chat/') || component.startsWith('message_templates/');
+    const isChatbotContext = chatbot?.id > 0;
     const navItems = isChatbotContext ? chatbotNavItems : mainNavItems;
 
     return (

@@ -3,36 +3,47 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/react';
-import { /*Layers, LayoutGrid,*/ MessagesSquare } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { Layers, /*LayoutGrid, */MessagesSquare } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
-    /*{
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
-    },*/{
+    {
         title: 'Chatbots',
         href: route('chatbots.index'),
         icon: MessagesSquare,
-    },/*{
-        title: 'Template Messages',
-        href: route('message-templates.index',2),
-        icon: Layers,
-    },*/
+    },
 ];
 
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
+    const { component, props } = usePage();
+    const chatbot = props.chatbot as { id: number };
+
+    const chatbotNavItems: NavItem[] = [
+        {
+            title: 'Chats',
+            href: route('chats', { chatbot: chatbot?.id || 0 }),
+            icon: MessagesSquare,
+        },
+        {
+            title: 'Template Messages',
+            href: route('message-templates.index', { chatbot: chatbot?.id || 0 }),
+            icon: Layers,
+        },
+    ];
+
+    const isChatbotContext = component.startsWith('chat/') || component.startsWith('message_templates/');
+    const navItems = isChatbotContext ? chatbotNavItems : mainNavItems;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href={route('dashboard')} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -41,7 +52,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain items={navItems} />
             </SidebarContent>
 
             <SidebarFooter>

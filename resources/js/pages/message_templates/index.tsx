@@ -35,6 +35,7 @@ interface TemplatesProps {
     allTemplates: Template[];
     activeTemplates: Template[];
     deletedTemplates: Template[];
+    chatbot: number;
 }
 
 interface FlashMessages {
@@ -46,13 +47,6 @@ interface PageProps {
     flash: FlashMessages;
     [key: string]: never|FlashMessages;
 }
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Message templates management',
-        href: route('message-templates.index'),
-    },
-];
 
 const TemplateTable = ({ templates }: { templates: Template[] }) => {
     const { delete: inertiaDelete } = useForm(); // Destructure delete method from useForm
@@ -200,8 +194,15 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
     )
 }
 
-export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
+export default function Templates({ allTemplates, activeTemplates, deletedTemplates, chatbot }: TemplatesProps) {
     const { props } = usePage<PageProps>();
+
+    const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
+        {
+            title: 'Message templates management',
+            href: route('message-templates.index', chatbot),
+        },
+    ], [chatbot]);
 
     // Display the flash messages
     useEffect(() => {

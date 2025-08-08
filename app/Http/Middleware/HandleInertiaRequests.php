@@ -48,6 +48,9 @@ class HandleInertiaRequests extends Middleware
         if ( $user ) {
             $currentOrganization = $this->organizationService->getCurrentOrganization( $request, $user);
         }
+
+        $chatbot = $request->route('chatbot');
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -64,6 +67,7 @@ class HandleInertiaRequests extends Middleware
                 'current' => $currentOrganization,
                 'list' => $user->organizations()->get(),
             ] : null,
+            'chatbot' => $chatbot,
         ];
     }
 }

@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { BreadcrumbItem } from '@/types';
+import { BreadcrumbItem, Chatbot } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,14 +23,6 @@ import { Head, Link, usePage, router } from '@inertiajs/react';
 import { Bot, Plus, MoreHorizontal, Trash2, Settings, MessageCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-
-interface Chatbot {
-    id: number;
-    name: string;
-    description: string | null;
-    status: number;
-    created_at: string;
-}
 
 interface ChatbotsIndexProps {
     chatbots: Chatbot[];

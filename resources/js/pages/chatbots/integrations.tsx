@@ -1,11 +1,30 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { Card, CardContent, CardDescription } from '@/components/ui/card';
+import { useMemo } from 'react';
+import type { BreadcrumbItem, Chatbot } from '@/types';
 
+interface PageProps {
+    chatbot: Chatbot;
+    [key: string]: never|Chatbot;
+}
 export default function Integrations() {
+    const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
+
+    const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
+        {
+            title: chatbot.name,
+            href: route('chatbots.index'),
+        },
+        {
+            title: 'Integrations',
+            href: route('chatbots.integrations', { chatbot: chatbot.id }),
+        },
+    ], [chatbot]);
+
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Agents | Integrations" />
             <AppContentDefaultLayout>
                 <div className="space-y-6">

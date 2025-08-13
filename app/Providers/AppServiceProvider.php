@@ -10,6 +10,8 @@ use App\Services\Organization\OrganizationService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Contracts\Services\Auth\RegistrationServiceInterface;
 use App\Services\Auth\RegistrationService;
+use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
+use App\Services\WhatsApp\FacebookService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -28,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(RegistrationServiceInterface::class, RegistrationService::class);
         $this->app->bind(OrganizationServiceInterface::class, OrganizationService::class);
+        $this->app->bind(FacebookServiceInterface::class, FacebookService::class);
 
     }
 

@@ -9,4 +9,6 @@ interface FacebookServiceInterface
     public function getPhoneNumberInfo(string $accessToken, string $phoneNumberId): array;
 
     public function subscribeToWebhooks(string $wabaId, string $accessToken): array;
+
+    public function registerPhoneNumber(string $accessToken, string $phoneNumberId, string $pin): array;
 }

@@ -101,4 +101,22 @@ class FacebookService implements FacebookServiceInterface
         Log::info('Successfully subscribed to WABA webhooks.', $response->json());
         return $response->json();
     }
+
+    public function registerPhoneNumber(string $accessToken, string $phoneNumberId, string $pin): array
+    {
+        Log::info('Registering phone number for Phone Number ID: ' . $phoneNumberId);
+
+        $response = Http::withToken($accessToken)->post("https://graph.facebook.com/v23.0/{$phoneNumberId}/register", [
+            'messaging_product' => 'whatsapp',
+            'pin' => $pin,
+        ]);
+
+        if ($response->failed()) {
+            Log::error('Failed to register phone number.', $response->json());
+            return ['error' => 'Failed to register phone number.'];
+        }
+
+        Log::info('Successfully registered phone number.', $response->json());
+        return $response->json();
+    }
 }

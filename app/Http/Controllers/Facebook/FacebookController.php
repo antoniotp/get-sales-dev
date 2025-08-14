@@ -47,11 +47,19 @@ class FacebookController extends Controller
             'display_phone_number' => '',
             'verified_name' => '',
         ];
+        $pin = '';
         if ( !empty($phone_number_id) ) {
             $phoneInfo = $this->facebookService->getPhoneNumberInfo($result['access_token'], $phone_number_id);
 
             if (isset($phoneInfo['error'])) {
                 return response()->json(['message' => $phoneInfo['error']['message'] ?? 'Failed to get phone number details.'], 400);
+            }
+
+            $pin = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $registrationResult = $this->facebookService->registerPhoneNumber($result['access_token'], $phone_number_id, $pin);
+
+            if (isset($registrationResult['error'])) {
+                return response()->json(['message' => $registrationResult['error']], 400);
             }
         }
 
@@ -78,6 +86,7 @@ class FacebookController extends Controller
             'phone_number_access_token'      => $result['access_token'],
             'whatsapp_business_account_id'   => $result['waba_id'],
             'whatsapp_business_access_token' => $result['access_token'],
+            'two_factor_pin'                 => $pin,
         ];
 
         ChatbotChannel::query()->updateOrCreate(

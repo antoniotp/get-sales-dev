@@ -35,6 +35,12 @@ class FacebookController extends Controller
             return response()->json(['message' => 'WhatsApp Business Account ID not found.'], 400);
         }
 
+        $subscriptionResult = $this->facebookService->subscribeToWebhooks($result['waba_id'], $result['access_token']);
+
+        if (isset($subscriptionResult['error'])) {
+            return response()->json(['message' => $subscriptionResult['error']], 400);
+        }
+
         $phone_number_id = $request->input('phone_number_id', '');
         Log::info('phone_number_id: ' . $phone_number_id);
         $phoneInfo = [

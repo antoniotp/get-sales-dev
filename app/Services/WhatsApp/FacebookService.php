@@ -86,4 +86,19 @@ class FacebookService implements FacebookServiceInterface
 
         return $response->json();
     }
+
+    public function subscribeToWebhooks(string $wabaId, string $accessToken): array
+    {
+        Log::info('Subscribing to WABA webhooks for WABA ID: ' . $wabaId);
+
+        $response = Http::withToken($accessToken)->post("https://graph.facebook.com/v23.0/{$wabaId}/subscribed_apps");
+
+        if ($response->failed()) {
+            Log::error('Failed to subscribe to WABA webhooks.', $response->json());
+            return ['error' => 'Failed to subscribe to WABA webhooks.'];
+        }
+
+        Log::info('Successfully subscribed to WABA webhooks.', $response->json());
+        return $response->json();
+    }
 }

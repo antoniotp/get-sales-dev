@@ -5,6 +5,7 @@ import axios from 'axios'
 import { format } from 'date-fns'
 import { useRoute } from 'ziggy-js'
 import Echo from 'laravel-echo'
+import parsePhoneNumber from 'libphonenumber-js'
 
 interface Chat {
     id: number
@@ -50,14 +51,21 @@ interface Organizations {
     current: Organization;
 }
 
-const formatUSPhoneNumber = (phone: string): string => {
-    const cleaned = phone.replace(/\D/g, '');
-    const match = cleaned.match(/^1?(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-        return `+1 (${match[1]}) ${match[2]}-${match[3]}`;
+const formatPhoneNumber = (phone: string): string => {
+    if (!phone.startsWith('+')) {
+        phone = '+' + phone
     }
-    return phone;
-};
+    if ( phone.startsWith('+521')) {
+        phone = phone.replace('+521', '+52')
+    }
+    try {
+        const phoneNumber = parsePhoneNumber(phone)
+        return phoneNumber ? phoneNumber.formatInternational() : phone
+    } catch {
+        console.warn('Failed to parse phone number:', phone)
+        return phone
+    }
+}
 
 const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
     return [...chats].sort((a, b) => {
@@ -428,7 +436,7 @@ export default function Chat(
                     <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
                         <h2 className="text-lg font-semibold">Chats</h2>
                         <p className="text-sm text-gray-900 mt-1">
-                            Messages Received on : <strong>{formatUSPhoneNumber(channelInfo.phone_number)}</strong>
+                            Messages Received on : <strong>{formatPhoneNumber(channelInfo.phone_number)}</strong>
                         </p>
                     </div>
                     <div className="flex-1 overflow-y-auto">

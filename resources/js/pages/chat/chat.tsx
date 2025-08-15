@@ -1,11 +1,18 @@
 import ChatLayout from '@/layouts/chat/layout'
-import { Head } from '@inertiajs/react'
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import axios from 'axios'
 import { format } from 'date-fns'
 import { useRoute } from 'ziggy-js'
 import Echo from 'laravel-echo'
 import parsePhoneNumber from 'libphonenumber-js'
+import type { BreadcrumbItem, Chatbot } from '@/types';
+import AppLayout from '@/layouts/app-layout';
+
+interface PageProps {
+    chatbot: Chatbot;
+    [key: string]: never | Chatbot;
+}
 
 interface Chat {
     id: number
@@ -85,6 +92,7 @@ export default function Chat(
     const [isSending, setIsSending] = useState(false)
     const [isLoadingMessages, setIsLoadingMessages] = useState(false)
     const [conversationMode, setConversationMode] = useState<'ai' | 'human'>('ai')
+    const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
 
     const route = useRoute()
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -92,6 +100,22 @@ export default function Chat(
     const echoRef = useRef<Echo<'pusher'> | null>(null)
     const activeChannelsRef = useRef<Set<string>>(new Set())
     const selectedChatRef = useRef<Chat | null>(null)
+
+
+
+    const breadcrumbs: BreadcrumbItem[] = useMemo(
+        () => [
+            {
+                title: chatbot.name,
+                href: route('chatbots.index'),
+            },
+            {
+                title: 'Chats',
+                href: '',
+            },
+        ],
+        [chatbot]
+    );
 
     // Keep selectedChatRef in sync with selectedChat
     useEffect(() => {
@@ -428,114 +452,116 @@ export default function Chat(
     ), [messages])
 
     return (
-        <ChatLayout>
+        <AppLayout  breadcrumbs={breadcrumbs}>
             <Head title="Chat" />
-            <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
-                {/* Chat List */}
-                <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-                    <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
-                        <h2 className="text-lg font-semibold">Chats</h2>
-                        <p className="text-sm text-gray-900 mt-1">
-                            Messages Received on : <strong>{formatPhoneNumber(channelInfo.phone_number)}</strong>
-                        </p>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                        {chats.length > 0 ? (
-                            chatList
-                        ) : (
-                            <div className="flex items-center justify-center h-full">
-                                <p className="text-gray-500">No chats available</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Chat Messages */}
-                {selectedChat ? (
-                    <div className="flex w-2/3 flex-col">
-                        {/* Chat Header */}
-                        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
-                            <div className="flex items-center space-x-4">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
-                                    {selectedChat.avatar}
-                                </div>
-                                <h3 className="font-semibold">{selectedChat.name}</h3>
-                            </div>
-
-                            <div className="flex items-center space-x-3">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    AI Response
-                                </span>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={conversationMode === 'ai'}
-                                        onChange={(e) => handleModeChange(e.target.checked ? 'ai' : 'human')}
-                                        className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                </label>
-                                <span className={`text-sm font-medium ${conversationMode === 'ai' ? 'text-blue-600' : 'text-gray-500'}`}>
-                                    {conversationMode === 'ai' ? 'ON' : 'OFF'}
-                                </span>
-                            </div>
+            <ChatLayout>
+                <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
+                    {/* Chat List */}
+                    <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+                        <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
+                            <h2 className="text-lg font-semibold">Chats</h2>
+                            <p className="text-sm text-gray-900 mt-1">
+                                Messages Received on : <strong>{formatPhoneNumber(channelInfo.phone_number)}</strong>
+                            </p>
                         </div>
-
-                        {/* Messages Container */}
-                        <div
-                            ref={messagesContainerRef}
-                            className="flex-1 overflow-y-auto p-4 space-y-4"
-                        >
-                            {isLoadingMessages ? (
-                                <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">Loading messages...</p>
-                                </div>
-                            ) : messages.length > 0 ? (
-                                <>
-                                    {messageList}
-                                    <div ref={messagesEndRef} />
-                                </>
+                        <div className="flex-1 overflow-y-auto">
+                            {chats.length > 0 ? (
+                                chatList
                             ) : (
                                 <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">No messages yet</p>
+                                    <p className="text-gray-500">No chats available</p>
                                 </div>
                             )}
                         </div>
+                    </div>
 
-                        {/* Message Input */}
-                        <form
-                            onSubmit={handleSendMessage}
-                            className="border-t border-gray-200 p-4 dark:border-gray-700 flex-shrink-0"
-                        >
-                            <div className="flex space-x-4">
-                                <input
-                                    type="text"
-                                    value={newMessage}
-                                    onChange={handleInputChange} // Cambiar de onChange a handleInputChange
-                                    placeholder="Type a message..."
-                                    disabled={isSending}
-                                    className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    autoComplete="off"
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isSending || !newMessage.trim()}
-                                    className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 transition-colors"
-                                >
-                                    {isSending ? 'Sending...' : 'Send'}
-                                </button>
+                    {/* Chat Messages */}
+                    {selectedChat ? (
+                        <div className="flex w-2/3 flex-col">
+                            {/* Chat Header */}
+                            <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
+                                        {selectedChat.avatar}
+                                    </div>
+                                    <h3 className="font-semibold">{selectedChat.name}</h3>
+                                </div>
+
+                                <div className="flex items-center space-x-3">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    AI Response
+                                </span>
+                                    <label className="relative inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={conversationMode === 'ai'}
+                                            onChange={(e) => handleModeChange(e.target.checked ? 'ai' : 'human')}
+                                            className="sr-only peer"
+                                        />
+                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    </label>
+                                    <span className={`text-sm font-medium ${conversationMode === 'ai' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                    {conversationMode === 'ai' ? 'ON' : 'OFF'}
+                                </span>
+                                </div>
                             </div>
-                        </form>
-                    </div>
-                ) : (
-                    <div className="flex w-2/3 items-center justify-center">
-                        <div className="text-center">
-                            <p className="text-gray-500 text-lg mb-2">Select a chat to start messaging</p>
-                            <p className="text-gray-400 text-sm">Choose a conversation from the list to view messages</p>
+
+                            {/* Messages Container */}
+                            <div
+                                ref={messagesContainerRef}
+                                className="flex-1 overflow-y-auto p-4 space-y-4"
+                            >
+                                {isLoadingMessages ? (
+                                    <div className="flex items-center justify-center h-full">
+                                        <p className="text-gray-500">Loading messages...</p>
+                                    </div>
+                                ) : messages.length > 0 ? (
+                                    <>
+                                        {messageList}
+                                        <div ref={messagesEndRef} />
+                                    </>
+                                ) : (
+                                    <div className="flex items-center justify-center h-full">
+                                        <p className="text-gray-500">No messages yet</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Message Input */}
+                            <form
+                                onSubmit={handleSendMessage}
+                                className="border-t border-gray-200 p-4 dark:border-gray-700 flex-shrink-0"
+                            >
+                                <div className="flex space-x-4">
+                                    <input
+                                        type="text"
+                                        value={newMessage}
+                                        onChange={handleInputChange} // Cambiar de onChange a handleInputChange
+                                        placeholder="Type a message..."
+                                        disabled={isSending}
+                                        className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        autoComplete="off"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={isSending || !newMessage.trim()}
+                                        className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 transition-colors"
+                                    >
+                                        {isSending ? 'Sending...' : 'Send'}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                    </div>
-                )}
-            </div>
-        </ChatLayout>
+                    ) : (
+                        <div className="flex w-2/3 items-center justify-center">
+                            <div className="text-center">
+                                <p className="text-gray-500 text-lg mb-2">Select a chat to start messaging</p>
+                                <p className="text-gray-400 text-sm">Choose a conversation from the list to view messages</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </ChatLayout>
+        </AppLayout>
     )
 }

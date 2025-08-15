@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
 import { Head, Link, useForm, usePage } from '@inertiajs/react'
 import { useMemo, useEffect } from 'react';
-import type { BreadcrumbItem } from '@/types'
+import type { BreadcrumbItem, Chatbot } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -35,7 +35,6 @@ interface TemplatesProps {
     allTemplates: Template[];
     activeTemplates: Template[];
     deletedTemplates: Template[];
-    chatbot: number;
 }
 
 interface FlashMessages {
@@ -45,7 +44,8 @@ interface FlashMessages {
 
 interface PageProps {
     flash: FlashMessages;
-    [key: string]: never|FlashMessages;
+    chatbot: Chatbot;
+    [key: string]: never|FlashMessages|Chatbot;
 }
 
 const TemplateTable = ({ templates }: { templates: Template[] }) => {
@@ -194,15 +194,19 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
     )
 }
 
-export default function Templates({ allTemplates, activeTemplates, deletedTemplates, chatbot }: TemplatesProps) {
+export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
     const { props } = usePage<PageProps>();
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         {
-            title: 'Message templates management',
-            href: route('message-templates.index', chatbot),
+            title: props.chatbot.name,
+            href: route('chatbots.index'),
         },
-    ], [chatbot]);
+        {
+            title: 'Message templates management',
+            href: route('message-templates.index', props.chatbot.id),
+        },
+    ], [props.chatbot]);
 
     // Display the flash messages
     useEffect(() => {

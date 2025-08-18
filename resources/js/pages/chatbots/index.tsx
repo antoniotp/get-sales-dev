@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Head, Link, usePage, router } from '@inertiajs/react';
-import { Bot, Plus, MoreHorizontal, Trash2, Settings, MessageCircle } from 'lucide-react';
+import { Bot, Plus, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -139,74 +139,75 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
 
     return (
         <>
-            <Card className="group hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="pb-0">
-                    <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                                <Bot className="h-5 w-5 text-white" />
+            <Link href={route('chatbots.edit', chatbot.id)}>
+                <Card className="group hover:shadow-md transition-shadow duration-200">
+                    <CardHeader className="pb-0">
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center space-x-2">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+                                    <Bot className="h-5 w-5 text-white" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <CardTitle className="truncate text-base">{chatbot.name}</CardTitle>
+                                </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <CardTitle className="truncate text-base">{chatbot.name}</CardTitle>
-                            </div>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                            <div
-                                className={`h-2 w-2 rounded-full ${
-                                    isActive ? 'bg-green-500' : 'bg-gray-400'
-                                }`}
-                            />
-                            <span className="text-xs text-muted-foreground">
+                            <div className="flex items-center space-x-1">
+                                <div
+                                    className={`h-2 w-2 rounded-full ${
+                                        isActive ? 'bg-green-500' : 'bg-gray-400'
+                                    }`}
+                                />
+                                <span className="text-xs text-muted-foreground">
                                 {isActive ? 'Active' : 'Inactive'}
                             </span>
+                            </div>
                         </div>
-                    </div>
-                </CardHeader>
+                    </CardHeader>
 
-                <CardContent className="pt-0">
-                    <CardDescription className="line-clamp-3 min-h-[30px] text-sm">
-                        {chatbot.description || 'No description provided'}
-                    </CardDescription>
+                    <CardContent className="pt-0">
+                        <CardDescription className="line-clamp-3 min-h-[30px] text-sm">
+                            {chatbot.description || 'No description provided'}
+                        </CardDescription>
 
-                    <div className="mt-4 flex items-center justify-between">
+                        <div className="mt-4 flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">
                             Created {chatbot.created_at}
                         </span>
-                        <div className="flex items-center space-x-2">
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href={route('chats', chatbot.id)}>
-                                    <MessageCircle className="mr-0 h-4 w-4" />
-                                    View Chats
-                                </Link>
-                            </Button>
-
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">Open menu</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild>
-                                        <Link href={route('chatbots.edit', chatbot.id)} className="flex items-center">
-                                            <Settings className="mr-2 h-4 w-4" />
-                                            View Details
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => setShowDeleteDialog(true)}
-                                        className="text-red-600 focus:text-red-600"
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete Agent
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div className="flex items-center space-x-2">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 w-8 p-0"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                            }}
+                                        >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                            <span className="sr-only">Open menu</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setShowDeleteDialog(true);
+                                            }}
+                                            className="text-red-600 focus:text-red-600"
+                                        >
+                                            <Trash2 className="mr-2 h-4 w-4" />
+                                            Delete Agent
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </Link>
 
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>

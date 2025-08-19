@@ -171,9 +171,9 @@ export function FacebookEmbeddedSignUpBtn({ onSuccess }: Props) {
     };
 
     return (
-        <Button onClick={handleClick} disabled={isLoading}>
+        <Button onClick={handleClick} disabled={isLoading} className="btn-whatsapp">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Connect with Facebook
+            Connect Your WhatsApp
         </Button>
     );
 }

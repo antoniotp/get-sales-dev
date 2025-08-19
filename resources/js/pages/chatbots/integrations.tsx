@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, Link } from '@inertiajs/react';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { WhatsAppIcon } from '@/components/icons/whatsapp';
 
 interface PageProps {
     chatbot: Chatbot;
-    linkedChannels: ChatbotChannel[]
+    linkedChannels: ChatbotChannel[];
     [key: string]: never | Chatbot | Channel[] | ChatbotChannel[];
 }
 
@@ -37,7 +37,14 @@ export default function Integrations() {
         return linkedChannels.find(channel => channel.channel_id === 1);
     }, [linkedChannels]);
 
-    const whatsappButtonText = whatsappChannel ? 'Manage' : 'Connect';
+    const whatsappButton = useMemo(() => {
+        const buttonText = whatsappChannel ? 'Manage' : 'Connect';
+        return (
+            <Link href={route('chatbots.integrations.whatsapp', { chatbot: chatbot.id })}>
+                <Button>{buttonText}</Button>
+            </Link>
+        );
+    }, [whatsappChannel, chatbot.id]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -63,7 +70,7 @@ export default function Integrations() {
                                 </CardContent>
                                 <CardFooter className="flex justify-end gap-2">
                                     {/*<Button variant="outline">Guía de conexión</Button>*/}
-                                    <Button>{whatsappButtonText}</Button>
+                                    {whatsappButton}
                                 </CardFooter>
                             </CardContent>
                         </Card>

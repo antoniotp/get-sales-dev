@@ -3,6 +3,7 @@
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\Chatbot\IntegrationsController;
+use App\Http\Controllers\Chatbot\WhatsAppIntegrationController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
 use App\Http\Controllers\OrganizationSwitchController;
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::put('/chatbots/{chatbot}', [ChatbotController::class, 'update'])->name('chatbots.update');
     Route::delete('/chatbots/{chatbot}', [ChatbotController::class, 'destroy'])->name('chatbots.destroy');
     Route::get('/chatbots/{chatbot}/integrations', [ IntegrationsController::class, 'index'])->name('chatbots.integrations');
+    Route::get('/chatbots/{chatbot}/integrations/whatsapp', [ WhatsAppIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp');
     Route::get('/chatbots/{chatbot}/chats', [ChatController::class, 'index'])->name('chats');
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');

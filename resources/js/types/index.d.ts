@@ -50,3 +50,24 @@ export interface Chatbot {
     status: number;
     created_at: string;
 }
+
+export interface Channel {
+    id: number;
+    name: string;
+    slug: string;
+    icon: string;
+    status: number;
+    [key: string]: unknown;
+}
+
+export interface ChatbotChannel {
+    id: number;
+    chatbot_id: number;
+    channel_id: number;
+    data: {
+        phone_number_verified_name: string;
+        display_phone_number: string;
+    }
+    status: number;
+    [key: string]: unknown;
+}

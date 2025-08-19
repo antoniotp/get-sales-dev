@@ -1,17 +1,22 @@
-import { FacebookEmbeddedSignUpBtn } from '@/components/facebook-embedded-signup-btn';
 import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { Card, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
-import type { BreadcrumbItem, Chatbot } from '@/types';
+import type { BreadcrumbItem, Chatbot, Channel, ChatbotChannel } from '@/types';
+import { WhatsAppIcon } from '@/components/icons/whatsapp';
 
 interface PageProps {
     chatbot: Chatbot;
-    [key: string]: never | Chatbot;
+    linkedChannels: ChatbotChannel[]
+    [key: string]: never | Chatbot | Channel[] | ChatbotChannel[];
 }
+
 export default function Integrations() {
-    const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
+    const props = usePage<PageProps>().props;
+    const chatbot = props.chatbot;
+    const linkedChannels = props.linkedChannels;
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -26,6 +31,13 @@ export default function Integrations() {
         ],
         [chatbot]
     );
+
+    // Check if there is a connected WhatsApp channel (channel_id = 1)
+    const whatsappChannel = useMemo(() => {
+        return linkedChannels.find(channel => channel.channel_id === 1);
+    }, [linkedChannels]);
+
+    const whatsappButtonText = whatsappChannel ? 'Manage' : 'Connect';
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -42,11 +54,17 @@ export default function Integrations() {
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                         <Card>
                             <CardContent>
-                                <CardDescription>
-                                    <FacebookEmbeddedSignUpBtn onSuccess={() => {
-                                        console.log('Facebook sign-up successful');
-                                    }}/>
-                                </CardDescription>
+                                <CardHeader className="flex flex-row items-center gap-2">
+                                    <WhatsAppIcon className="bg-green-500 p-2 text-white rounded-lg" size={48} />
+                                    <CardTitle>WhatsApp</CardTitle>
+                                </CardHeader>
+                                <CardContent className="py-4">
+                                    <CardDescription>Connect your WhatsApp account in just a few steps.</CardDescription>
+                                </CardContent>
+                                <CardFooter className="flex justify-end gap-2">
+                                    {/*<Button variant="outline">Guía de conexión</Button>*/}
+                                    <Button>{whatsappButtonText}</Button>
+                                </CardFooter>
                             </CardContent>
                         </Card>
                     </div>

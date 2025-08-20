@@ -24,7 +24,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(WhatsAppServiceInterface::class, WhatsAppService::class);
         $this->app->bind(AIServiceInterface::class, function ($app) {
             return new ChatGPTService(
-                config('services.openai.api_key')
+                config('services.openai.api_key'),
+                config('services.openai.model')
             );
         });
 

@@ -10,9 +10,11 @@ class ChatGPTService implements AIServiceInterface
 {
     public function __construct(
         private string $apiKey,
-        private readonly string $model = 'gpt-4.1-nano'
+        private readonly string $model = 'gpt-5-nano'
     ) {
         $this->apiKey = config('services.openai.api_key');
+        Log::info('ChatGPT Service Initialized');
+        Log::info('Model: ' . $this->model);
     }
 
     public function generateResponse(string $prompt, array $history): string
@@ -26,8 +28,6 @@ class ChatGPTService implements AIServiceInterface
             ])->post('https://api.openai.com/v1/chat/completions', [
                 'model' => $this->model,
                 'messages' => $messages,
-                'temperature' => 0.7,
-                'max_tokens' => 500,
             ]);
 
             if ($response->failed()) {

@@ -2,11 +2,22 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $organization_id
+ * @property int $subscription_id
+ * @property int $status
+ * @property Carbon $started_at
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $cancelled_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class OrganizationSubscription extends Model
 {
     use HasFactory;

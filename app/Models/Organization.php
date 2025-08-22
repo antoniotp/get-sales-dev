@@ -8,7 +8,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property string|null $logo
+ * @property string|null $website
+ * @property string|null $address
+ * @property string $timezone
+ * @property string $locale
+ * @property int $status
+ * @property int $owner_id
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Organization extends Model
 {
     use HasFactory, SoftDeletes;

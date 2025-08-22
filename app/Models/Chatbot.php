@@ -7,7 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $organization_id
+ * @property string $name
+ * @property string|null $description
+ * @property string|null $system_prompt
+ * @property int $status
+ * @property int $response_delay_min
+ * @property int $response_delay_max
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Chatbot extends Model
 {
     use HasFactory, SoftDeletes;

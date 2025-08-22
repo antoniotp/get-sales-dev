@@ -7,7 +7,22 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $chatbot_id
+ * @property int $channel_id
+ * @property string $name
+ * @property string|null $webhook_url
+ * @property array|null $credentials
+ * @property array|null $webhook_config
+ * @property int $status
+ * @property Carbon|null $last_activity_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class ChatbotChannel extends Model
 {
     use HasFactory, SoftDeletes;

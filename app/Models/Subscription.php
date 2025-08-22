@@ -6,7 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $slug
+ * @property string|null $description
+ * @property float|null $price
+ * @property string|null $currency
+ * @property string $billing_period
+ * @property bool $is_free
+ * @property int|null $max_chatbots
+ * @property int|null $max_messages_per_month
+ * @property array|null $features
+ * @property int $status
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Subscription extends Model
 {
     use HasFactory, SoftDeletes;

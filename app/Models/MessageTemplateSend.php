@@ -5,7 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $message_template_id
+ * @property int $conversation_id
+ * @property int|null $message_id
+ * @property array|null $variables_data
+ * @property string|null $rendered_content
+ * @property string|null $platform_message_id
+ * @property string $send_status
+ * @property string|null $error_code
+ * @property string|null $error_message
+ * @property Carbon|null $sent_at
+ * @property Carbon|null $delivered_at
+ * @property Carbon|null $read_at
+ * @property Carbon|null $failed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ */
 class MessageTemplateSend extends Model
 {
     use HasFactory;

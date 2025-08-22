@@ -7,12 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int|null $contact_channel_id
+ * @property int $chatbot_channel_id
+ * @property string $external_conversation_id
+ * @property string|null $contact_name
+ * @property string|null $contact_phone
+ * @property string|null $contact_email
+ * @property string|null $contact_avatar
+ * @property int $status
+ * @property string $mode
+ * @property int|null $assigned_user_id
+ * @property Carbon|null $last_message_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ */
 class Conversation extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'contact_channel_id',
         'chatbot_channel_id',
         'external_conversation_id',
         'contact_name',

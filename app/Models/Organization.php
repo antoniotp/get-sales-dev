@@ -189,4 +189,11 @@ class Organization extends Model
         return $this->activeChatbots()->count();
     }
 
+    /**
+     * Get the contacts for the organization.
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
 }

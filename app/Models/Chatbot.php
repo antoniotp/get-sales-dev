@@ -45,6 +45,14 @@ class Chatbot extends Model
     }
 
     /**
+     * Get the contact channels for this chatbot.
+     */
+    public function contactChannels(): HasMany
+    {
+        return $this->hasMany(ContactChannel::class);
+    }
+
+    /**
      * Get all conversations through chatbot channels.
      */
     public function conversations(): \Illuminate\Database\Eloquent\Relations\HasManyThrough

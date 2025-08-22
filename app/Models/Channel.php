@@ -34,6 +34,14 @@ class Channel extends Model
     }
 
     /**
+     * Get the contact channels for this channel.
+     */
+    public function contactChannels(): HasMany
+    {
+        return $this->hasMany(ContactChannel::class);
+    }
+
+    /**
      * Scope a query to only include active channels.
      */
     public function scopeActive($query)

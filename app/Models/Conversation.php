@@ -39,6 +39,14 @@ class Conversation extends Model
     }
 
     /**
+     * Get the contact channel that owns this conversation.
+     */
+    public function contactChannel(): BelongsTo
+    {
+        return $this->belongsTo(ContactChannel::class);
+    }
+
+    /**
      * Get the assigned user for this conversation.
      */
     public function assignedUser(): BelongsTo

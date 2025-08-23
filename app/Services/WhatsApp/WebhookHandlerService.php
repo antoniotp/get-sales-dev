@@ -7,6 +7,8 @@ use App\Events\NewWhatsAppMessage;
 //use App\Events\WhatsAppTemplateStatusUpdate;
 use App\Jobs\ProcessAIResponse;
 use App\Models\ChatbotChannel;
+use App\Models\Contact;
+use App\Models\ContactChannel;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageTemplate;
@@ -78,7 +80,7 @@ class WebhookHandlerService
             return;
         }
 
-        if (!$this->createOrUpdateConversation($value, $message)) {
+        if (!$this->getOrCreateContactAndConversation($value, $message)) {
             Log::error('Could not create or update conversation for message', ['message' => $message]);
             return;
         }
@@ -238,29 +240,53 @@ class WebhookHandlerService
     }
 
     /**
-     * Create or update the conversation for the incoming message.
+     * Get or create the contact, contact channel, and conversation.
      *
      * @param array<string, mixed> $value
      * @param array<string, mixed> $message
      */
-    private function createOrUpdateConversation(array $value, array $message): bool
+    private function getOrCreateContactAndConversation(array $value, array $message): bool
     {
         try {
-            $contact = $value['contacts'][0] ?? null;
+            $organizationId = $this->chatbotChannel->chatbot->organization_id;
+            $channelIdentifier = $message['from'];
+            $contactData = $value['contacts'][0] ?? null;
 
+            // Find or create the contact channel
+            $contactChannel = ContactChannel::firstOrCreate(
+                [
+                    'chatbot_id' => $this->chatbotChannel->chatbot_id,
+                    'channel_id' => 1, // WhatsApp
+                    'channel_identifier' => $channelIdentifier,
+                ],
+                [
+                    'contact_id' => Contact::firstOrCreate(
+                        ['organization_id' => $organizationId, 'phone_number' => $channelIdentifier],
+                        ['first_name' => $contactData ? ($contactData['profile']['name'] ?? null) : null]
+                    )->id,
+                ]
+            );
+
+            // Find or create the conversation
             $this->conversation = Conversation::firstOrCreate(
                 [
                     'chatbot_channel_id' => $this->chatbotChannel->id,
-                    'external_conversation_id' => $message['from'],
+                    'external_conversation_id' => $channelIdentifier,
                 ],
                 [
-                    'contact_name' => $contact ? ($contact['profile']['name'] ?? null) : null,
-                    'contact_phone' => $message['from'],
+                    'contact_channel_id' => $contactChannel->id,
+                    'contact_name' => $contactChannel->contact->first_name,
+                    'contact_phone' => $channelIdentifier,
                     'status' => 1,
                     'mode' => 'ai',
                     'last_message_at' => now(),
                 ]
             );
+
+            // If conversation existed but without contact channel, update it
+            if (!$this->conversation->wasRecentlyCreated && is_null($this->conversation->contact_channel_id)) {
+                $this->conversation->update(['contact_channel_id' => $contactChannel->id]);
+            }
 
             // Dispatch the event if a conversation was created
             if ($this->conversation->wasRecentlyCreated) {
@@ -275,7 +301,7 @@ class WebhookHandlerService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Error creating/updating conversation', [
+            Log::error('Error creating/updating contact and conversation', [
                 'error' => $e->getMessage(),
                 'message' => $message
             ]);

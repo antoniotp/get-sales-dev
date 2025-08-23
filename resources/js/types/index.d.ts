@@ -71,3 +71,12 @@ export interface ChatbotChannel {
     status: number;
     [key: string]: unknown;
 }
+
+interface FlashMessages {
+    success?: string;
+    error?: string;
+}
+
+interface PageProps {
+    flash: FlashMessages;
+}

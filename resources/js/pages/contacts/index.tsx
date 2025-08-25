@@ -8,18 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { type PageProps } from '@/types';
 import { Button } from '@/components/ui/button';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-
-interface Contact {
-    id: number;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone_number: string;
-    country_code: string;
-    language_code: string;
-    chatbots: string[];
-    channels: string[];
-}
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { EllipsisVertical } from 'lucide-react';
+import { UpsertContactSheet } from '@/pages/contacts/partials/upsert-contact-sheet';
+import { useState } from 'react';
+import { Contact } from '@/types/contact';
 
 interface FilterOptions {
     countries: string[];
@@ -55,6 +48,9 @@ interface FormData {
 }
 
 export default function ContactsPage({ contacts, filters, filterOptions }: ContactsPageProps) {
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [selectedContact, setSelectedContact] = useState<Contact | undefined>(undefined);
+
     const { data, setData, get, transform } = useForm<FormData>({
         search: filters.search || '',
         country: filters.country || 'all',
@@ -89,67 +85,75 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                 <div className="space-y-4">
                     <h1 className="text-2xl font-bold">Contacts</h1>
 
-                    <div className="flex items-center space-x-2">
-                        <Input
-                            placeholder="Search by name, email, phone..."
-                            className="max-w-sm"
-                            value={data.search}
-                            onChange={(e) => setData('search', e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleFilterChange()}
-                        />
-                        <Select value={data.country} onValueChange={(v) => handleSelectChange('country', v)}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Country" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Countries</SelectItem>
-                                {filterOptions.countries.map((country) => (
-                                    <SelectItem key={country} value={country}>
-                                        {country}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={data.language} onValueChange={(v) => handleSelectChange('language', v)}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Language" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Languages</SelectItem>
-                                {filterOptions.languages.map((lang) => (
-                                    <SelectItem key={lang} value={lang}>
-                                        {lang}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={data.chatbot} onValueChange={(v) => handleSelectChange('chatbot', v)}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Chatbot" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Chatbots</SelectItem>
-                                {filterOptions.chatbots.map((bot) => (
-                                    <SelectItem key={bot.id} value={String(bot.id)}>
-                                        {bot.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Select value={data.channel} onValueChange={(v) => handleSelectChange('channel', v)}>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Channel" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Channels</SelectItem>
-                                {filterOptions.channels.map((chan) => (
-                                    <SelectItem key={chan.id} value={String(chan.id)}>
-                                        {chan.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Button onClick={handleFilterChange}>Apply Filters</Button>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <Input
+                                placeholder="Search by name, email, phone..."
+                                className="max-w-sm"
+                                value={data.search}
+                                onChange={(e) => setData('search', e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleFilterChange()}
+                            />
+                            <Select value={data.country} onValueChange={(v) => handleSelectChange('country', v)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Country" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Countries</SelectItem>
+                                    {filterOptions.countries.map((country) => (
+                                        <SelectItem key={country} value={country}>
+                                            {country}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={data.language} onValueChange={(v) => handleSelectChange('language', v)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Languages</SelectItem>
+                                    {filterOptions.languages.map((lang) => (
+                                        <SelectItem key={lang} value={lang}>
+                                            {lang}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={data.chatbot} onValueChange={(v) => handleSelectChange('chatbot', v)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Chatbot" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Chatbots</SelectItem>
+                                    {filterOptions.chatbots.map((bot) => (
+                                        <SelectItem key={bot.id} value={String(bot.id)}>
+                                            {bot.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select value={data.channel} onValueChange={(v) => handleSelectChange('channel', v)}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Channel" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Channels</SelectItem>
+                                    {filterOptions.channels.map((chan) => (
+                                        <SelectItem key={chan.id} value={String(chan.id)}>
+                                            {chan.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button onClick={handleFilterChange}>Apply Filters</Button>
+                        </div>
+                        <Button className="ml-2" onClick={() => {
+                            setTimeout(() => {
+                                setSelectedContact(undefined);
+                                setIsSheetOpen(true);
+                            }, 100);
+                        }}>Create Contact</Button>
                     </div>
 
                     <div className="rounded-md border">
@@ -161,6 +165,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                     <TableHead>Location</TableHead>
                                     <TableHead>Chatbots</TableHead>
                                     <TableHead>Channels</TableHead>
+                                    <TableHead></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -196,11 +201,33 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                                     ))}
                                                 </div>
                                             </TableCell>
+                                            <TableCell>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                                            <span className="sr-only">Open menu</span>
+                                                            <EllipsisVertical className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setTimeout(() => {
+                                                                    setSelectedContact(contact);
+                                                                    setIsSheetOpen(true);
+                                                                }, 100);
+                                                            }}
+                                                        >
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">
+                                        <TableCell colSpan={6} className="h-24 text-center">
                                             No contacts found.
                                         </TableCell>
                                     </TableRow>
@@ -228,6 +255,12 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                             )}
                         </PaginationContent>
                     </Pagination>
+
+                    <UpsertContactSheet
+                        open={isSheetOpen}
+                        onOpenChange={setIsSheetOpen}
+                        contact={selectedContact}
+                    />
                 </div>
             </AppContentDefaultLayout>
         </AppLayout>

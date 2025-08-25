@@ -40,6 +40,8 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::post('/contacts', [ContactController::class, 'upsert'])->name('contacts.store');
+    Route::put('/contacts/{contact}', [ContactController::class, 'upsert'])->name('contacts.update');
     Route::post('/organizations/switch', [OrganizationSwitchController::class, 'switch'])->name('organizations.switch');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
 });

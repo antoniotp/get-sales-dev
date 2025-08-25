@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\Contact;
+use App\Http\Requests\Contacts\UpsertContactRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,5 +78,26 @@ class ContactController extends Controller
                 'channels' => Channel::all(['id', 'name']),
             ],
         ]);
+    }
+
+    public function upsert(UpsertContactRequest $request): RedirectResponse
+    {
+        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
+
+        if (!$organization) {
+            abort(403, 'No organization available');
+        }
+
+        $validatedData = $request->validated();
+
+        Contact::updateOrCreate(
+            [
+                'id' => $request->route('contact'),
+                'organization_id' => $organization->id,
+            ],
+            $validatedData
+        );
+
+        return redirect()->route('contacts.index');
     }
 }

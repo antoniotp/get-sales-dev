@@ -100,4 +100,17 @@ class ContactController extends Controller
 
         return redirect()->route('contacts.index');
     }
+
+    public function destroy(Request $request, Contact $contact): RedirectResponse
+    {
+        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
+
+        if ($contact->organization_id !== $organization->id) {
+            abort(403, 'You are not authorized to delete this contact.');
+        }
+
+        $contact->delete();
+
+        return redirect()->route('contacts.index');
+    }
 }

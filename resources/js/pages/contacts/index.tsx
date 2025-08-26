@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { EllipsisVertical } from 'lucide-react';
+import { DeleteContactDialog } from '@/pages/contacts/partials/delete-contact-dialog';
 import { UpsertContactSheet } from '@/pages/contacts/partials/upsert-contact-sheet';
 import { useState } from 'react';
 import { Contact } from '@/types/contact';
@@ -49,7 +50,9 @@ interface FormData {
 
 export default function ContactsPage({ contacts, filters, filterOptions }: ContactsPageProps) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedContact, setSelectedContact] = useState<Contact | undefined>(undefined);
+    const [contactToDelete, setContactToDelete] = useState<number | undefined>(undefined);
 
     const { data, setData, get, transform } = useForm<FormData>({
         search: filters.search || '',
@@ -220,6 +223,15 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                                         >
                                                             Edit
                                                         </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                setContactToDelete(contact.id);
+                                                                setIsDeleteDialogOpen(true);
+                                                            }}
+                                                            className="text-red-600"
+                                                        >
+                                                            Delete
+                                                        </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
@@ -261,6 +273,14 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                         onOpenChange={setIsSheetOpen}
                         contact={selectedContact}
                     />
+
+                    {contactToDelete && (
+                        <DeleteContactDialog
+                            open={isDeleteDialogOpen}
+                            onOpenChange={setIsDeleteDialogOpen}
+                            contactId={contactToDelete}
+                        />
+                    )}
                 </div>
             </AppContentDefaultLayout>
         </AppLayout>

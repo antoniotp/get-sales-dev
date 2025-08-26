@@ -42,6 +42,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
     Route::post('/contacts', [ContactController::class, 'upsert'])->name('contacts.store');
     Route::put('/contacts/{contact}', [ContactController::class, 'upsert'])->name('contacts.update');
+    Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
     Route::post('/organizations/switch', [OrganizationSwitchController::class, 'switch'])->name('organizations.switch');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
 });

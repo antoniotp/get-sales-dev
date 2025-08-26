@@ -27,7 +27,7 @@ class ContactData implements Arrayable
     {
         $channels = $contact->contactChannels->map(fn ($cc) => $cc->channel->name)->unique()->values();
 
-        $chatbots = $contact->conversations->map(fn ($conv) => $conv->chatbot?->name)->filter()->unique()->values();
+        $chatbots = $contact->conversations->map(fn ($conv) => $conv->chatbotchannel->chatbot?->name)->filter()->unique()->values();
 
         return new self(
             id: $contact->id,

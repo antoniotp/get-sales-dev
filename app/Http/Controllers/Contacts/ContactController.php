@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Contacts;
 
-use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\DataTransferObjects\Contact\ContactData;
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\Contact;
 use App\Http\Requests\Contacts\UpsertContactRequest;
+use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,20 +16,14 @@ use Inertia\Response;
 
 class ContactController extends Controller
 {
-    public function __construct(private readonly OrganizationServiceInterface $organizationService)
+    public function __construct(private Organization $organization)
     {
     }
 
     public function index(Request $request): Response
     {
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-
         $query = Contact::query()
-            ->where('organization_id', $organization->id)
+            ->where('organization_id', $this->organization->id)
             ->with(['contactChannels.channel', 'conversations.chatbotChannel.chatbot']);
 
         if ($request->filled('search')) {
@@ -72,9 +66,9 @@ class ContactController extends Controller
             'contacts' => $contacts,
             'filters' => $request->only(['search', 'country', 'language', 'chatbot', 'channel']),
             'filterOptions' => [
-                'countries' => Contact::where('organization_id', $organization->id)->whereNotNull('country_code')->distinct()->pluck('country_code'),
-                'languages' => Contact::where('organization_id', $organization->id)->whereNotNull('language_code')->distinct()->pluck('language_code'),
-                'chatbots' => Chatbot::where('organization_id', $organization->id)->get(['id', 'name']),
+                'countries' => Contact::where('organization_id', $this->organization->id)->whereNotNull('country_code')->distinct()->pluck('country_code'),
+                'languages' => Contact::where('organization_id', $this->organization->id)->whereNotNull('language_code')->distinct()->pluck('language_code'),
+                'chatbots' => Chatbot::where('organization_id', $this->organization->id)->get(['id', 'name']),
                 'channels' => Channel::all(['id', 'name']),
             ],
         ]);
@@ -82,18 +76,12 @@ class ContactController extends Controller
 
     public function upsert(UpsertContactRequest $request): RedirectResponse
     {
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-
         $validatedData = $request->validated();
 
         Contact::updateOrCreate(
             [
                 'id' => $request->route('contact'),
-                'organization_id' => $organization->id,
+                'organization_id' => $this->organization->id,
             ],
             $validatedData
         );
@@ -103,9 +91,7 @@ class ContactController extends Controller
 
     public function destroy(Request $request, Contact $contact): RedirectResponse
     {
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if ($contact->organization_id !== $organization->id) {
+        if ($contact->organization_id !== $this->organization->id) {
             abort(403, 'You are not authorized to delete this contact.');
         }
 

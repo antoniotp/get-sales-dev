@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Chat;
 
-use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\DataTransferObjects\Chat\ConversationData;
 use App\DataTransferObjects\Chat\MessageData;
 use App\Events\MessageSent;
@@ -12,6 +11,7 @@ use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -19,20 +19,13 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function __construct(private OrganizationServiceInterface $organizationService)
+    public function __construct(private Organization $organization)
     {
     }
 
     public function index(Request $request, Chatbot $chatbot): Response
     {
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-        $organizationId = $organization->id;
-
-        if ( $chatbot->organization_id != $organizationId ) {
+        if ( $chatbot->organization_id != $this->organization->id ) {
             abort(403, 'Unauthorized');
         }
 
@@ -46,8 +39,8 @@ class ChatController extends Controller
                 'conversations.*',
             ])
             ->with(['latestMessage', 'chatbotChannel.chatbot'])
-            ->whereHas('chatbotChannel.chatbot', function ($query) use ($organizationId, $chatbotId) {
-                $query->where('chatbots.organization_id', $organizationId)
+            ->whereHas('chatbotChannel.chatbot', function ($query) use ($chatbotId) {
+                $query->where('chatbots.organization_id', $this->organization->id)
                     ->where('chatbots.id', $chatbotId);
             })
             ->orderBy('last_message_at', 'desc')
@@ -63,15 +56,7 @@ class ChatController extends Controller
 
     public function getMessages(Conversation $conversation, Request $request): JsonResponse
     {
-        // Get current organization from session
-        $organizationId = $request->session()->get('currentOrganizationId');
-
-        if (!$organizationId) {
-            return response()->json(['error' => 'No organization selected'], 403);
-        }
-
-        // Verify if the user has access to this conversation
-        if (!$conversation->chatbotChannel->chatbot->where('organization_id', $organizationId)->exists()) {
+        if ($conversation->chatbotChannel->chatbot->organization_id !== $this->organization->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -131,18 +116,7 @@ class ChatController extends Controller
             'mode' => 'required|in:ai,human',
         ]);
 
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-        $organizationId = $organization->id;
-
-        if (!$organizationId) {
-            return response()->json(['error' => 'No organization selected'], 403);
-        }
-
-        // Verify if the user has access to this conversation
-        if (!$conversation->chatbotChannel->chatbot->where('organization_id', $organizationId)->exists()) {
+        if ($conversation->chatbotChannel->chatbot->organization_id !== $this->organization->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

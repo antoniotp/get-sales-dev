@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Facebook;
 
-use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\Organization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +15,7 @@ class FacebookController extends Controller
 {
     public function __construct(
         private readonly FacebookServiceInterface $facebookService,
-        private OrganizationServiceInterface $organizationService
+        private Organization $organization
     ) {
     }
 
@@ -63,15 +63,7 @@ class FacebookController extends Controller
             }
         }
 
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-
-        $organizationId = $organization->id;
-
-        if ( $chatbot->organization_id != $organizationId ) {
+        if ( $chatbot->organization_id != $this->organization->id ) {
             abort(403, 'Unauthorized');
         }
 

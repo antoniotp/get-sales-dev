@@ -2,28 +2,22 @@
 
 namespace App\Http\Controllers\Chatbot;
 
-use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class WhatsAppIntegrationController extends Controller
 {
-    public function __construct(private readonly OrganizationServiceInterface $organizationService)
+    public function __construct(private Organization $organization)
     {
     }
 
     public function index(Chatbot $chatbot, Request $request): Response
     {
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-
-        if ($chatbot->organization_id !== $organization->id) {
+        if ($chatbot->organization_id !== $this->organization->id) {
             abort(403, 'Unauthorized');
         }
 

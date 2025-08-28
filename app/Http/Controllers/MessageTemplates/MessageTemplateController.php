@@ -2,31 +2,26 @@
 
 namespace App\Http\Controllers\MessageTemplates;
 
-use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\DataTransferObjects\MessageTemplate\MessageTemplateData;
 use App\Events\MessageTemplateCreated;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
 use App\Models\MessageTemplate;
 use App\Models\MessageTemplateCategory;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MessageTemplateController extends Controller
 {
-    public function __construct(private OrganizationServiceInterface $organizationService)
+    public function __construct(private Organization $organization)
     {
     }
 
     public function index(Request $request, Chatbot $chatbot): Response
     {
-        $organization = $this->organizationService->getCurrentOrganization($request, auth()->user());
-
-        if (!$organization) {
-            abort(403, 'No organization available');
-        }
-        $organizationId = $organization->id;
+        $organizationId = $this->organization->id;
 
         if ( $chatbot->organization_id != $organizationId ) {
             abort(403, 'Unauthorized');

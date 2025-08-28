@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Chatbot;
 
-use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\DataTransferObjects\Chatbot\ChatbotData;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ChatbotController extends Controller
 {
-    public function __construct(private OrganizationServiceInterface $organizationService)
+    public function __construct(private Organization $organization)
     {
     }
 
@@ -21,8 +21,7 @@ class ChatbotController extends Controller
      */
     public function index(): Response
     {
-        $organization = $this->organizationService->getCurrentOrganization(request(), auth()->user());
-        $chatbots = $organization->chatbots()
+        $chatbots = $this->organization->chatbots()
             ->select(['id', 'name', 'description', 'status', 'created_at'])
             ->orderBy('created_at', 'desc')
             ->get()
@@ -60,9 +59,7 @@ class ChatbotController extends Controller
             'response_delay_max' => 'nullable|integer|min:0',
         ]);
 
-        $organization = $this->organizationService->getCurrentOrganization(request(), auth()->user());
-
-        $chatbot = $organization->chatbots()->create([
+        $chatbot = $this->organization->chatbots()->create([
             ...$validated,
             'status' => 1, // Active by default
         ]);
@@ -149,8 +146,7 @@ class ChatbotController extends Controller
      */
     private function authorizeForOrganization(Chatbot $chatbot): void
     {
-        $organization = $this->organizationService->getCurrentOrganization(request(), auth()->user());
-        if ($chatbot->organization_id !== $organization->id) {
+        if ($chatbot->organization_id !== $this->organization->id) {
             abort(403, 'Unauthorized access to this chatbot.');
         }
     }

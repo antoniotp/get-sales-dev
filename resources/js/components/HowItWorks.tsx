@@ -74,9 +74,6 @@ const HowItWorks = () => {
                 className="rounded-xl shadow-lg border border-white/20"
               />
             </div>
-
-            <div className="absolute -z-10 top-10 -right-10 h-[300px] w-[300px] bg-brandBlue/5 rounded-full blur-3xl"></div>
-            <div className="absolute -z-10 bottom-10 -left-10 h-[300px] w-[300px] bg-whatsapp/5 rounded-full blur-3xl"></div>
           </div>
         </div>
       </div>

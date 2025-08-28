@@ -70,11 +70,6 @@ const Hero = () => {
                                 </div>
                             </div>
                         </div>
-
-                        <div
-                            className="absolute top-10 -right-10 bg-gradient-to-br from-brandBlue to-blue-700 h-64 w-64 rounded-full opacity-20 blur-3xl -z-10"></div>
-                        <div
-                            className="absolute -bottom-10 -left-10 bg-gradient-to-br from-whatsapp to-green-700 h-64 w-64 rounded-full opacity-20 blur-3xl -z-10"></div>
                     </div>
                 </div>
             </div>

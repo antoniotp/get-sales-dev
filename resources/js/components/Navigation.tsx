@@ -98,8 +98,16 @@ const Navigation = () => {
               Contact
             </a>
             <div className="flex flex-col gap-2 pt-4">
-              <Button variant="outline" className="w-full">Login</Button>
-              <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Register</Button>
+                <Link
+                    href={route('login')}
+                >
+                    <Button variant="outline" className="w-full">Login</Button>
+                </Link>
+                <Link
+                    href={route('register')}
+                >
+                    <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Register</Button>
+                </Link>
             </div>
           </div>
         </div>

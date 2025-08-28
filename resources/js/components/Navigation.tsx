@@ -98,16 +98,26 @@ const Navigation = () => {
               Contact
             </a>
             <div className="flex flex-col gap-2 pt-4">
-                <Link
-                    href={route('login')}
-                >
-                    <Button variant="outline" className="w-full">Login</Button>
-                </Link>
-                <Link
-                    href={route('register')}
-                >
-                    <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Register</Button>
-                </Link>
+                {auth.user ? (
+                    <Link
+                        href={route('dashboard')}
+                    >
+                        <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Dashboard</Button>
+                    </Link>
+                ) : (
+                    <>
+                        <Link
+                            href={route('login')}
+                        >
+                            <Button variant="outline" className="w-full">Login</Button>
+                        </Link>
+                        <Link
+                            href={route('register')}
+                        >
+                            <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Register</Button>
+                        </Link>
+                    </>
+                )}
             </div>
           </div>
         </div>

@@ -17,10 +17,6 @@ class IntegrationsController extends Controller
 
     public function index(Chatbot $chatbot, Request $request): Response
     {
-        if ( $chatbot->organization_id != $this->organization->id ) {
-            abort(403, 'Unauthorized');
-        }
-
         $linkedChannels = $chatbot->chatbotChannels()->where('credentials','!=','')->active()->get()->map(fn($channel) => [
             'id' => $channel->id,
             'chatbot_id' => $channel->chatbot_id,

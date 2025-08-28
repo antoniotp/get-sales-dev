@@ -25,10 +25,6 @@ class ChatController extends Controller
 
     public function index(Request $request, Chatbot $chatbot): Response
     {
-        if ( $chatbot->organization_id != $this->organization->id ) {
-            abort(403, 'Unauthorized');
-        }
-
         $chatbotId = $chatbot->id;
 
         //TODO: the following must be dynamic depending on messaging channel

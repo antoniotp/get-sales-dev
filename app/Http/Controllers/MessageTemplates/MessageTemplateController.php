@@ -21,12 +21,6 @@ class MessageTemplateController extends Controller
 
     public function index(Request $request, Chatbot $chatbot): Response
     {
-        $organizationId = $this->organization->id;
-
-        if ( $chatbot->organization_id != $organizationId ) {
-            abort(403, 'Unauthorized');
-        }
-
         $chatbotId = $chatbot->id;
 
         //TODO: also filter by channel if needed
@@ -35,8 +29,8 @@ class MessageTemplateController extends Controller
                 'message_templates.*',
             ])
             ->with(['category'])
-            ->whereHas('chatbotChannel.chatbot', function ($query) use ($organizationId, $chatbotId) {
-                $query->where('chatbots.organization_id', $organizationId)
+            ->whereHas('chatbotChannel.chatbot', function ($query) use ($chatbotId) {
+                $query->where('chatbots.organization_id', $this->organization->id)
                     ->where('chatbots.id', $chatbotId);
             });
 

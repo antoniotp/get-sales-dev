@@ -73,8 +73,6 @@ class ChatbotController extends Controller
      */
     public function show(Chatbot $chatbot)
     {
-        $this->authorizeForOrganization($chatbot);
-
         return Inertia::render('chatbots/show', [
             'chatbot' => $chatbot->load('organization'),
         ]);
@@ -85,8 +83,6 @@ class ChatbotController extends Controller
      */
     public function edit(Chatbot $chatbot)
     {
-        $this->authorizeForOrganization($chatbot);
-
         return Inertia::render('chatbots/form', [
             'chatbot' => $chatbot,
         ]);
@@ -97,8 +93,6 @@ class ChatbotController extends Controller
      */
     public function update(Request $request, Chatbot $chatbot)
     {
-        $this->authorizeForOrganization($chatbot);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:500',
@@ -119,8 +113,6 @@ class ChatbotController extends Controller
      */
     public function destroy(Chatbot $chatbot)
     {
-        $this->authorizeForOrganization($chatbot);
-
         $chatbot->delete();
 
         return redirect()->route('chatbots.index')
@@ -139,15 +131,5 @@ class ChatbotController extends Controller
         return strlen($description) > $limit
             ? substr($description, 0, $limit) . '...'
             : $description;
-    }
-
-    /**
-     * Ensure the chatbot belongs to the authenticated user's organization.
-     */
-    private function authorizeForOrganization(Chatbot $chatbot): void
-    {
-        if ($chatbot->organization_id !== $this->organization->id) {
-            abort(403, 'Unauthorized access to this chatbot.');
-        }
     }
 }

@@ -63,10 +63,6 @@ class FacebookController extends Controller
             }
         }
 
-        if ( $chatbot->organization_id != $this->organization->id ) {
-            abort(403, 'Unauthorized');
-        }
-
         $chatbotId = $chatbot->id;
 
         $credentials = [

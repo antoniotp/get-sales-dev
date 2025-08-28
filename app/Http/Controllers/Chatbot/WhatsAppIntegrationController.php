@@ -17,10 +17,6 @@ class WhatsAppIntegrationController extends Controller
 
     public function index(Chatbot $chatbot, Request $request): Response
     {
-        if ($chatbot->organization_id !== $this->organization->id) {
-            abort(403, 'Unauthorized');
-        }
-
         $whatsAppChannel = $chatbot->chatbotChannels()
             ->where('channel_id', 1)
             ->where('status', 1)

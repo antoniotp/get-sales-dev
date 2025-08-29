@@ -1,10 +1,20 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    useSidebar,
+} from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Layers, /*LayoutGrid, */MessagesSquare, Settings, BotMessageSquare, Users } from 'lucide-react';
+import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users, X } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -20,6 +30,7 @@ const footerNavItems: NavItem[] = [];
 export function AppSidebar() {
     const { props } = usePage();
     const chatbot = props.chatbot as { id: number };
+    const { isMobile, toggleSidebar } = useSidebar();
 
     const chatbotNavItems: NavItem[] = [
         {
@@ -41,7 +52,8 @@ export function AppSidebar() {
             title: 'Integrations',
             href: route('chatbots.integrations', { chatbot: chatbot?.id || 0 }),
             icon: Settings,
-        },{
+        },
+        {
             title: 'Contacts',
             href: route('contacts.index'),
             icon: Users,
@@ -55,12 +67,17 @@ export function AppSidebar() {
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
-                    <SidebarMenuItem>
+                    <SidebarMenuItem className="flex">
                         <SidebarMenuButton size="lg" asChild>
                             <Link href={route('dashboard')} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
+                        {isMobile ? (
+                            <Button variant="ghost" size="icon" className="ml-auto" onClick={toggleSidebar}>
+                                <X className="h-5 w-5" />
+                            </Button>
+                        ) : null}
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>

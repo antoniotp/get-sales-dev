@@ -8,6 +8,7 @@ import Echo from 'laravel-echo'
 import parsePhoneNumber from 'libphonenumber-js'
 import type { BreadcrumbItem, Chatbot } from '@/types';
 import AppLayout from '@/layouts/app-layout';
+import { ArrowLeft } from 'lucide-react';
 
 interface PageProps {
     chatbot: Chatbot;
@@ -457,7 +458,7 @@ export default function Chat(
             <ChatLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     {/* Chat List */}
-                    <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+                    <div className={`${selectedChat? "hidden lg:flex":"flex"} w-full lg:w-1/3 border-r border-gray-200 dark:border-gray-700 flex-col`}>
                         <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
                             <h2 className="text-lg font-semibold">Chats</h2>
                             <p className="text-sm text-gray-900 mt-1">
@@ -477,7 +478,15 @@ export default function Chat(
 
                     {/* Chat Messages */}
                     {selectedChat ? (
-                        <div className="flex w-2/3 flex-col">
+                        <div className="flex w-full lg:w-2/3 flex-col">
+                            <div className="flex lg:hidden items-center h-8 border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
+                                <button
+                                    onClick={() => setSelectedChat(null)}
+                                    className="text-blue-500 hover:underline flex flex-row items-center space-x-2"
+                                >
+                                    <ArrowLeft size={16} /> Back to Chats
+                                </button>
+                            </div>
                             {/* Chat Header */}
                             <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
                                 <div className="flex items-center space-x-4">
@@ -553,7 +562,7 @@ export default function Chat(
                             </form>
                         </div>
                     ) : (
-                        <div className="flex w-2/3 items-center justify-center">
+                        <div className="hidden lg:flex w-2/3 items-center justify-center">
                             <div className="text-center">
                                 <p className="text-gray-500 text-lg mb-2">Select a chat to start messaging</p>
                                 <p className="text-gray-400 text-sm">Choose a conversation from the list to view messages</p>

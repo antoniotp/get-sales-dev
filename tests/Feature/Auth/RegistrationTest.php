@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,6 +19,7 @@ class RegistrationTest extends TestCase
 
     public function test_new_users_can_register()
     {
+        (new RoleSeeder())->run();
         $response = $this->post('/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',

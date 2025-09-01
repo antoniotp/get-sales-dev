@@ -33,7 +33,7 @@ class RegistrationService implements RegistrationServiceInterface
                 'owner_id' => $user->id,
             ]);
 
-            $ownerRole = Role::where('name', 'owner')->first();
+            $ownerRole = Role::where('slug', 'owner')->first();
 
             $user->organizations()->attach($organization->id, [
                 'role_id' => $ownerRole->id,

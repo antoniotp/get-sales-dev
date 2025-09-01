@@ -60,7 +60,7 @@ class ChatGPTService implements AIServiceInterface
         $messages = [
             ['role' => 'system', 'content' => $prompt]
         ];
-
+        $history = array_reverse($history);
         return array_merge($messages, $history);
     }
 }

@@ -46,7 +46,7 @@ export default function OrganizationSwitcher() {
 
     return (
         <Select onValueChange={handleSwitch} defaultValue={organization.current.id.toString()}>
-            <SelectTrigger className="w-[150px] overflow-ellipsis no-wrap whitespace-nowrap text-left">
+            <SelectTrigger className="w-full overflow-ellipsis no-wrap whitespace-nowrap text-left">
                 <SelectValue placeholder="Select an organization" />
             </SelectTrigger>
             <SelectContent>

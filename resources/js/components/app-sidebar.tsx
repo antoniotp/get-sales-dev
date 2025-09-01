@@ -16,6 +16,7 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users, X } from 'lucide-react';
 import AppLogo from './app-logo';
+import OrganizationSwitcher from '@/components/OrganizationSwitcher';
 
 const mainNavItems: NavItem[] = [
     {
@@ -30,7 +31,7 @@ const footerNavItems: NavItem[] = [];
 export function AppSidebar() {
     const { props } = usePage();
     const chatbot = props.chatbot as { id: number };
-    const { isMobile, toggleSidebar } = useSidebar();
+    const { isMobile, toggleSidebar, open } = useSidebar();
 
     const chatbotNavItems: NavItem[] = [
         {
@@ -78,6 +79,9 @@ export function AppSidebar() {
                                 <X className="h-5 w-5" />
                             </Button>
                         ) : null}
+                    </SidebarMenuItem>
+                    <SidebarMenuItem className={!open ? 'hidden' : ''}>
+                        <OrganizationSwitcher />
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>

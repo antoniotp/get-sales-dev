@@ -64,7 +64,7 @@ export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndex
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight">Agents</h1>
-                            <p className="text-muted-foreground">
+                            <p className="text-muted-foreground mr-1">
                                 Manage your AI Agents and their configurations
                             </p>
                         </div>

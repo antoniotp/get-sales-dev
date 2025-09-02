@@ -1,22 +1,16 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Button } from '@/components/ui/button';
 import {
     Sidebar,
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    useSidebar,
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users, X } from 'lucide-react';
-import AppLogo from './app-logo';
-import OrganizationSwitcher from '@/components/OrganizationSwitcher';
+import { usePage } from '@inertiajs/react';
+import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users } from 'lucide-react';
+import { OrgSwitcher } from '@/components/org-switcher';
 
 const mainNavItems: NavItem[] = [
     {
@@ -31,7 +25,6 @@ const footerNavItems: NavItem[] = [];
 export function AppSidebar() {
     const { props } = usePage();
     const chatbot = props.chatbot as { id: number };
-    const { isMobile, toggleSidebar, open } = useSidebar();
 
     const chatbotNavItems: NavItem[] = [
         {
@@ -66,24 +59,8 @@ export function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem className="flex">
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={route('dashboard')} prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                        {isMobile ? (
-                            <Button variant="ghost" size="icon" className="ml-auto" onClick={toggleSidebar}>
-                                <X className="h-5 w-5" />
-                            </Button>
-                        ) : null}
-                    </SidebarMenuItem>
-                    <SidebarMenuItem className={!open ? 'hidden' : ''}>
-                        <OrganizationSwitcher />
-                    </SidebarMenuItem>
-                </SidebarMenu>
+            <SidebarHeader className="relative">
+                <OrgSwitcher />
             </SidebarHeader>
 
             <SidebarContent>

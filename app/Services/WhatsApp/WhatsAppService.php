@@ -23,7 +23,6 @@ class WhatsAppService implements WhatsAppServiceInterface
 
             Log::info('Sending WhatsApp message to ' . $to);
             Log::info('Message: ' . $message);
-            Log::info('Access token: ' . $accessToken);
             Log::info('API URL: ' . $apiUrl);
 
             // Send a message using the channel-specific credentials
@@ -69,7 +68,6 @@ class WhatsAppService implements WhatsAppServiceInterface
             $accessToken = $credentials['whatsapp_business_access_token'];
 
             Log::info('Submitting WhatsApp template for review: ' . $template->name);
-            Log::info('Access token: ' . $accessToken);
             Log::info('API URL: ' . $apiUrl);
 
             // Prepare button configuration if exists

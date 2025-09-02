@@ -48,9 +48,6 @@ class ProcessAIResponse implements ShouldQueue
             $prompt = $this->message->conversation->chatbotChannel->chatbot->system_prompt ??
                 'You are a helpful assistant. Respond professionally and concisely.';
 
-//            Log::info( 'Prompt: ' . $prompt );
-            Log::info( 'Conversation History: ' . json_encode( $history ) );
-
             // Generate AI response
             $aiResponse = $aiService->generateResponse( $prompt, $history );
 

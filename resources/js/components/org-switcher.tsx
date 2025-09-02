@@ -16,7 +16,7 @@ import {
     SidebarMenuItem,
     useSidebar,
 } from "@/components/ui/sidebar"
-import { router, usePage } from '@inertiajs/react';
+import { router, usePage, Link } from '@inertiajs/react';
 
 
 
@@ -35,7 +35,7 @@ interface PageProps {
     [key: string]: unknown;
 }
 
-export function OrgSwitcher() {
+export function OrgSwitcher(){
     const { props } = usePage<PageProps>();
     const { organization } = props;
     const { isMobile } = useSidebar()
@@ -100,12 +100,14 @@ export function OrgSwitcher() {
                             </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="gap-2 p-2">
-                            <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
-                                <Plus className="size-4" />
-                            </div>
-                            <div className="text-muted-foreground font-medium">Add Organization</div>
-                        </DropdownMenuItem>
+                        <Link href={route('organizations.create')}>
+                            <DropdownMenuItem className="gap-2 p-2">
+                                <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
+                                    <Plus className="size-4" />
+                                </div>
+                                <div className="text-muted-foreground font-medium">Add Organization</div>
+                            </DropdownMenuItem>
+                        </Link>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>

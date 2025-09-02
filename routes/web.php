@@ -7,6 +7,7 @@ use App\Http\Controllers\Chatbot\WhatsAppIntegrationController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
+use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,8 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::put('/contacts/{contact}', [ContactController::class, 'upsert'])->name('contacts.update');
     Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
     Route::post('/organizations/switch', [OrganizationSwitchController::class, 'switch'])->name('organizations.switch');
+    Route::get('/organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
+    Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
 });
 

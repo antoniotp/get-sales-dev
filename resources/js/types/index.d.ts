@@ -80,6 +80,10 @@ interface FlashMessages {
 interface Organization {
     id: number;
     name: string;
+    website?: string | null;
+    address?: string | null;
+    timezone?: string | null;
+    locale?: string | null;
 }
 
 interface Organizations {

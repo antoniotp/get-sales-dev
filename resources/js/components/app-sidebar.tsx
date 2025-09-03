@@ -32,7 +32,7 @@ export function AppSidebar() {
         },
         {
             title: 'Org. Settings',
-            href: route('organizations.edit', orgId),
+            href: route('organizations.edit'),
             icon: Settings,
         },
     ];

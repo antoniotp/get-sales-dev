@@ -1,12 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { FormEventHandler } from 'react';
+import { FormEventHandler, useEffect } from 'react';
+import { PageProps } from '@/types';
+import { toast } from 'sonner';
 
 const timezones = {
     'America': [
@@ -34,30 +36,50 @@ const timezones = {
 
 const locales = ['EN', 'ES', 'FR', 'IT', 'PT'];
 
-export default function CreateOrganization() {
-    const { data, setData, post, errors, processing } = useForm({
-        name: '',
-        website: '',
-        address: '',
-        timezone: '',
-        locale: '',
+export default function OrganizationForm() {
+    const {props} = usePage<PageProps>();
+    const organization = props.organization.current;
+    const isEditMode = organization !== null;
+
+    const { data, setData, post, put, errors, processing } = useForm({
+        name: organization?.name || '',
+        website: organization?.website || '',
+        address: organization?.address || '',
+        timezone: organization?.timezone || '',
+        locale: organization?.locale || '',
     });
+
+    useEffect(() => {
+        if (props.flash?.success) {
+            toast.success(props.flash.success);
+        } else if (props.flash?.error) {
+            toast.error(props.flash.error);
+        }
+    }, [props.flash]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-        post(route('organizations.store'));
+        if (isEditMode) {
+            put(route('organizations.update', organization.id));
+        } else {
+            post(route('organizations.store'));
+        }
     };
 
     return (
         <AppLayout>
-            <Head title="Create Organization" />
+            <Head title={isEditMode ? 'Organization Details' : 'Create Organization'} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <div className="w-full overflow-auto pb-12">
                         <Card className="w-full p-3 overflow-auto">
                             <CardHeader>
-                                <CardTitle>Create New Organization</CardTitle>
-                                <CardDescription>Fill in the details below to create a new organization.</CardDescription>
+                                <CardTitle>{isEditMode ? 'General' : 'Create New Organization'}</CardTitle>
+                                <CardDescription>
+                                    {isEditMode
+                                        ? 'Organization Details.'
+                                        : 'Fill in the details below to create a new organization.'}
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={submit} className="space-y-6">
@@ -130,7 +152,7 @@ export default function CreateOrganization() {
 
                                     <div className="flex items-center justify-end">
                                         <Button type="submit" disabled={processing}>
-                                            Create Organization
+                                            {isEditMode ? 'Save' : 'Create Organization'}
                                         </Button>
                                     </div>
                                 </form>

@@ -53,6 +53,14 @@ class Role extends Model
     }
 
     /**
+     * Get the invitations with this role.
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
+    }
+
+    /**
      * Check if this role can manage chats.
      */
     public function canManageChats(): bool

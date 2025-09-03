@@ -158,4 +158,11 @@ class User extends Authenticatable
         return $this->organizations()->first();
     }
 
+    /**
+     * Get the invitations sent by this user.
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class, 'created_by');
+    }
 }

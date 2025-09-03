@@ -213,4 +213,12 @@ class Organization extends Model
     {
         return $this->hasMany(Contact::class);
     }
+
+    /**
+     * Get the invitations for the organization.
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
+    }
 }

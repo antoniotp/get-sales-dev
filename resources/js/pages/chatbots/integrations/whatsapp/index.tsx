@@ -4,7 +4,7 @@ import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
-import type { BreadcrumbItem, Chatbot, ChatbotChannel } from '@/types';
+import type { BreadcrumbItem, ChatbotChannel, PageProps as GlobalPageProps } from '@/types';
 import { QRCodeSVG } from 'qrcode.react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
@@ -16,10 +16,8 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { FacebookEmbeddedSignUpBtn } from '@/components/facebook-embedded-signup-btn';
 
-interface PageProps {
-    chatbot: Chatbot;
+interface PageProps extends GlobalPageProps {
     whatsAppChannel: ChatbotChannel | null;
-    [key: string]: never | Chatbot | ChatbotChannel | null;
 }
 
 export default function WhatsAppIntegration() {

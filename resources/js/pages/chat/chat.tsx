@@ -6,14 +6,9 @@ import { format } from 'date-fns'
 import { useRoute } from 'ziggy-js'
 import Echo from 'laravel-echo'
 import parsePhoneNumber from 'libphonenumber-js'
-import type { BreadcrumbItem, Chatbot } from '@/types';
+import type { BreadcrumbItem, Chatbot, PageProps, Organizations } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft } from 'lucide-react';
-
-interface PageProps {
-    chatbot: Chatbot;
-    [key: string]: never | Chatbot;
-}
 
 interface Chat {
     id: number
@@ -47,16 +42,6 @@ interface NewConversationEvent {
 
 interface ChannelInfo {
     phone_number: string
-}
-
-interface Organization {
-    id: number;
-    name: string;
-}
-
-interface Organizations {
-    list: Organization[];
-    current: Organization;
 }
 
 const formatPhoneNumber = (phone: string): string => {

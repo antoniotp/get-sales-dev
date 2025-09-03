@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import type { Chatbot } from '@/types';
+import type { Chatbot, PageProps } from '@/types';
 import { usePage } from '@inertiajs/react';
 import axios from 'axios';
 
@@ -48,11 +48,6 @@ declare global {
 
 interface Props {
     onSuccess: () => void;
-}
-
-interface PageProps {
-    chatbot: Chatbot;
-    [key: string]: never | Chatbot;
 }
 
 axios.defaults.withCredentials = true

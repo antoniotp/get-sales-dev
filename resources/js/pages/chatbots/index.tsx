@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { BreadcrumbItem, Chatbot } from '@/types';
+import { BreadcrumbItem, Chatbot, PageProps } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,16 +33,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: route('dashboard') },
     { title: 'Agents', href: route('chatbots.index') },
 ];
-
-interface FlashMessages {
-    success?: string;
-    error?: string;
-}
-
-interface PageProps {
-    flash: FlashMessages;
-    [key: string]: never|FlashMessages;
-}
 
 export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndexProps) {
     const { props } = usePage<PageProps>();

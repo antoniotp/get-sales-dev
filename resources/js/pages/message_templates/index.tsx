@@ -2,7 +2,7 @@ import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
 import { Head, Link, useForm, usePage } from '@inertiajs/react'
 import { useMemo, useEffect } from 'react';
-import type { BreadcrumbItem, Chatbot } from '@/types'
+import { BreadcrumbItem, PageProps } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -37,16 +37,6 @@ interface TemplatesProps {
     deletedTemplates: Template[];
 }
 
-interface FlashMessages {
-    success?: string;
-    error?: string;
-}
-
-interface PageProps {
-    flash: FlashMessages;
-    chatbot: Chatbot;
-    [key: string]: never|FlashMessages|Chatbot;
-}
 
 const TemplateTable = ({ templates }: { templates: Template[] }) => {
     const { delete: inertiaDelete } = useForm(); // Destructure delete method from useForm

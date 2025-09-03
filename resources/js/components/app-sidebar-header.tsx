@@ -1,23 +1,8 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
+import { type BreadcrumbItem as BreadcrumbItemType, PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import AppLogoIcon from './app-logo-icon';
-
-interface Organization {
-    id: number;
-    name: string;
-}
-
-interface Organizations {
-    list: Organization[];
-    current: Organization;
-}
-
-interface PageProps {
-    organization: Organizations;
-    [key: string]: unknown;
-}
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
 

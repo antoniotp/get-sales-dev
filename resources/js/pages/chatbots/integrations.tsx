@@ -4,13 +4,11 @@ import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
-import type { BreadcrumbItem, Chatbot, Channel, ChatbotChannel } from '@/types';
+import type { BreadcrumbItem, ChatbotChannel, PageProps as GlobalPageProps } from '@/types';
 import { WhatsAppIcon } from '@/components/icons/whatsapp';
 
-interface PageProps {
-    chatbot: Chatbot;
+interface PageProps extends GlobalPageProps{
     linkedChannels: ChatbotChannel[];
-    [key: string]: never | Chatbot | Channel[] | ChatbotChannel[];
 }
 
 export default function Integrations() {

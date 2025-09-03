@@ -17,23 +17,7 @@ import {
     useSidebar,
 } from "@/components/ui/sidebar"
 import { router, usePage, Link } from '@inertiajs/react';
-
-
-
-interface Organization {
-    id: number;
-    name: string;
-}
-
-interface Organizations {
-    list: Organization[];
-    current: Organization;
-}
-
-interface PageProps {
-    organization: Organizations;
-    [key: string]: unknown;
-}
+import {PageProps, Organization} from '@/types';
 
 export function OrgSwitcher(){
     const { props } = usePage<PageProps>();

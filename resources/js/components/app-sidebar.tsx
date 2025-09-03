@@ -11,20 +11,31 @@ import { type NavItem } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users } from 'lucide-react';
 import { OrgSwitcher } from '@/components/org-switcher';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Chatbots',
-        href: route('chatbots.index'),
-        icon: BotMessageSquare,
-    },
-];
+import {PageProps} from '@/types';
 
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
-    const { props } = usePage();
+    const { props } = usePage<PageProps>()
+    const orgId = props.organization.current.id
     const chatbot = props.chatbot as { id: number };
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Chatbots',
+            href: route('chatbots.index'),
+            icon: BotMessageSquare,
+        },{
+            title: 'All Contacts',
+            href: route('contacts.index'),
+            icon: Users,
+        },
+        {
+            title: 'Org. Settings',
+            href: route('organizations.edit', orgId),
+            icon: Settings,
+        },
+    ];
 
     const chatbotNavItems: NavItem[] = [
         {

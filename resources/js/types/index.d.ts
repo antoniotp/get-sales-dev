@@ -77,6 +77,19 @@ interface FlashMessages {
     error?: string;
 }
 
+interface Organization {
+    id: number;
+    name: string;
+}
+
+interface Organizations {
+    list: Organization[];
+    current: Organization;
+}
+
 interface PageProps {
     flash: FlashMessages;
+    organization: Organizations;
+    chatbot: Chatbot;
+    [key: string]: unknown;
 }

@@ -7,7 +7,7 @@ import {
     SidebarFooter,
     SidebarHeader,
 } from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
+import { type NavItems, NavItem } from '@/types';
 import { usePage } from '@inertiajs/react';
 import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users } from 'lucide-react';
 import { OrgSwitcher } from '@/components/org-switcher';
@@ -17,29 +17,39 @@ const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
     const { props } = usePage<PageProps>()
-    const orgId = props.organization.current.id
     const chatbot = props.chatbot as { id: number };
 
-    const mainNavItems: NavItem[] = [
+    const mainNavItems: NavItems[] = [
         {
-            title: 'Chatbots',
+            title: 'Agents',
             href: route('chatbots.index'),
             icon: BotMessageSquare,
         },{
             title: 'All Contacts',
             href: route('contacts.index'),
             icon: Users,
-        },
-        {
+        },{
             title: 'Org. Settings',
-            href: route('organizations.edit'),
             icon: Settings,
+            href: '#',
+            items: [
+                {
+                    title: 'General',
+                    href: route('organizations.edit'),
+                    isActive: false,
+                },
+                {
+                    title: 'Members',
+                    href: route('organizations.members.index'),
+                    isActive: false,
+                },
+            ],
         },
     ];
 
-    const chatbotNavItems: NavItem[] = [
+    const chatbotNavItems: NavItems[] = [
         {
-            title: 'Chatbots',
+            title: 'Agents',
             href: route('chatbots.index'),
             icon: BotMessageSquare,
         },
@@ -75,7 +85,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navItems} />
+                <NavMain items={navItems} groupLabel={isChatbotContext ? 'Agent' : 'General'} />
             </SidebarContent>
 
             <SidebarFooter>

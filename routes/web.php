@@ -8,6 +8,7 @@ use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
 use App\Http\Controllers\Organizations\OrganizationController;
+use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('/organizations/settings', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    Route::get('/organizations/members', [OrganizationMemberController::class, 'index'])->name('organizations.members.index');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
 });
 

@@ -12,6 +12,8 @@ use App\Contracts\Services\Auth\RegistrationServiceInterface;
 use App\Services\Auth\RegistrationService;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
 use App\Services\WhatsApp\FacebookService;
+use App\Contracts\Services\Invitation\InvitationServiceInterface;
+use App\Services\Invitation\InvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +37,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RegistrationServiceInterface::class, RegistrationService::class);
         $this->app->bind(OrganizationServiceInterface::class, OrganizationService::class);
         $this->app->bind(FacebookServiceInterface::class, FacebookService::class);
+
+        $this->app->bind(InvitationServiceInterface::class, InvitationService::class);
 
     }
 

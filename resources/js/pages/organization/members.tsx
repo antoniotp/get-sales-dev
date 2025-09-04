@@ -42,6 +42,7 @@ interface MembersPageProps {
     organizationDetails: Organization;
     members: Member[];
     roles: Roles;
+    currentUserRoleSlug: string | null;
 }
 
 // --- Invite Member Form ---
@@ -105,13 +106,15 @@ function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: bo
 }
 
 // --- Main Page Component ---
-export default function OrganizationMembers({ organizationDetails, members, roles }: MembersPageProps) {
+export default function OrganizationMembers({ organizationDetails, members, roles, currentUserRoleSlug }: MembersPageProps) {
     const [isInviteDialogOpen, setInviteDialogOpen] = useState(false);
 
     const formatDate = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
+
+    const canInvite = currentUserRoleSlug === 'admin' || currentUserRoleSlug === 'owner';
 
     return (
         <AppLayout>
@@ -124,7 +127,9 @@ export default function OrganizationMembers({ organizationDetails, members, role
                                 <CardTitle>Organization Members</CardTitle>
                                 <Dialog open={isInviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button>Invite Member</Button>
+                                        <Button disabled={!canInvite}>
+                                            Invite Member
+                                        </Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>

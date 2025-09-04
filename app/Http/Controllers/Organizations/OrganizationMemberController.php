@@ -30,10 +30,13 @@ class OrganizationMemberController extends Controller
         // Load all roles to map role_id to role name in the frontend
         $roles = Role::all()->keyBy('id');
 
+        $currentUserRoleSlug = $organization->getUserRole($user)?->slug;
+
         return Inertia::render('organization/members', [
             'organizationDetails' => $organization,
             'members' => $organization->users,
             'roles' => $roles,
+            'currentUserRoleSlug' => $currentUserRoleSlug,
         ]);
     }
 }

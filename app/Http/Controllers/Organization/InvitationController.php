@@ -6,8 +6,12 @@ use App\Contracts\Services\Invitation\InvitationServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organization\StoreInvitationRequest;
+use App\Models\Invitation;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class InvitationController extends Controller
 {
@@ -24,9 +28,6 @@ class InvitationController extends Controller
 
     /**
      * Store a newly created invitation in storage.
-     *
-     * @param StoreInvitationRequest $request
-     * @return RedirectResponse
      */
     public function store(StoreInvitationRequest $request): RedirectResponse
     {
@@ -48,5 +49,42 @@ class InvitationController extends Controller
         }
 
         return back()->with('success', 'Invitation sent successfully.');
+    }
+
+    /**
+     * Show the invitation acceptance page.
+     */
+    public function show(Request $request): Response
+    {
+        $token = $request->query('token');
+        $invitation = Invitation::where('token', $token)->first();
+
+        if (!$invitation || $invitation->expires_at->isPast() || $invitation->accepted_at) {
+            return Inertia::render('invitations/invalid');
+        }
+
+        return Inertia::render('invitations/accept', [
+            'invitationDetails' => [
+                'organization_name' => $invitation->organization->name,
+                'inviter_name' => $invitation->inviter->name,
+                'email' => $invitation->email,
+            ],
+            'token' => $token,
+            'userExists' => User::where('email', $invitation->email)->exists(),
+        ]);
+    }
+
+    /**
+     * Process the acceptance of an invitation.
+     */
+    public function accept(Request $request, string $token): RedirectResponse
+    {
+        try {
+            $this->invitationService->accept($token, $request->user());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('dashboard')->with('success', 'You have successfully joined the organization.');
     }
 }

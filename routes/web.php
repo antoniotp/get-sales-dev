@@ -20,6 +20,9 @@ Route::get('/policies', function () { return Inertia::render('policies'); })->na
 Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify']);
 Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
 
+// Public invitation acceptance page
+Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');
+
 
 Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('dashboard', function () { return redirect()->route('chatbots.index'); })->name('dashboard');
@@ -54,6 +57,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::get('/organizations/members', [OrganizationMemberController::class, 'index'])->name('organizations.members.index');
     Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
+    Route::post('/invitations/accept/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
 });
 

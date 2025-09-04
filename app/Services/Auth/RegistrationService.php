@@ -13,33 +13,36 @@ use Illuminate\Support\Str;
 class RegistrationService implements RegistrationServiceInterface
 {
     /**
-     * Handle the registration of a new user and their organization.
+     * Handle the registration of a new user and optionally their organization.
      *
      * @param array<string, string> $data
+     * @param bool $createOrganization
      * @return User
      */
-    public function register(array $data): User
+    public function register(array $data, bool $createOrganization = true): User
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $createOrganization) {
             $user = User::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'password' => Hash::make($data['password']),
             ]);
 
-            $organization = Organization::create([
-                'name' => $data['name'] . '\'s Organization',
-                'slug' => Str::slug($data['name'] . '-organization'),
-                'owner_id' => $user->id,
-            ]);
+            if ($createOrganization) {
+                $organization = Organization::create([
+                    'name' => $data['name'] . '\'s Organization',
+                    'slug' => Str::slug($data['name'] . '-organization'),
+                    'owner_id' => $user->id,
+                ]);
 
-            $ownerRole = Role::where('slug', 'owner')->first();
+                $ownerRole = Role::where('slug', 'owner')->first();
 
-            $user->organizations()->attach($organization->id, [
-                'role_id' => $ownerRole->id,
-                'status' => 1, // Active
-                'joined_at' => now(),
-            ]);
+                $user->organizations()->attach($organization->id, [
+                    'role_id' => $ownerRole->id,
+                    'status' => 1, // Active
+                    'joined_at' => now(),
+                ]);
+            }
 
             return $user;
         });

@@ -17,4 +17,13 @@ interface InvitationServiceInterface
      * @return void
      */
     public function createAndSendInvitation(User $inviter, Organization $organization, string $email, int $roleId): void;
+
+    /**
+     * Accept an invitation for the given user.
+     *
+     * @param string $token
+     * @param User $user
+     * @return void
+     */
+    public function accept(string $token, User $user): void;
 }

@@ -99,6 +99,7 @@ interface Organizations {
 }
 
 interface PageProps {
+    auth: Auth;
     flash: FlashMessages;
     organization: Organizations;
     chatbot: Chatbot;

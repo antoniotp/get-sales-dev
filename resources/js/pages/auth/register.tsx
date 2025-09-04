@@ -14,14 +14,21 @@ type RegisterForm = {
     email: string;
     password: string;
     password_confirmation: string;
+    token: string; // Changed from string | null
 };
 
-export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
+interface RegisterPageProps {
+    email?: string;
+    token?: string;
+}
+
+export default function Register({ email = '', token }: RegisterPageProps) {
+    const { data, setData, post, processing, errors, reset } = useForm<RegisterForm>({
         name: '',
-        email: '',
+        email: email,
         password: '',
         password_confirmation: '',
+        token: token || '', // Ensure it's always a string
     });
 
     const submit: FormEventHandler = (e) => {
@@ -35,6 +42,7 @@ export default function Register() {
         <AuthLayout title="Create an account" description="Enter your details below to create your account">
             <Head title="Register" />
             <form className="flex flex-col gap-6" onSubmit={submit}>
+                <input type="hidden" name="token" value={data.token || ''} />
                 <div className="grid gap-6">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Name</Label>
@@ -63,7 +71,7 @@ export default function Register() {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            disabled={processing}
+                            disabled={processing || !!email}
                             placeholder="email@example.com"
                         />
                         <InputError message={errors.email} />

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Organization;
+namespace App\Http\Controllers\Organizations;
 
 use App\Contracts\Services\Invitation\InvitationServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Organization\StoreInvitationRequest;
+use App\Http\Requests\Organizations\StoreInvitationRequest;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;

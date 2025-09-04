@@ -9,7 +9,7 @@ use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
-use App\Http\Controllers\Organization\InvitationController;
+use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use Illuminate\Support\Facades\Route;
@@ -54,7 +54,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::get('/organizations/settings', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
-    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+//    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::get('/organizations/members', [OrganizationMemberController::class, 'index'])->name('organizations.members.index');
     Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::post('/invitations/accept/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');

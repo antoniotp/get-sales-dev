@@ -98,4 +98,40 @@ class InvitationService implements InvitationServiceInterface
             $user->save();
         });
     }
+
+    /**
+     * Cancel an invitation.
+     *
+     * @param Invitation $invitation
+     * @return void
+     * @throws InvitationException
+     */
+    public function cancel(Invitation $invitation): void
+    {
+        if ($invitation->accepted_at) {
+            throw new InvitationException('This invitation has already been accepted.');
+        }
+
+        $invitation->delete();
+    }
+
+    /**
+     * Resend an invitation.
+     *
+     * @param Invitation $invitation
+     * @return void
+     * @throws InvitationException
+     */
+    public function resend(Invitation $invitation): void
+    {
+        if ($invitation->accepted_at) {
+            throw new InvitationException('This invitation has already been accepted.');
+        }
+
+        // Update the expiration date
+        $invitation->expires_at = now()->addDays(7);
+        $invitation->save();
+
+        Mail::to($invitation->email)->send(new OrganizationInvitation($invitation));
+    }
 }

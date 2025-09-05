@@ -87,4 +87,32 @@ class InvitationController extends Controller
 
         return redirect()->route('dashboard')->with('success', 'You have successfully joined the organization.');
     }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Invitation $invitation): RedirectResponse
+    {
+        try {
+            $this->invitationService->cancel($invitation);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Invitation cancelled successfully.');
+    }
+
+    /**
+     * Resend the specified invitation.
+     */
+    public function resend(Invitation $invitation): RedirectResponse
+    {
+        try {
+            $this->invitationService->resend($invitation);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Invitation resent successfully.');
+    }
 }

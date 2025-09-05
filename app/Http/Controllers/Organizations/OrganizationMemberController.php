@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Organizations;
 
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Models\Invitation;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,11 +33,21 @@ class OrganizationMemberController extends Controller
 
         $currentUserRoleSlug = $organization->getUserRole($user)?->slug;
 
+        $invitations = Invitation::where('organization_id', $organization->id)
+            ->whereNull('accepted_at')
+            ->with('role')
+            ->get()
+            ->map(function ($invitation) {
+                $invitation->status = $invitation->expires_at->isPast() ? 'expired' : 'pending';
+                return $invitation;
+            });
+
         return Inertia::render('organization/members', [
             'organizationDetails' => $organization,
             'members' => $organization->users,
             'roles' => $roles,
             'currentUserRoleSlug' => $currentUserRoleSlug,
+            'invitations' => $invitations,
         ]);
     }
 }

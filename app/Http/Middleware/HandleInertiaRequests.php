@@ -50,8 +50,7 @@ class HandleInertiaRequests extends Middleware
         }
 
         $chatbot = $request->route('chatbot');
-
-        return [
+        $data = [
             ...parent::share($request),
             'name' => config('app.name'),
             'quote' => ['message' => '', 'author' => ''],
@@ -69,5 +68,13 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'chatbot' => $chatbot,
         ];
+        if ( session('success') || session('error') ) {
+            $data['flash'] = [
+                'success' => session('success'),
+                'error' => session('error'),
+            ];
+        }
+
+        return $data;
     }
 }

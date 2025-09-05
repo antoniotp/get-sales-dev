@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { User, Organization } from '@/types';
+import { User, Organization, PageProps } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -18,8 +18,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 
-// --- Type Definitions ---
 interface Member extends User {
     pivot: {
         role_id: number;
@@ -38,11 +38,20 @@ interface Roles {
     [key: number]: Role;
 }
 
+interface Invitation {
+    id: number;
+    email: string;
+    role: Role;
+    status: 'pending' | 'expired';
+    expires_at: string;
+}
+
 interface MembersPageProps {
     organizationDetails: Organization;
     members: Member[];
     roles: Roles;
     currentUserRoleSlug: string | null;
+    invitations: Invitation[];
 }
 
 // --- Invite Member Form ---
@@ -106,8 +115,23 @@ function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: bo
 }
 
 // --- Main Page Component ---
-export default function OrganizationMembers({ organizationDetails, members, roles, currentUserRoleSlug }: MembersPageProps) {
+export default function OrganizationMembers({
+    organizationDetails,
+    members,
+    roles,
+    currentUserRoleSlug,
+    invitations,
+}: MembersPageProps) {
     const [isInviteDialogOpen, setInviteDialogOpen] = useState(false);
+    const { props } = usePage<PageProps>();
+
+    useEffect(() => {
+        if (props.flash?.success) {
+            toast.success(props.flash.success);
+        } else if (props.flash?.error) {
+            toast.error(props.flash.error);
+        }
+    }, [props.flash]);
 
     const formatDate = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -116,20 +140,30 @@ export default function OrganizationMembers({ organizationDetails, members, role
 
     const canInvite = currentUserRoleSlug === 'admin' || currentUserRoleSlug === 'owner';
 
+    const handleCancelInvitation = (invitationId: number) => {
+        router.delete(route('invitations.destroy', invitationId), {
+            preserveScroll: true,
+        });
+    };
+
+    const handleResendInvitation = (invitationId: number) => {
+        router.post(route('invitations.resend', invitationId), undefined, {
+            preserveScroll: true,
+        });
+    };
+
     return (
         <AppLayout>
             <Head title={`Members of ${organizationDetails.name}`} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
-                    <div className="w-full overflow-auto pb-12">
+                    <div className="w-full overflow-auto pb-12 space-y-8">
                         <Card className="w-full p-3 overflow-auto">
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Organization Members</CardTitle>
                                 <Dialog open={isInviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button disabled={!canInvite}>
-                                            Invite Member
-                                        </Button>
+                                        <Button disabled={!canInvite}>Invite Member</Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
@@ -167,6 +201,54 @@ export default function OrganizationMembers({ organizationDetails, members, role
                                 </Table>
                             </CardContent>
                         </Card>
+
+                        {invitations.length > 0 && (
+                            <Card className="w-full p-3 overflow-auto">
+                                <CardHeader>
+                                    <CardTitle>Invitations</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead>Role</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Expires At</TableHead>
+                                                <TableHead>Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {invitations.map((invitation) => (
+                                                <TableRow key={invitation.id}>
+                                                    <TableCell>{invitation.email}</TableCell>
+                                                    <TableCell>{invitation.role.name}</TableCell>
+                                                    <TableCell>{invitation.status}</TableCell>
+                                                    <TableCell>{formatDate(invitation.expires_at)}</TableCell>
+                                                    <TableCell>
+                                                        {invitation.status === 'pending' ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleCancelInvitation(invitation.id)}>
+                                                                Cancel
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleResendInvitation(invitation.id)}>
+                                                                Resend
+                                                            </Button>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </AppContentDefaultLayout>

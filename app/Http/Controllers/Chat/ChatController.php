@@ -12,6 +12,7 @@ use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,7 +35,7 @@ class ChatController extends Controller
             ->select([
                 'conversations.*',
             ])
-            ->with(['latestMessage', 'chatbotChannel.chatbot'])
+            ->with(['latestMessage', 'chatbotChannel.chatbot', 'assignedUser'])
             ->whereHas('chatbotChannel.chatbot', function ($query) use ($chatbotId) {
                 $query->where('chatbots.organization_id', $this->organization->id)
                     ->where('chatbots.id', $chatbotId);
@@ -43,9 +44,26 @@ class ChatController extends Controller
             ->get()
             ->map(fn(Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
 
+        $user = $request->user();
+        $role = $user->getRoleInOrganization($this->organization);
+        $canAssign = $role && $role->level > 40;
+
+        $agents = [];
+        if ($canAssign) {
+            $agents = User::query()
+                ->whereHas('organizationUsers', function ($query) {
+                    $query->where('organization_id', $this->organization->id)
+                        ->whereHas('role', fn ($q) => $q->where('level', '>=', 40));
+                })
+                ->select('id', 'name')
+                ->get();
+        }
+
         return Inertia::render('chat/chat', [
             'chats' => $conversations,
             'channelInfo' => $chatbotChannel->credentials,
+            'agents' => $agents,
+            'canAssign' => $canAssign,
         ]);
 
     }
@@ -126,4 +144,5 @@ class ChatController extends Controller
             'mode' => $conversation->mode,
         ]);
     }
-}
+
+    }

@@ -16,6 +16,8 @@ class ConversationData implements Arrayable
         public ?string $lastMessageTime,
         public string $mode,
         public int $unreadCount,
+        public ?int $assigned_user_id,
+        public ?string $assigned_user_name,
     ) {
     }
 
@@ -33,6 +35,8 @@ class ConversationData implements Arrayable
                 ->whereNull('read_at')
                 ->where('type', 'incoming')
                 ->count(),
+            assigned_user_id: $conversation->assigned_user_id,
+            assigned_user_name: $conversation->assignedUser?->name,
         );
     }
 
@@ -47,6 +51,8 @@ class ConversationData implements Arrayable
             'lastMessageTime' => $this->lastMessageTime,
             'mode' => $this->mode,
             'unreadCount' => $this->unreadCount,
+            'assigned_user_id' => $this->assigned_user_id,
+            'assigned_user_name' => $this->assigned_user_name,
         ];
     }
 }

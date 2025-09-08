@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\Chat\ChatAssignmentController;
 use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\Chatbot\IntegrationsController;
 use App\Http\Controllers\Chatbot\WhatsAppIntegrationController;
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');
     Route::put('/chats/{conversation}/mode', [ChatController::class, 'updateConversationMode'])->name('chats.mode.update');
+    Route::put('/chats/{conversation}/assignment', [ChatAssignmentController::class, 'update'])->name('chats.assignment.update');
     Route::get('/chatbots/{chatbot}/message_templates', [ MessageTemplateController::class, 'index'])->name('message-templates.index');
     Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->name('message-templates.create');
     Route::post('/message_templates', [MessageTemplateController::class, 'store'])->name('message-templates.store');

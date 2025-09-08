@@ -10,6 +10,11 @@ import type { BreadcrumbItem, Chatbot, PageProps, Organizations } from '@/types'
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft } from 'lucide-react';
 
+interface Agent {
+    id: number;
+    name: string;
+}
+
 interface Chat {
     id: number
     name: string
@@ -19,6 +24,8 @@ interface Chat {
     lastMessageTime: string
     unreadCount: number
     mode: 'ai' | 'human'
+    assigned_user_id: number | null
+    assigned_user_name: string | null
 }
 
 interface Message {
@@ -70,7 +77,14 @@ const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
 };
 
 export default function Chat(
-    { chats: initialChats, channelInfo, organization }: { chats: Chat[], channelInfo: ChannelInfo, organization: Organizations }
+    { chats: initialChats, channelInfo, organization, agents, canAssign }:
+    {
+        chats: Chat[],
+        channelInfo: ChannelInfo,
+        organization: Organizations,
+        agents: Agent[],
+        canAssign: boolean
+    }
 ) {
     const [chats, setChats] = useState<Chat[]>(initialChats)
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
@@ -101,7 +115,7 @@ export default function Chat(
                 href: '',
             },
         ],
-        [chatbot]
+        [chatbot, route]
     );
 
     // Keep the selectedChatRef in sync with the selectedChat
@@ -177,7 +191,7 @@ export default function Chat(
                 activeChannelsRef.current.delete(channelName)
             }
         }
-    }, [])
+    }, [organization, setChats])
 
     // Setup chat channels for messages - optimized to avoid unnecessary re-subscriptions
     useEffect(() => {
@@ -241,7 +255,7 @@ export default function Chat(
                 }
             })
         }
-    }, [chats.map(chat => chat.id).join(',')])
+    }, [chats, setChats, setMessages])
 
     // Load messages when chat is selected
     const loadChatMessages = useCallback(async (chatId: number) => {
@@ -349,6 +363,37 @@ export default function Chat(
             // TODO: show error notification
         }
     }, [selectedChat, conversationMode, route])
+
+    const handleAssignAgent = useCallback(async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        if (!selectedChat) return;
+
+        const newAgentId = e.target.value ? parseInt(e.target.value, 10) : null;
+
+        try {
+            const response = await axios.put(
+                route('chats.assignment.update', { conversation: selectedChat.id }),
+                { user_id: newAgentId }
+            );
+
+            if (response.data.success) {
+                const { assigned_user_id, assigned_user_name } = response.data;
+                // Update the selected chat
+                setSelectedChat(prev => prev ? { ...prev, assigned_user_id, assigned_user_name } : null);
+
+                // Update the chat in the main list
+                setChats(prevChats =>
+                    prevChats.map(chat =>
+                        chat.id === selectedChat.id
+                            ? { ...chat, assigned_user_id, assigned_user_name }
+                            : chat
+                    )
+                );
+            }
+        } catch (error) {
+            console.error('Failed to assign agent:', error);
+            // TODO: show error notification
+        }
+    }, [selectedChat, route]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value
@@ -504,6 +549,24 @@ export default function Chat(
                                         <span className={`text-sm font-medium ${conversationMode === 'ai' ? 'text-blue-600' : 'text-gray-500'}`}>
                                             {conversationMode === 'ai' ? 'ON' : 'OFF'}
                                         </span>
+                                    </div>
+                                    <div className="text-sm">
+                                        {canAssign ? (
+                                            <select
+                                                value={selectedChat.assigned_user_id || ''}
+                                                onChange={handleAssignAgent}
+                                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:border-gray-600"
+                                            >
+                                                <option value="">Unassigned</option>
+                                                {agents.map(agent => (
+                                                    <option key={agent.id} value={agent.id}>
+                                                        {agent.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <span>{selectedChat.assigned_user_name || 'Unassigned'}</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

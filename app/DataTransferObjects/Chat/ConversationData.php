@@ -10,6 +10,7 @@ class ConversationData implements Arrayable
     public function __construct(
         public int $id,
         public string $name,
+        public string $phone,
         public string $avatar,
         public string $lastMessage,
         public ?string $lastMessageTime,
@@ -22,7 +23,8 @@ class ConversationData implements Arrayable
     {
         return new self(
             id: $conversation->id,
-            name: $conversation->contact_name ?? $conversation->contact_phone,
+            name: $conversation->contact_name ?? $conversation->contact_phone ?? 'Unknown',
+            phone: $conversation->contact_phone ?? '',
             avatar: $conversation->contact_avatar ?? mb_substr($conversation->contact_name ?? 'U', 0, 1),
             lastMessage: $conversation->latestMessage?->first()?->content ?? '',
             lastMessageTime: $conversation->last_message_at?->toIso8601String(),
@@ -39,6 +41,7 @@ class ConversationData implements Arrayable
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'phone' => $this->phone,
             'avatar' => $this->avatar,
             'lastMessage' => $this->lastMessage,
             'lastMessageTime' => $this->lastMessageTime,

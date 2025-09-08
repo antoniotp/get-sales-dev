@@ -13,6 +13,7 @@ import { ArrowLeft } from 'lucide-react';
 interface Chat {
     id: number
     name: string
+    phone: string
     avatar: string
     lastMessage: string
     lastMessageTime: string
@@ -103,7 +104,7 @@ export default function Chat(
         [chatbot]
     );
 
-    // Keep selectedChatRef in sync with selectedChat
+    // Keep the selectedChatRef in sync with the selectedChat
     useEffect(() => {
         selectedChatRef.current = selectedChat
     }, [selectedChat])
@@ -297,7 +298,7 @@ export default function Chat(
                 }
             )
 
-            // Add message to current conversation
+            // Add the message to the current conversation
             setMessages(prevMessages => [...prevMessages, response.data.message])
 
             // Update chat list and reorder
@@ -353,7 +354,7 @@ export default function Chat(
         const value = e.target.value
         setNewMessage(value)
 
-        // Auto-disable AI mode when user starts typing
+        // Auto-disable AI mode when the user starts typing
         if (value.length === 1 && conversationMode === 'ai') {
             handleModeChange('human')
         }
@@ -464,7 +465,7 @@ export default function Chat(
                     {/* Chat Messages */}
                     {selectedChat ? (
                         <div className="flex w-full lg:w-2/3 flex-col">
-                            <div className="flex lg:hidden items-center h-8 border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
+                            <div className="flex lg:hidden items-center h-6 border-b border-gray-200 px-1 md:px-4 dark:border-gray-700 flex-shrink-0">
                                 <button
                                     onClick={() => setSelectedChat(null)}
                                     className="text-blue-500 hover:underline flex flex-row items-center space-x-2"
@@ -473,30 +474,37 @@ export default function Chat(
                                 </button>
                             </div>
                             {/* Chat Header */}
-                            <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700 flex-shrink-0">
-                                <div className="flex items-center space-x-4">
+                            <div className="flex h-16 items-center justify-between border-b border-gray-200 px-1 md:px-4 dark:border-gray-700 flex-shrink-0">
+                                <div className="flex items-center space-x-1 md:space-x-4 w-1/2">
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
                                         {selectedChat.avatar}
                                     </div>
-                                    <h3 className="font-semibold">{selectedChat.name}</h3>
+                                    <div className="min-w-0">
+                                        <h3 className="font-semibold truncate">{selectedChat.name}</h3>
+                                        <div>
+                                            <small>{formatPhoneNumber(selectedChat.phone)}</small>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center space-x-3">
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                    AI Response
-                                </span>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={conversationMode === 'ai'}
-                                            onChange={(e) => handleModeChange(e.target.checked ? 'ai' : 'human')}
-                                            className="sr-only peer"
-                                        />
-                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                    </label>
-                                    <span className={`text-sm font-medium ${conversationMode === 'ai' ? 'text-blue-600' : 'text-gray-500'}`}>
-                                    {conversationMode === 'ai' ? 'ON' : 'OFF'}
-                                </span>
+                                <div className="flex flex-col items-left space-x-1 md:space-x-4">
+                                    <div className="justify-center flex space-x-1">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                            AI Response
+                                        </span>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={conversationMode === 'ai'}
+                                                onChange={(e) => handleModeChange(e.target.checked ? 'ai' : 'human')}
+                                                className="sr-only peer"
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                        </label>
+                                        <span className={`text-sm font-medium ${conversationMode === 'ai' ? 'text-blue-600' : 'text-gray-500'}`}>
+                                            {conversationMode === 'ai' ? 'ON' : 'OFF'}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 

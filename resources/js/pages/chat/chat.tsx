@@ -1,72 +1,55 @@
-import ChatLayout from '@/layouts/chat/layout'
+import ChatLayout from '@/layouts/chat/layout';
 import { Head, usePage } from '@inertiajs/react';
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
-import axios from 'axios'
-import { format } from 'date-fns'
-import { useRoute } from 'ziggy-js'
-import Echo from 'laravel-echo'
-import parsePhoneNumber from 'libphonenumber-js'
-import type { BreadcrumbItem, Chatbot, PageProps, Organizations } from '@/types';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
+import axios from 'axios';
+import { format } from 'date-fns';
+import { useRoute } from 'ziggy-js';
+import Echo from 'laravel-echo';
+import parsePhoneNumber from 'libphonenumber-js';
+import type { BreadcrumbItem, Chatbot, PageProps, Organizations, Agent, Chat } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft } from 'lucide-react';
-
-interface Agent {
-    id: number;
-    name: string;
-}
-
-interface Chat {
-    id: number
-    name: string
-    phone: string
-    avatar: string
-    lastMessage: string
-    lastMessageTime: string
-    unreadCount: number
-    mode: 'ai' | 'human'
-    assigned_user_id: number | null
-    assigned_user_name: string | null
-}
+import AgentAssignmentDropdown from '@/components/chat/AgentAssignmentDropdown';
 
 interface Message {
-    id: number
-    content: string
-    sender: string
-    senderId: number | string
-    timestamp: string
-    type: 'incoming' | 'outgoing'
-    contentType: string
-    mediaUrl?: string
-    conversationId: number
+    id: number;
+    content: string;
+    sender: string;
+    senderId: number | string;
+    timestamp: string;
+    type: 'incoming' | 'outgoing';
+    contentType: string;
+    mediaUrl?: string;
+    conversationId: number;
 }
 
 interface NewMessageEvent {
-    message: Message
+    message: Message;
 }
 
 interface NewConversationEvent {
-    conversation: Chat
+    conversation: Chat;
 }
 
 interface ChannelInfo {
-    phone_number: string
+    phone_number: string;
 }
 
 const formatPhoneNumber = (phone: string): string => {
     if (!phone.startsWith('+')) {
-        phone = '+' + phone
+        phone = '+' + phone;
     }
-    if ( phone.startsWith('+521')) {
-        phone = phone.replace('+521', '+52')
+    if (phone.startsWith('+521')) {
+        phone = phone.replace('+521', '+52');
     }
     try {
-        const phoneNumber = parsePhoneNumber(phone)
-        return phoneNumber ? phoneNumber.formatInternational() : phone
+        const phoneNumber = parsePhoneNumber(phone);
+        return phoneNumber ? phoneNumber.formatInternational() : phone;
     } catch {
-        console.warn('Failed to parse phone number:', phone)
-        return phone
+        console.warn('Failed to parse phone number:', phone);
+        return phone;
     }
-}
+};
 
 const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
     return [...chats].sort((a, b) => {
@@ -79,30 +62,28 @@ const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
 export default function Chat(
     { chats: initialChats, channelInfo, organization, agents, canAssign }:
     {
-        chats: Chat[],
-        channelInfo: ChannelInfo,
-        organization: Organizations,
-        agents: Agent[],
-        canAssign: boolean
+        chats: Chat[];
+        channelInfo: ChannelInfo;
+        organization: Organizations;
+        agents: Agent[];
+        canAssign: boolean;
     }
 ) {
-    const [chats, setChats] = useState<Chat[]>(initialChats)
-    const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
-    const [messages, setMessages] = useState<Message[]>([])
-    const [newMessage, setNewMessage] = useState('')
-    const [isSending, setIsSending] = useState(false)
-    const [isLoadingMessages, setIsLoadingMessages] = useState(false)
-    const [conversationMode, setConversationMode] = useState<'ai' | 'human'>('ai')
+    const [chats, setChats] = useState<Chat[]>(initialChats);
+    const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [isSending, setIsSending] = useState(false);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const [conversationMode, setConversationMode] = useState<'ai' | 'human'>('ai');
     const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
 
-    const route = useRoute()
-    const messagesEndRef = useRef<HTMLDivElement>(null)
-    const messagesContainerRef = useRef<HTMLDivElement>(null)
-    const echoRef = useRef<Echo<'pusher'> | null>(null)
-    const activeChannelsRef = useRef<Set<string>>(new Set())
-    const selectedChatRef = useRef<Chat | null>(null)
-
-
+    const route = useRoute();
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const echoRef = useRef<Echo<'pusher'> | null>(null);
+    const activeChannelsRef = useRef<Set<string>>(new Set());
+    const selectedChatRef = useRef<Chat | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -120,149 +101,149 @@ export default function Chat(
 
     // Keep the selectedChatRef in sync with the selectedChat
     useEffect(() => {
-        selectedChatRef.current = selectedChat
-    }, [selectedChat])
+        selectedChatRef.current = selectedChat;
+    }, [selectedChat]);
 
     // Optimized scroll to bottom
     const scrollToBottom = useCallback(() => {
         if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [])
+    }, []);
 
     // Initialize Echo connection
     useEffect(() => {
         const initializeEcho = () => {
-            if (echoRef.current) return echoRef.current
+            if (echoRef.current) return echoRef.current;
 
             const echoInstance = new Echo<'pusher'>({
                 broadcaster: 'pusher',
                 key: import.meta.env.VITE_PUSHER_APP_KEY,
                 cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-                forceTLS: true
-            })
+                forceTLS: true,
+            });
 
-            echoRef.current = echoInstance
-            return echoInstance
-        }
+            echoRef.current = echoInstance;
+            return echoInstance;
+        };
 
-        const echo = initializeEcho()
+        const echo = initializeEcho();
 
         return () => {
             // Cleanup all channels
             activeChannelsRef.current.forEach(channelName => {
-                echo.leave(channelName)
-            })
-            activeChannelsRef.current.clear()
+                echo.leave(channelName);
+            });
+            activeChannelsRef.current.clear();
 
             if (echoRef.current) {
-                echoRef.current.disconnect()
-                echoRef.current = null
+                echoRef.current.disconnect();
+                echoRef.current = null;
             }
-        }
-    }, [])
+        };
+    }, []);
 
     // Setup organization channel for new conversations
     useEffect(() => {
-        if (!echoRef.current) return
+        if (!echoRef.current) return;
 
-        const channelName = 'chat.organization.' + organization.current.id
+        const channelName = 'chat.organization.' + organization.current.id;
 
-        if (activeChannelsRef.current.has(channelName)) return
+        if (activeChannelsRef.current.has(channelName)) return;
 
-        const orgChannel = echoRef.current.channel(channelName)
+        const orgChannel = echoRef.current.channel(channelName);
 
         orgChannel.listen('.conversation.created', (e: NewConversationEvent) => {
             setChats(prevChats => {
-                const exists = prevChats.some(chat => chat.id === e.conversation.id)
+                const exists = prevChats.some(chat => chat.id === e.conversation.id);
                 if (!exists) {
-                    const updatedChats = [e.conversation, ...prevChats]
-                    return sortChatsByLastMessageTime(updatedChats)
+                    const updatedChats = [e.conversation, ...prevChats];
+                    return sortChatsByLastMessageTime(updatedChats);
                 }
-                return prevChats
-            })
-        })
+                return prevChats;
+            });
+        });
 
-        activeChannelsRef.current.add(channelName)
+        activeChannelsRef.current.add(channelName);
 
         return () => {
             if (echoRef.current && activeChannelsRef.current.has(channelName)) {
-                echoRef.current.leave(channelName)
-                activeChannelsRef.current.delete(channelName)
+                echoRef.current.leave(channelName);
+                activeChannelsRef.current.delete(channelName);
             }
-        }
-    }, [organization, setChats])
+        };
+    }, [organization, setChats]);
 
     // Setup chat channels for messages - optimized to avoid unnecessary re-subscriptions
     useEffect(() => {
-        if (!echoRef.current || chats.length === 0) return
+        if (!echoRef.current || chats.length === 0) return;
 
-        const echo = echoRef.current
-        const newChannels: string[] = []
+        const echo = echoRef.current;
+        const newChannels: string[] = [];
 
         // Subscribe to new chat channels
         chats.forEach(chat => {
-            const channelName = `chat.conversation.${chat.id}`
+            const channelName = `chat.conversation.${chat.id}`;
 
             if (!activeChannelsRef.current.has(channelName)) {
-                const channel = echo.channel(channelName)
+                const channel = echo.channel(channelName);
 
                 channel.listen('.message.received', (e: NewMessageEvent) => {
                     // Update messages if this is the selected chat - using ref to get the current value
-                    const currentSelectedChat = selectedChatRef.current
+                    const currentSelectedChat = selectedChatRef.current;
                     if (currentSelectedChat?.id === e.message.conversationId) {
                         setMessages(prevMessages => {
                             // Avoid duplicates
-                            const exists = prevMessages.some(msg => msg.id === e.message.id)
+                            const exists = prevMessages.some(msg => msg.id === e.message.id);
                             if (!exists) {
-                                return [...prevMessages, e.message]
+                                return [...prevMessages, e.message];
                             }
-                            return prevMessages
-                        })
+                            return prevMessages;
+                        });
                     }
 
                     // Update chat list - this should always happen regardless of selected chat
                     setChats(prevChats => {
                         const updatedChats = prevChats.map(prevChat => {
                             if (prevChat.id === e.message.conversationId) {
-                                const isCurrentChat = currentSelectedChat?.id === e.message.conversationId
+                                const isCurrentChat = currentSelectedChat?.id === e.message.conversationId;
                                 return {
                                     ...prevChat,
                                     lastMessage: e.message.content,
                                     lastMessageTime: e.message.timestamp,
                                     unreadCount: isCurrentChat
                                         ? prevChat.unreadCount
-                                        : prevChat.unreadCount + 1
-                                }
+                                        : prevChat.unreadCount + 1,
+                                };
                             }
-                            return prevChat
-                        })
-                        return sortChatsByLastMessageTime(updatedChats)
-                    })
-                })
+                            return prevChat;
+                        });
+                        return sortChatsByLastMessageTime(updatedChats);
+                    });
+                });
 
-                activeChannelsRef.current.add(channelName)
-                newChannels.push(channelName)
+                activeChannelsRef.current.add(channelName);
+                newChannels.push(channelName);
             }
-        })
+        });
 
         // Cleanup function for this effect
         return () => {
             newChannels.forEach(channelName => {
                 if (echo && activeChannelsRef.current.has(channelName)) {
-                    echo.leave(channelName)
-                    activeChannelsRef.current.delete(channelName)
+                    echo.leave(channelName);
+                    activeChannelsRef.current.delete(channelName);
                 }
-            })
-        }
-    }, [chats, setChats, setMessages])
+            });
+        };
+    }, [chats, setChats, setMessages]);
 
     // Load messages when chat is selected
     const loadChatMessages = useCallback(async (chatId: number) => {
-        setIsLoadingMessages(true)
+        setIsLoadingMessages(true);
         try {
-            const response = await axios.get(route('chats.messages', { conversation: chatId }))
-            setMessages(response.data.messages || [])
+            const response = await axios.get(route('chats.messages', { conversation: chatId }));
+            setMessages(response.data.messages || []);
 
             // Mark chat as read
             setChats(prevChats =>
@@ -271,37 +252,37 @@ export default function Chat(
                         ? { ...chat, unreadCount: 0 }
                         : chat
                 )
-            )
+            );
 
             // Scroll to the bottom after messages load
-            setTimeout(scrollToBottom, 100)
+            setTimeout(scrollToBottom, 100);
         } catch (error) {
-            console.error('Failed to load messages:', error)
-            setMessages([])
+            console.error('Failed to load messages:', error);
+            setMessages([]);
         } finally {
-            setIsLoadingMessages(false)
+            setIsLoadingMessages(false);
         }
-    }, [route, scrollToBottom])
+    }, [route, scrollToBottom, setChats]);
 
     // Handle chat selection
     const handleChatSelect = useCallback((chat: Chat) => {
-        if (selectedChat?.id === chat.id) return
+        if (selectedChat?.id === chat.id) return;
 
-        setSelectedChat(chat)
-        setConversationMode(chat.mode)
-        setMessages([]) // Clear previous messages immediately
-        loadChatMessages(chat.id)
-    }, [selectedChat?.id, loadChatMessages])
+        setSelectedChat(chat);
+        setConversationMode(chat.mode);
+        setMessages([]); // Clear previous messages immediately
+        loadChatMessages(chat.id);
+    }, [selectedChat?.id, loadChatMessages]);
 
     // Handle message sending
     const handleSendMessage = useCallback(async (e: React.FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
 
-        if (!newMessage.trim() || !selectedChat || isSending) return
+        if (!newMessage.trim() || !selectedChat || isSending) return;
 
-        const messageContent = newMessage.trim()
-        setIsSending(true)
-        setNewMessage('') // Clear input immediately for better UX
+        const messageContent = newMessage.trim();
+        setIsSending(true);
+        setNewMessage(''); // Clear input immediately for better UX
 
         try {
             const response = await axios.post(
@@ -310,10 +291,10 @@ export default function Chat(
                     content: messageContent,
                     content_type: 'text',
                 }
-            )
+            );
 
             // Add the message to the current conversation
-            setMessages(prevMessages => [...prevMessages, response.data.message])
+            setMessages(prevMessages => [...prevMessages, response.data.message]);
 
             // Update chat list and reorder
             setChats(prevChats => {
@@ -325,30 +306,30 @@ export default function Chat(
                             lastMessageTime: new Date().toISOString(),
                         }
                         : chat
-                )
-                return sortChatsByLastMessageTime(updatedChats)
-            })
+                );
+                return sortChatsByLastMessageTime(updatedChats);
+            });
         } catch (error) {
-            console.error('Failed to send message:', error)
+            console.error('Failed to send message:', error);
             // Restore message on error
-            setNewMessage(messageContent)
+            setNewMessage(messageContent);
             // TODO: show an error notification
         } finally {
-            setIsSending(false)
+            setIsSending(false);
         }
-    }, [newMessage, selectedChat, isSending, route])
+    }, [newMessage, selectedChat, isSending, route, setChats]);
 
     const handleModeChange = useCallback(async (newMode: 'ai' | 'human') => {
-        if (!selectedChat || conversationMode === newMode) return
+        if (!selectedChat || conversationMode === newMode) return;
 
         try {
             const response = await axios.put(
                 route('chats.mode.update', { conversation: selectedChat.id }),
                 { mode: newMode }
-            )
+            );
 
             if (response.data.success) {
-                setConversationMode(newMode)
+                setConversationMode(newMode);
                 // Update the chat in the list
                 setChats(prevChats =>
                     prevChats.map(chat =>
@@ -356,61 +337,39 @@ export default function Chat(
                             ? { ...chat, mode: newMode }
                             : chat
                     )
-                )
-            }
-        } catch (error) {
-            console.error('Failed to update conversation mode:', error)
-            // TODO: show error notification
-        }
-    }, [selectedChat, conversationMode, route])
-
-    const handleAssignAgent = useCallback(async (e: React.ChangeEvent<HTMLSelectElement>) => {
-        if (!selectedChat) return;
-
-        const newAgentId = e.target.value ? parseInt(e.target.value, 10) : null;
-
-        try {
-            const response = await axios.put(
-                route('chats.assignment.update', { conversation: selectedChat.id }),
-                { user_id: newAgentId }
-            );
-
-            if (response.data.success) {
-                const { assigned_user_id, assigned_user_name } = response.data;
-                // Update the selected chat
-                setSelectedChat(prev => prev ? { ...prev, assigned_user_id, assigned_user_name } : null);
-
-                // Update the chat in the main list
-                setChats(prevChats =>
-                    prevChats.map(chat =>
-                        chat.id === selectedChat.id
-                            ? { ...chat, assigned_user_id, assigned_user_name }
-                            : chat
-                    )
                 );
             }
         } catch (error) {
-            console.error('Failed to assign agent:', error);
+            console.error('Failed to update conversation mode:', error);
             // TODO: show error notification
         }
-    }, [selectedChat, route]);
+    }, [selectedChat, conversationMode, route, setChats]);
+
+    const handleAgentAssigned = useCallback((updatedChat: Chat) => {
+        setSelectedChat(updatedChat);
+        setChats(prevChats =>
+            prevChats.map(chat =>
+                chat.id === updatedChat.id ? updatedChat : chat
+            )
+        );
+    }, [setChats]);
 
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-        setNewMessage(value)
+        const value = e.target.value;
+        setNewMessage(value);
 
         // Auto-disable AI mode when the user starts typing
         if (value.length === 1 && conversationMode === 'ai') {
-            handleModeChange('human')
+            handleModeChange('human');
         }
-    }, [conversationMode, handleModeChange])
+    }, [conversationMode, handleModeChange]);
 
     // Auto-scroll when new messages arrive
     useEffect(() => {
         if (messages.length > 0) {
-            scrollToBottom()
+            scrollToBottom();
         }
-    }, [messages.length, scrollToBottom])
+    }, [messages.length, scrollToBottom]);
 
     // Memoized chat list to prevent unnecessary re-renders
     const chatList = useMemo(() => (
@@ -447,7 +406,7 @@ export default function Chat(
                 </div>
             </div>
         ))
-    ), [chats, selectedChat?.id, handleChatSelect])
+    ), [chats, selectedChat?.id, handleChatSelect]);
 
     // Memoized message list
     const messageList = useMemo(() => (
@@ -481,15 +440,15 @@ export default function Chat(
                 </div>
             </div>
         ))
-    ), [messages])
+    ), [messages]);
 
     return (
-        <AppLayout  breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Chat" />
             <ChatLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     {/* Chat List */}
-                    <div className={`${selectedChat? "hidden lg:flex":"flex"} w-full lg:w-1/3 border-r border-gray-200 dark:border-gray-700 flex-col`}>
+                    <div className={`${selectedChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-1/3 border-r border-gray-200 dark:border-gray-700 flex-col`}>
                         <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
                             <h2 className="text-lg font-semibold">Chats</h2>
                             <p className="text-sm text-gray-900 mt-1">
@@ -550,24 +509,12 @@ export default function Chat(
                                             {conversationMode === 'ai' ? 'ON' : 'OFF'}
                                         </span>
                                     </div>
-                                    <div className="text-sm">
-                                        {canAssign ? (
-                                            <select
-                                                value={selectedChat.assigned_user_id || ''}
-                                                onChange={handleAssignAgent}
-                                                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-800 dark:border-gray-600"
-                                            >
-                                                <option value="">Unassigned</option>
-                                                {agents.map(agent => (
-                                                    <option key={agent.id} value={agent.id}>
-                                                        {agent.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        ) : (
-                                            <span>{selectedChat.assigned_user_name || 'Unassigned'}</span>
-                                        )}
-                                    </div>
+                                    <AgentAssignmentDropdown
+                                        canAssign={canAssign}
+                                        selectedChat={selectedChat}
+                                        agents={agents}
+                                        onAgentAssigned={handleAgentAssigned}
+                                    />
                                 </div>
                             </div>
 
@@ -601,7 +548,7 @@ export default function Chat(
                                     <input
                                         type="text"
                                         value={newMessage}
-                                        onChange={handleInputChange} // Cambiar de onChange a handleInputChange
+                                        onChange={handleInputChange}
                                         placeholder="Type a message..."
                                         disabled={isSending}
                                         className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -628,5 +575,5 @@ export default function Chat(
                 </div>
             </ChatLayout>
         </AppLayout>
-    )
+    );
 }

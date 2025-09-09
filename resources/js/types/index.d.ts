@@ -105,3 +105,21 @@ interface PageProps {
     chatbot: Chatbot;
     [key: string]: unknown;
 }
+
+export interface Agent {
+    id: number;
+    name: string;
+}
+
+export interface Chat {
+    id: number
+    name: string
+    phone: string
+    avatar: string
+    lastMessage: string
+    lastMessageTime: string
+    unreadCount: number
+    mode: 'ai' | 'human'
+    assigned_user_id: number | null
+    assigned_user_name: string | null
+}

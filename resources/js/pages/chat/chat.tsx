@@ -397,6 +397,19 @@ export default function Chat(
                         <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                             {chat.lastMessage}
                         </p>
+                        <div className="flex justify-between items-center mt-1 italic">
+                            <small>@{chat.assigned_user_name?? "Unassigned"}</small>
+                            <small>
+                                AI Response
+                                <strong className="border border-gray-300 rounded-md px-1 py-1 text-xs font-medium ml-1 not-italic">
+                                {chat.mode === 'ai' ? (
+                                    <span className="text-blue-600">ON</span>
+                                ) : (
+                                    <span className="text-gray-500">OFF</span>
+                                )}
+                                </strong>
+                            </small>
+                        </div>
                     </div>
                     {chat.unreadCount > 0 && (
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white flex-shrink-0">

@@ -68,15 +68,14 @@ export function AppSidebar() {
             href: route('chatbots.integrations', { chatbot: chatbot?.id || 0 }),
             icon: Settings,
         },
-        {
+        /*{
             title: 'Contacts',
             href: route('contacts.index'),
             icon: Users,
-        },
+        },*/
     ];
 
     const isChatbotContext = chatbot?.id > 0;
-    const navItems = isChatbotContext ? chatbotNavItems : mainNavItems;
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -85,7 +84,9 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={navItems} groupLabel={isChatbotContext ? 'Agent' : 'General'} />
+                {isChatbotContext && <NavMain items={chatbotNavItems} groupLabel='Agent' />}
+                <NavMain items={mainNavItems} groupLabel='Organization' />
+
             </SidebarContent>
 
             <SidebarFooter>

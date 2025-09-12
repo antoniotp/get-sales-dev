@@ -163,7 +163,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
 
                         </div>
 
-                        <div className="rounded-md border">
+                        <div className="rounded-md border h-[calc(100vh-20rem)] overflow-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow>

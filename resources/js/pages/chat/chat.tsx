@@ -10,6 +10,7 @@ import type { BreadcrumbItem, Chatbot, PageProps, Organizations, Agent, Chat } f
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft } from 'lucide-react';
 import AgentAssignmentDropdown from '@/components/chat/AgentAssignmentDropdown';
+import { Badge } from '@/components/ui/badge';
 
 interface Message {
     id: number;
@@ -398,7 +399,12 @@ export default function Chat(
                             {chat.lastMessage}
                         </p>
                         <div className="flex justify-between items-center mt-1 italic">
-                            <small>@{chat.assigned_user_name?? "Unassigned"}</small>
+                            <Badge
+                                variant="secondary"
+                                className="bg-blue-500 text-white dark:bg-blue-600 px-1 py-0 max-w-1/2 overflow-hidden whitespace-nowrap justify-start"
+                            >
+                                @{chat.assigned_user_name?? "Unassigned"}
+                            </Badge>
                             <small>
                                 AI Response
                                 <strong className="border border-gray-300 rounded-md px-1 py-1 text-xs font-medium ml-1 not-italic">

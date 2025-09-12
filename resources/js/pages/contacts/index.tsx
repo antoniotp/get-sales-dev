@@ -1,6 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm } from '@inertiajs/react';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,6 +14,7 @@ import { UpsertContactSheet } from '@/pages/contacts/partials/upsert-contact-she
 import { useState } from 'react';
 import { Contact } from '@/types/contact';
 import { Card } from '@/components/ui/card';
+import { CustomPagination } from '@/components/general/CustomPagination';
 
 interface FilterOptions {
     countries: string[];
@@ -252,25 +252,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                             </Table>
                         </div>
 
-                        <Pagination>
-                            <PaginationContent>
-                                {contacts.prev_page_url && (
-                                    <PaginationItem>
-                                        <PaginationPrevious href={contacts.prev_page_url} />
-                                    </PaginationItem>
-                                )}
-                                {contacts.links.map((link, index) => (
-                                    <PaginationItem key={index}>
-                                        <PaginationLink href={link.url || ''} isActive={link.active} dangerouslySetInnerHTML={{ __html: link.label }} />
-                                    </PaginationItem>
-                                ))}
-                                {contacts.next_page_url && (
-                                    <PaginationItem>
-                                        <PaginationNext href={contacts.next_page_url} />
-                                    </PaginationItem>
-                                )}
-                            </PaginationContent>
-                        </Pagination>
+                        <CustomPagination links={contacts.links} />
                     </Card>
                 </div>
                 <UpsertContactSheet

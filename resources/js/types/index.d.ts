@@ -1,5 +1,6 @@
 import { LucideIcon } from 'lucide-react';
 import type { Config } from 'ziggy-js';
+import React from 'react';
 
 export interface Auth {
     user: User;
@@ -27,6 +28,7 @@ export interface NavItem {
      icon?: LucideIcon | null;
      isActive?: boolean;
      items?: NavItem[];
+     component?: React.ComponentType | null;
  }
 
 export interface SharedData {

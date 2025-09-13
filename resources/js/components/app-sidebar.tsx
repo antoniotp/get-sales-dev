@@ -12,6 +12,7 @@ import { usePage } from '@inertiajs/react';
 import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users } from 'lucide-react';
 import { OrgSwitcher } from '@/components/org-switcher';
 import {PageProps} from '@/types';
+import { AgentSwitcher } from '@/components/agent-switcher';
 
 const footerNavItems: NavItem[] = [];
 
@@ -29,7 +30,7 @@ export function AppSidebar() {
             href: route('contacts.index'),
             icon: Users,
         },{
-            title: 'Org. Settings',
+            title: 'Settings',
             icon: Settings,
             href: '#',
             items: [
@@ -49,9 +50,9 @@ export function AppSidebar() {
 
     const chatbotNavItems: NavItems[] = [
         {
-            title: 'Agents',
-            href: route('chatbots.index'),
-            icon: BotMessageSquare,
+            title: 'Agent Switcher',
+            href: '#',
+            component: AgentSwitcher,
         },
         {
             title: 'Chats',
@@ -79,12 +80,16 @@ export function AppSidebar() {
 
     return (
         <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader className="relative">
+            <SidebarHeader className="relative border-b">
                 <OrgSwitcher />
             </SidebarHeader>
 
-            <SidebarContent>
-                {isChatbotContext && <NavMain items={chatbotNavItems} groupLabel='Agent' />}
+            <SidebarContent className="mt-3">
+                {isChatbotContext && (
+                    <>
+                    <NavMain items={chatbotNavItems} groupLabel='' />
+                    </>
+                )}
                 <NavMain items={mainNavItems} groupLabel='Organization' />
 
             </SidebarContent>

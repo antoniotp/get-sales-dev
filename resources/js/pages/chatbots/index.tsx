@@ -112,6 +112,7 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
     const isActive = chatbot.status === 1;
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
 
     const handleDelete = () => {
         setIsDeleting(true);
@@ -164,7 +165,7 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                             Created {chatbot.created_at}
                         </span>
                             <div className="flex items-center space-x-2">
-                                <DropdownMenu>
+                                <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="outline"
@@ -184,6 +185,7 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                                             onClick={(e) => {
                                                 e.preventDefault();
                                                 e.stopPropagation();
+                                                setMenuOpen(false);
                                                 setShowDeleteDialog(true);
                                             }}
                                             className="text-red-600 focus:text-red-600"

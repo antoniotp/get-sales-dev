@@ -3,6 +3,7 @@
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chat\ChatAssignmentController;
 use App\Http\Controllers\Chatbot\ChatbotController;
+use App\Http\Controllers\Chatbot\ChatbotSwitcherController;
 use App\Http\Controllers\Chatbot\IntegrationsController;
 use App\Http\Controllers\Chatbot\WhatsAppIntegrationController;
 use App\Http\Controllers\Contacts\ContactController;
@@ -63,6 +64,9 @@ Route::middleware(['auth', 'verified', 'organization'])->group(function () {
     Route::post('/invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('invitations.resend');
     Route::post('/invitations/accept/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
+
+    Route::get('/chatbot_switcher', [ ChatbotSwitcherController::class, 'list'])->name('chatbot_switcher.list');
+    Route::post('/chatbot_switcher', [ ChatbotSwitcherController::class, 'switch'])->name('chatbot_switcher.switch');
 });
 
 require __DIR__.'/settings.php';

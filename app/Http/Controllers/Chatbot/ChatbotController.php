@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Chatbot;
 
-use App\DataTransferObjects\Chatbot\ChatbotData;
+use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
 use App\Models\Organization;
@@ -19,21 +19,13 @@ class ChatbotController extends Controller
     /**
      * Display a listing of the chatbots for the authenticated user's organization.
      */
-    public function index(): Response
+    public function index( ChatbotServiceInterface $chatbotService ): Response
     {
-        $chatbots = $this->organization->chatbots()
-            ->select(['id', 'name', 'description', 'status', 'created_at'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(fn(Chatbot $chatbot) => ChatbotData::fromChatbot($chatbot, true)->toArray());
+        $chatbots = $chatbotService->getChatbotsByOrganization( $this->organization );
 
         return Inertia::render('chatbots/index', [
             'chatbots' => $chatbots,
-            'hasNoChatbots' => $chatbots->isEmpty(),
-            'flash' => [
-                'success' => session('success'),
-                'error' => session('error'),
-            ]
+            'hasNoChatbots' => empty($chatbots),
         ]);
     }
 

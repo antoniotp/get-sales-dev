@@ -8,9 +8,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { PageProps } from '@/types';
+import { Chatbot, PageProps } from '@/types';
 import { useChatbots } from '@/context/ChatbotProvider';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { BotMessageSquare, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
 
@@ -19,6 +19,20 @@ export function AgentSwitcher() {
     const { state } = useSidebar();
     const isMobile = useIsMobile();
     const { switcherChatbots, isLoading } = useChatbots();
+
+    function handleSwitch(chatbotOption: Chatbot): void {
+        router.post(route('chatbot_switcher.switch'), {
+            new_chatbot_id: chatbotOption.id,
+        }, {
+            onSuccess: () => {
+                // Opcional: mostrar una notificación de éxito
+            },
+            onError: (errors) => {
+                // Opcional: mostrar errores de validación
+                console.error(errors);
+            },
+        });
+    }
 
     return (
         <SidebarMenuItem key='agent-switcher'>
@@ -48,7 +62,7 @@ export function AgentSwitcher() {
                         switcherChatbots && switcherChatbots.map((chatbotOption) => (
                             <DropdownMenuItem
                                 key={chatbotOption.id}
-                                /*onClick={() => handleSwitch(chatbotOption)}*/
+                                onClick={() => handleSwitch(chatbotOption)}
                                 className="gap-2 p-2"
                             >
 

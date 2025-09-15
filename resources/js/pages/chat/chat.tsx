@@ -90,7 +90,7 @@ export default function Chat(
         () => [
             {
                 title: chatbot.name,
-                href: route('chatbots.index'),
+                href: route('chatbots.edit', { chatbot: chatbot.id }),
             },
             {
                 title: 'Chats',

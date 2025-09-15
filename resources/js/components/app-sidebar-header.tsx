@@ -8,13 +8,13 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
 
     const { props } = usePage<PageProps>();
     const { organization } = props;
-    breadcrumbs = [{title:organization.current.name,href:''}, ...breadcrumbs]
+    breadcrumbs = [{title:organization.current.name,href:route('dashboard')}, ...breadcrumbs]
 
     return (
         <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
             <div className="flex items-center gap-2">
                 <CustomSidebarTrigger className="-ml-1" />
-                <Link href={route('dashboard')} prefetch>
+                <Link href={route('organizations.edit')} prefetch>
                     <div className="hidden md:flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground bg-white border border-grey-100 dark:[border-color:var(--sidebar-foreground)]">
                         <AppLogoIcon className="fill-current text-white dark:text-black" />
                     </div>

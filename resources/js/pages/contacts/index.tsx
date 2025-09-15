@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { type PageProps } from '@/types';
+import { BreadcrumbItem, type PageProps } from '@/types';
 import { Button } from '@/components/ui/button';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -49,6 +49,10 @@ interface FormData {
     [key: string]: string | undefined;
 }
 
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Contacts', href: route('contacts.index') },
+];
+
 export default function ContactsPage({ contacts, filters, filterOptions }: ContactsPageProps) {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -83,7 +87,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
     }
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Contacts" />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">

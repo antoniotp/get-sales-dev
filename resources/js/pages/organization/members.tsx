@@ -3,7 +3,7 @@ import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { User, Organization, PageProps } from '@/types';
+import { User, Organization, PageProps, BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -114,6 +114,10 @@ function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: bo
     );
 }
 
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Members', href: route('organizations.members.index') },
+];
 // --- Main Page Component ---
 export default function OrganizationMembers({
     organizationDetails,
@@ -153,7 +157,7 @@ export default function OrganizationMembers({
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Members of ${organizationDetails.name}`} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">

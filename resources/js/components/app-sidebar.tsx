@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItems, NavItem } from '@/types';
 import { usePage } from '@inertiajs/react';
-import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users } from 'lucide-react';
+import { Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users, Unplug } from 'lucide-react';
 import { OrgSwitcher } from '@/components/org-switcher';
 import {PageProps} from '@/types';
 import { AgentSwitcher } from '@/components/agent-switcher';
@@ -67,6 +67,11 @@ export function AppSidebar() {
         {
             title: 'Integrations',
             href: route('chatbots.integrations', { chatbot: chatbot?.id || 0 }),
+            icon: Unplug,
+        },
+        {
+            title: 'Settings',
+            href: route('chatbots.edit', { chatbot: chatbot?.id || 0 }),
             icon: Settings,
         },
         /*{

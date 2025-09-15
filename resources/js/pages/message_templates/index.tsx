@@ -190,7 +190,7 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         {
             title: props.chatbot.name,
-            href: route('chatbots.index'),
+            href: route('chatbots.edit', props.chatbot.id),
         },
         {
             title: 'Message templates management',

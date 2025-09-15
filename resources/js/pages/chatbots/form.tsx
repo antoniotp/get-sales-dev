@@ -55,8 +55,10 @@ export default function ChatbotForm({ chatbot }: Props) {
     const isEditing = !!chatbot;
 
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Agents', href: route('chatbots.index') },
+        {
+            title: chatbot?.name || 'Create Agent',
+            href: chatbot?.id ? route('chatbots.edit', { chatbot: chatbot?.id }): route('chatbots.create'),
+        },
         {
             title: isEditing ? 'Edit' : 'New',
             href: isEditing ? route('chatbots.edit', chatbot.id) : route('chatbots.create')

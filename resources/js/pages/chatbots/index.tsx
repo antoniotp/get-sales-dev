@@ -30,7 +30,6 @@ interface ChatbotsIndexProps {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: route('dashboard') },
     { title: 'Agents', href: route('chatbots.index') },
 ];
 
@@ -130,7 +129,7 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
 
     return (
         <>
-            <Link href={route('chatbots.edit', chatbot.id)}>
+            <Link href={route('chats', chatbot.id)}>
                 <Card className="group hover:shadow-md transition-shadow duration-200">
                     <CardHeader className="pb-0">
                         <div className="flex items-start justify-between">

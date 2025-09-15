@@ -26,7 +26,7 @@ Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
 Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');
 
 
-Route::middleware(['auth', 'verified', 'organization'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () { return redirect()->route('chatbots.index'); })->name('dashboard');
     Route::get('/chatbots', [ChatbotController::class, 'index'])->name('chatbots.index');
     Route::get('/chatbots/create', [ChatbotController::class, 'create'])->name('chatbots.create');

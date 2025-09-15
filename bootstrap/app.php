@@ -20,11 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             HandleAppearance::class,
+            EnsureCurrentOrganization::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
-        ]);
-        $middleware->alias([
-            'organization' => EnsureCurrentOrganization::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             'webhook/*',

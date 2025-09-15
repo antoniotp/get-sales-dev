@@ -14,15 +14,17 @@ class EnsureCurrentOrganization
 
     public function handle(Request $request, Closure $next)
     {
-        if (auth()->check() && !session('currentOrganizationId')) {
-            $this->organizationService->initializeCurrentOrganization( $request, auth()->user() );
-        }
+        if (auth()->check()) {
+            if (!session('currentOrganizationId')) {
+                $this->organizationService->initializeCurrentOrganization($request, auth()->user());
+            }
 
-        if ($organizationId = session('currentOrganizationId')) {
-            $organization = Organization::query()->find($organizationId);
+            if ($organizationId = session('currentOrganizationId')) {
+                $organization = Organization::query()->find($organizationId);
 
-            if ($organization && Auth::user()->belongsToOrganization($organization)) {
-                app()->singleton(Organization::class, fn() => $organization);
+                if ($organization && Auth::user()->belongsToOrganization($organization)) {
+                    app()->singleton(Organization::class, fn() => $organization);
+                }
             }
         }
 

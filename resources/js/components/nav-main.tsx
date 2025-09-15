@@ -78,7 +78,7 @@ export function NavMain({ items = [], groupLabel = '' }: { items: NavItems[], gr
                     return item.items && item.items.length > 0 ? (
                         <CollapsibleNavItem key={item.title} item={item} />
                     ) : (
-                        item.component? <item.component /> :
+                        item.component? <item.component key={item.title} /> :
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
                                 asChild

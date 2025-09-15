@@ -7,6 +7,7 @@ use App\DataTransferObjects\Chatbot\ChatbotData;
 use App\DataTransferObjects\Chatbot\ChatbotSummaryData;
 use App\Models\Chatbot;
 use App\Models\Organization;
+use App\Models\User;
 
 class ChatbotService implements ChatbotServiceInterface
 {
@@ -36,5 +37,21 @@ class ChatbotService implements ChatbotServiceInterface
         }
 
         return $chatbots->map(fn(Chatbot $chatbot) => ChatbotData::fromChatbot($chatbot, true)->toArray())->toArray();
+    }
+
+    public function canSwitchToChatbot( int $chatbot_id, Organization $organization, User $user ): bool
+    {
+        $chatbot = Chatbot::active()->find($chatbot_id);
+
+        if ( !$chatbot ) {
+            return false;
+        }
+
+        if ( !$organization->chatbots()->where('chatbots.id', $chatbot_id)->exists() ) {
+            return false;
+        }
+
+        return true;
+
     }
 }

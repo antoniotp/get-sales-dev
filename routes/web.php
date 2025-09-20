@@ -12,7 +12,7 @@ use App\Http\Controllers\MessageTemplates\MessageTemplateController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\InvitationController;
-use App\Http\Controllers\OrganizationSwitchController;
+use App\Http\Controllers\Organizations\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;

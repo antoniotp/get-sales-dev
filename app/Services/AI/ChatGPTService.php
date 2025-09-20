@@ -2,7 +2,7 @@
 
 namespace App\Services\AI;
 
-use App\Contracts\Services\AIServiceInterface;
+use App\Contracts\Services\AI\AIServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 

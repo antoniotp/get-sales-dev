@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Contracts\Services\AIServiceInterface;
+use App\Contracts\Services\AI\AIServiceInterface;
 use App\Events\NewWhatsAppMessage;
 use App\Models\Message;
 use App\Services\WhatsApp\WhatsAppService;

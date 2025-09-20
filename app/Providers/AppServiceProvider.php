@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Contracts\Services\AIServiceInterface;
+use App\Contracts\Services\AI\AIServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;

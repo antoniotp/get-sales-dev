@@ -378,6 +378,14 @@ class ChannelsSeeder extends Seeder
                     ]
                 ],
                 'status' => 1
+            ],
+            [
+                'name' => 'WhatsApp Web (Unofficial)',
+                'slug' => 'whatsapp-web',
+                'icon' => 'smartphone',
+                'webhook_fields' => null,
+                'credentials_fields' => null,
+                'status' => 1
             ]
         ];
 

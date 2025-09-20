@@ -48,4 +48,7 @@ return [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4.1-nano'),
     ],
+    'wwebjs_service' => [
+        'url' => env('WWEBJS_SERVICE_URL'),
+    ],
 ];

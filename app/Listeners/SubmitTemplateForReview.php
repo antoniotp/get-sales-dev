@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Contracts\Services\WhatsAppServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Events\MessageTemplateCreated;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;

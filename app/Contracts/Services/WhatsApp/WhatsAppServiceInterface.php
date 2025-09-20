@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Contracts\Services;
+namespace App\Contracts\Services\WhatsApp;
 
 use App\Models\ChatbotChannel;
 use App\Models\MessageTemplate;

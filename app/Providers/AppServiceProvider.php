@@ -5,7 +5,7 @@ namespace App\Providers;
 use App\Contracts\Services\AIServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
-use App\Contracts\Services\WhatsAppServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Services\AI\ChatGPTService;
 use App\Services\Chatbot\ChatbotService;
 use App\Services\Organization\OrganizationService;

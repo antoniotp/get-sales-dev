@@ -2,7 +2,7 @@
 
 namespace App\Services\WhatsApp;
 
-use App\Contracts\Services\WhatsAppServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Models\ChatbotChannel;
 use App\Models\MessageTemplate;
 use Illuminate\Support\Facades\Http;

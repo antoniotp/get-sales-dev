@@ -14,6 +14,7 @@ use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
+use App\Http\Controllers\Webhooks\WhatsAppWebController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,6 +22,7 @@ Route::get('/', function () { return Inertia::render('home'); })->name('home');
 Route::get('/policies', function () { return Inertia::render('policies'); })->name('policies');
 Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify']);
 Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
+Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle']);
 
 // Public invitation acceptance page
 Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');

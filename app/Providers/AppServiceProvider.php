@@ -6,6 +6,7 @@ use App\Contracts\Services\AI\AIServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Services\AI\ChatGPTService;
 use App\Services\Chatbot\ChatbotService;
 use App\Services\Organization\OrganizationService;
@@ -17,6 +18,7 @@ use App\Services\WhatsApp\FacebookService;
 use App\Contracts\Services\Invitation\InvitationServiceInterface;
 use App\Services\Invitation\InvitationService;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Services\WhatsApp\WhatsAppWebService;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ChatbotServiceInterface::class, ChatbotService::class);
 
         $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookService::class);
+        $this->app->bind(WhatsAppWebServiceInterface::class, WhatsappWebService::class);
     }
 
     /**

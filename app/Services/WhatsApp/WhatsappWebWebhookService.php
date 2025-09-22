@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -28,7 +29,12 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleQr(array $data): void
     {
         Log::info('Handling QR code event', ['session_id' => $data['session_id']]);
-        // Future logic: Broadcast the QR code to the frontend.
+
+        if (!empty($data['qr'])) {
+            WhatsappQrCodeReceived::dispatch($data['session_id'], $data['qr']);
+        } else {
+            Log::warning('QR code event received without QR code data.', ['session_id' => $data['session_id']]);
+        }
     }
 
     /**

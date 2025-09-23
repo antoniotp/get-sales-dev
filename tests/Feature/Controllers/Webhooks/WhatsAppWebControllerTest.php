@@ -15,9 +15,9 @@ class WhatsAppWebControllerTest extends TestCase
     {
         // Arrange
         $payload = [
-            'event_type' => 'qr',
+            'event_type' => 'qr_code_received',
             'session_id' => 'test-session-123',
-            'qr' => 'some-qr-code-string',
+            'qr_code' => 'some-qr-code-string',
         ];
 
         // Mock the service
@@ -27,7 +27,7 @@ class WhatsAppWebControllerTest extends TestCase
                 ->withArgs(function ($data) use ($payload) {
                     return $data['event_type'] === $payload['event_type']
                         && $data['session_id'] === $payload['session_id']
-                        && isset($data['qr']);
+                        && isset($data['qr_code']);
                 });
         });
 
@@ -63,7 +63,7 @@ class WhatsAppWebControllerTest extends TestCase
     {
         // Arrange: Missing session_id
         $payload = [
-            'event_type' => 'qr',
+            'event_type' => 'qr_code_received',
         ];
 
         // Ensure the service is never called

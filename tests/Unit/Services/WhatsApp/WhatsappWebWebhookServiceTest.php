@@ -16,9 +16,9 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         $service = new WhatsappWebWebhookService();
         $payload = [
-            'event_type' => 'qr',
+            'event_type' => 'qr_code_received',
             'session_id' => 'test-session-123',
-            'qr' => 'test-qr-code',
+            'qr_code' => 'test-qr-code',
         ];
 
         // Act
@@ -26,7 +26,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         // Assert
         Event::assertDispatched(WhatsappQrCodeReceived::class, function ($event) use ($payload) {
-            return $event->sessionId === $payload['session_id'] && $event->qrCode === $payload['qr'];
+            return $event->sessionId === $payload['session_id'] && $event->qrCode === $payload['qr_code'];
         });
     }
 
@@ -37,9 +37,9 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         $service = new WhatsappWebWebhookService();
         $payload = [
-            'event_type' => 'qr',
+            'event_type' => 'qr_code_received',
             'session_id' => 'test-session-123',
-            'qr' => '', // empty qr code
+            'qr_code' => '', // empty qr code
         ];
 
         // Act

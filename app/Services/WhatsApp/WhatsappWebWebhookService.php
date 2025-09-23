@@ -11,6 +11,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 {
     public function handle(array $data): void
     {
+        Log::info('Handling WhatsApp Web webhook event', $data);
         $eventType = $data['event_type'];
 
         $methodName = 'handle' . Str::studly($eventType);
@@ -26,12 +27,12 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
      * Handles the 'qr' event.
      * This event is triggered when a QR code is generated for authentication.
      */
-    private function handleQr(array $data): void
+    private function handleQrCodeReceived(array $data): void
     {
         Log::info('Handling QR code event', ['session_id' => $data['session_id']]);
 
-        if (!empty($data['qr'])) {
-            WhatsappQrCodeReceived::dispatch($data['session_id'], $data['qr']);
+        if (!empty($data['qr_code'])) {
+            WhatsappQrCodeReceived::dispatch($data['session_id'], $data['qr_code']);
         } else {
             Log::warning('QR code event received without QR code data.', ['session_id' => $data['session_id']]);
         }

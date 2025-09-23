@@ -7,6 +7,7 @@ use App\Models\Chatbot;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use Inertia\Response;
 
 class WhatsAppIntegrationController extends Controller
@@ -33,5 +34,18 @@ class WhatsAppIntegrationController extends Controller
                 'status' => $whatsAppChannel->status,
             ] : null,
         ]);
+    }
+
+    public function startWhatsappWebServer(Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService)
+    {
+        $sessionId = 'chatbot-' . $chatbot->id;
+
+        $success = $whatsAppWebService->startSession($sessionId);
+
+        if ($success) {
+            return response()->json(['session_id' => $sessionId]);
+        }
+
+        return response()->json(['error' => 'Failed to start WhatsApp Web session.'], 500);
     }
 }

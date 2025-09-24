@@ -107,6 +107,9 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     {
         Log::info('Handling ready event', ['session_id' => $data['session_id']]);
         $chatbot = $this->getValidatedChatbot($data['session_id']);
+        if (!$chatbot) {
+            return;
+        }
         $wid = $data['phone_number_id'] ?? null;
         if (!$wid) {
             Log::error('ready event received without WID.', ['session_id' => $data['session_id']]);

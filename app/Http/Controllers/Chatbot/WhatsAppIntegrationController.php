@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chatbot;
 
 use App\Http\Controllers\Controller;
+use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\Organization;
 use Illuminate\Http\Request;
@@ -22,6 +23,10 @@ class WhatsAppIntegrationController extends Controller
             ->where('channel_id', 1)
             ->where('status', 1)
             ->first();
+        $whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
+        $whatsAppWebChatbotChannel = $chatbot->chatbotChannels()
+            ->where('channel_id', $whatsAppWebChannel->id)
+            ->first();
 
         return Inertia::render('chatbots/integrations/whatsapp/index', [
             'chatbot' => $chatbot,
@@ -33,6 +38,14 @@ class WhatsAppIntegrationController extends Controller
                 ],
                 'status' => $whatsAppChannel->status,
             ] : null,
+            'whatsAppWebChatbotChannel' => $whatsAppWebChatbotChannel ? [
+                'id' => $whatsAppWebChatbotChannel->id,
+                'data' => [
+                    'display_phone_number' => $whatsAppWebChatbotChannel->credentials['display_phone_number'] ?? '',
+                    'phone_number_id' => $whatsAppWebChatbotChannel->credentials['phone_number_id'] ?? '',
+                ],
+                'status' => $whatsAppWebChatbotChannel->status,
+            ]:null,
         ]);
     }
 
@@ -47,5 +60,11 @@ class WhatsAppIntegrationController extends Controller
         }
 
         return response()->json(['error' => 'Failed to start WhatsApp Web session.'], 500);
+    }
+
+    public function getWhatsAppWebStatus( Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService )
+    {
+        $status = $whatsAppWebService->getSessionStatus( $chatbot );
+        return response()->json($status);
     }
 }

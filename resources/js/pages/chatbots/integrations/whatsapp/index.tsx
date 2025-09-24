@@ -16,13 +16,15 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { FacebookEmbeddedSignUpBtn } from '@/components/facebook-embedded-signup-btn';
 import { WhatsappWebConnection } from '@/components/chatbot/integrations/WhatsappWebConnection';
+import { WhatsappWebConnectedState} from "@/components/chatbot/integrations/WhatsappWebConnectedState";
 
 interface PageProps extends GlobalPageProps {
     whatsAppChannel: ChatbotChannel | null;
+    whatsAppWebChatbotChannel: ChatbotChannel | null;
 }
 
 export default function WhatsAppIntegration() {
-    const { chatbot, whatsAppChannel } = usePage<PageProps>().props;
+    const { chatbot, whatsAppChannel, whatsAppWebChatbotChannel } = usePage<PageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -127,7 +129,11 @@ export default function WhatsAppIntegration() {
                             </CardContent>
                         </Card>
                     </div>
-                    <WhatsappWebConnection chatbot={chatbot} />
+                    {whatsAppWebChatbotChannel ? (
+                        <WhatsappWebConnectedState chatbot={chatbot} channel={whatsAppWebChatbotChannel} />
+                    ):(
+                        <WhatsappWebConnection chatbot={chatbot} />
+                    )}
                 </div>
             </AppContentDefaultLayout>
         </AppLayout>

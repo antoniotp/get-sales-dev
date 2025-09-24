@@ -14,4 +14,5 @@ interface WhatsAppWebServiceInterface
      * @return bool True on success, false on failure.
      */
     public function startSession(string $sessionId): bool;
+    public function getSessionStatus( $chatbot );
 }

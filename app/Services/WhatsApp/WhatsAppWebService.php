@@ -48,4 +48,41 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
         Log::info('Successfully requested session start for wwebjs.', ['session_id' => $sessionId]);
         return true;
     }
+
+    public function getSessionStatus( $chatbot ): array
+    {
+        if ( empty( $this->wwebjs_url) ) {
+            Log::error('WhatsApp Web Service URL is not configured.');
+            return ['status' => 'error', 'message' => 'Service not configured.'];
+        }
+        $sessionId = 'chatbot-' . $chatbot->id;
+        try {
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->get($this->wwebjs_url . '/sessions/' . $sessionId);
+
+            if ($response->serverError()) {
+                Log::error('WhatsApp Web Service returned a server error.', [
+                    'session_id' => $sessionId,
+                    'status' => $response->status(),
+                ]);
+                return ['status' => 'ERROR', 'message' => 'Connection service failed.'];
+            }
+            if ($response->clientError()) {
+                Log::warning('WhatsApp Web Service returned a client error, assuming disconnected.', [
+                    'session_id' => $sessionId,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return ['status' => 'DISCONNECTED'];
+            }
+            return ['status' => $response->json('status', 'UNKNOWN')];
+        } catch ( Exception $e ) {
+            Log::error('Error getting session status', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage()
+            ]);
+            return ['status' => 'error', 'message' => $e->getMessage()];
+        }
+    }
 }

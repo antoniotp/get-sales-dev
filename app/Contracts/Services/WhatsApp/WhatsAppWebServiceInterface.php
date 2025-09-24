@@ -2,6 +2,8 @@
 
 namespace App\Contracts\Services\WhatsApp;
 
+use App\Models\Chatbot;
+
 /**
  * Interface for the unofficial WhatsApp Web Service (whatsapp-web.js).
  */
@@ -14,5 +16,6 @@ interface WhatsAppWebServiceInterface
      * @return bool True on success, false on failure.
      */
     public function startSession(string $sessionId): bool;
-    public function getSessionStatus( $chatbot );
+    public function getSessionStatus( Chatbot $chatbot );
+    public function reconnectSession( Chatbot $chatbot );
 }

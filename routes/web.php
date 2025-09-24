@@ -41,6 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chatbots/{chatbot}/integrations/whatsapp', [ WhatsAppIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp');
     Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/start', [WhatsAppIntegrationController::class, 'startWhatsappWebServer'])->name('chatbots.integrations.whatsapp-web.start');
     Route::get('/chatbots/{chatbot}/integrations/whatsapp-web/status', [WhatsAppIntegrationController::class, 'getWhatsAppWebStatus'])->name('chatbots.integrations.whatsapp-web.status');
+    Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/reconnect', [WhatsAppIntegrationController::class, 'reconnectWhatsappWebSession'])->name('chatbots.integrations.whatsapp-web.reconnect');
     Route::get('/chatbots/{chatbot}/chats', [ChatController::class, 'index'])->name('chats');
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');

@@ -14,10 +14,11 @@ interface Props {
 
 type ConnectionStatus = 'VERIFYING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR';
 
-export function WhatsappWebConnectedState({ chatbot, channel }: Props) {
+export function WhatsappWebConnectedState({ chatbot }: Props) {
     const [status, setStatus] = useState<ConnectionStatus>('VERIFYING');
+    const [reconnecting, setReconnecting] = useState<boolean>(false); // New state for reconnect button loading
 
-    useEffect(() => {
+    const fetchStatus = () => {
         axios
             .get(route('chatbots.integrations.whatsapp-web.status', { chatbot: chatbot.id }))
             .then((response) => {
@@ -26,7 +27,25 @@ export function WhatsappWebConnectedState({ chatbot, channel }: Props) {
             .catch(() => {
                 setStatus('ERROR');
             });
+    };
+
+    useEffect(() => {
+        fetchStatus(); // Initial fetch
     }, [chatbot.id]);
+
+    const handleReconnect = async () => {
+        setReconnecting(true);
+        try {
+            await axios.post(route('chatbots.integrations.whatsapp-web.reconnect', { chatbot: chatbot.id }));
+            // If successful, re-fetch status to see if it's connecting or connected
+            fetchStatus();
+        } catch (error) {
+            console.error('Failed to send reconnect command', error);
+            setStatus('ERROR'); // Set status to error if reconnect command fails
+        } finally {
+            setReconnecting(false);
+        }
+    };
 
     const renderContent = () => {
         switch (status) {
@@ -58,7 +77,10 @@ export function WhatsappWebConnectedState({ chatbot, channel }: Props) {
                         <p className="text-sm text-muted-foreground">
                             The connection was lost. Please reconnect.
                         </p>
-                        <Button className="mt-4">Reconnect</Button>
+                        <Button className="mt-4" onClick={handleReconnect} disabled={reconnecting}>
+                            {reconnecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Reconnect
+                        </Button>
                     </div>
                 );
             case 'ERROR':
@@ -70,6 +92,10 @@ export function WhatsappWebConnectedState({ chatbot, channel }: Props) {
                         <p className="text-sm text-muted-foreground">
                             Could not verify the connection status. Please try again later.
                         </p>
+                        <Button className="mt-4" onClick={handleReconnect} disabled={reconnecting}>
+                            {reconnecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Reconnect
+                        </Button>
                     </div>
                 );
             default:

@@ -67,4 +67,15 @@ class WhatsAppIntegrationController extends Controller
         $status = $whatsAppWebService->getSessionStatus( $chatbot );
         return response()->json($status);
     }
+
+    public function reconnectWhatsappWebSession( Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService )
+    {
+        $response = $whatsAppWebService->reconnectSession($chatbot);
+
+        if ($response['success']) {
+            return response()->json($response);
+        }
+
+        return response()->json($response, 500);
+    }
 }

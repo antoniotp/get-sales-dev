@@ -3,12 +3,23 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
+use App\Models\Channel;
+use App\Models\Chatbot;
+use App\Models\ChatbotChannel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 {
+    private ?Channel $whatsAppWebChannel;
+
+    public function __construct()
+    {
+        $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
+    }
+
     public function handle(array $data): void
     {
         Log::info('Handling WhatsApp Web webhook event', $data);
@@ -20,6 +31,46 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             $this->$methodName($data);
         } else {
             Log::warning("No handler for WhatsApp Web webhook event: {$eventType}", $data);
+        }
+    }
+
+    private function findChatbotBySessionId(string $sessionId): ?Chatbot
+    {
+        $chatbotId = Str::after($sessionId, 'chatbot-');
+        return Chatbot::find($chatbotId);
+    }
+
+    private function getValidatedChatbot(string $sessionId): ?Chatbot
+    {
+        if (!$this->whatsAppWebChannel) {
+            Log::error('WhatsApp Web channel not found in database.');
+            return null;
+        }
+        $chatbot = $this->findChatbotBySessionId($sessionId);
+        if (!$chatbot) {
+            Log::error('Could not find chatbot for session.', ['session_id' => $sessionId]);
+            return null;
+        }
+        return $chatbot;
+    }
+
+    private function updateChannelStatus(string $sessionId, int $newStatus, string $statusNameForEvent): void
+    {
+        $chatbot = $this->getValidatedChatbot($sessionId);
+        if (!$chatbot) {
+            return;
+        }
+
+        $chatbotChannel = $chatbot->chatbotChannels()
+            ->where('channel_id', $this->whatsAppWebChannel->id)
+            ->first();
+
+        if ($chatbotChannel) {
+            $chatbotChannel->update(['status' => $newStatus]);
+            WhatsappConnectionStatusUpdated::dispatch($sessionId, $newStatus);
+            Log::info("Chatbot channel updated to $statusNameForEvent.", ['chatbot_id' => $chatbot->id]);
+        } else {
+            Log::warning("Received $statusNameForEvent event for a non-existent channel.", ['session_id' => $sessionId]);
         }
     }
 
@@ -39,20 +90,10 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     }
 
     /**
-     * Handles the 'authenticated' event.
-     * This event is triggered when the WhatsApp client successfully authenticates.
-     */
-    private function handleAuthenticated(array $data): void
-    {
-        Log::info('Handling authenticated event', ['session_id' => $data['session_id']]);
-        // Future logic: Update the channel status to 'connected' in the database.
-    }
-
-    /**
      * Handles the 'message' event.
      * This event is triggered when a new message is received.
      */
-    private function handleMessage(array $data): void
+    private function handleMessageReceived(array $data): void
     {
         Log::info('Handling message event', ['session_id' => $data['session_id']]);
         // Future logic: Process the incoming message and store it.
@@ -62,10 +103,34 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
      * Handles the 'ready' event.
      * This event is triggered when the WhatsApp client is ready to send and receive messages.
      */
-    private function handleReady(array $data): void
+    private function handleClientReady(array $data): void
     {
         Log::info('Handling ready event', ['session_id' => $data['session_id']]);
-        // Future logic: Update the channel status to 'ready' or 'active'.
+        $chatbot = $this->getValidatedChatbot($data['session_id']);
+        $wid = $data['phone_number_id'] ?? null;
+        if (!$wid) {
+            Log::error('ready event received without WID.', ['session_id' => $data['session_id']]);
+            return;
+        }
+
+        ChatbotChannel::updateOrCreate(
+            [
+                'chatbot_id' => $chatbot->id,
+                'channel_id' => $this->whatsAppWebChannel->id
+            ],
+            [
+                'name' => 'WA-Web ' . $chatbot->name,
+                'credentials' => [
+                    'session_id'                     => $data['session_id'],
+                    'phone_number'                   => $wid,
+                    'phone_number_id'                => $wid,
+                    'phone_number_verified_name'     => $wid,
+                    'display_phone_number'           => $wid,
+                ],
+                'status' => ChatbotChannel::STATUS_CONNECTED,
+            ]
+        );
+        WhatsappConnectionStatusUpdated::dispatch($data['session_id'], ChatbotChannel::STATUS_CONNECTED);
     }
 
     /**
@@ -75,6 +140,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleDisconnected(array $data): void
     {
         Log::info('Handling disconnected event', ['session_id' => $data['session_id']]);
-        // Future logic: Update the channel status to 'disconnected'.
+        $this->updateChannelStatus($data['session_id'], ChatbotChannel::STATUS_DISCONNECTED, 'DISCONNECTED');
     }
 }

@@ -74,6 +74,7 @@ export interface ChatbotChannel {
     chatbot_id: number;
     channel_id: number;
     data: {
+        session_id: string | null;
         phone_number_verified_name: string;
         display_phone_number: string;
     }

@@ -16,7 +16,6 @@ import {
 import { MoreHorizontal } from 'lucide-react';
 import { FacebookEmbeddedSignUpBtn } from '@/components/facebook-embedded-signup-btn';
 import { WhatsappWebConnection } from '@/components/chatbot/integrations/WhatsappWebConnection';
-import { WhatsappWebConnectedState} from "@/components/chatbot/integrations/WhatsappWebConnectedState";
 
 interface PageProps extends GlobalPageProps {
     whatsAppChannel: ChatbotChannel | null;
@@ -122,18 +121,15 @@ export default function WhatsAppIntegration() {
                             </CardHeader>
                             <CardContent className="flex items-center justify-center">
                                 {whatsAppLink ? (
-                                    <QRCodeSVG value={whatsAppLink} size={256} />
+                                    <QRCodeSVG value={whatsAppLink} size={128} />
                                 ) : (
                                     <p>No QR code available. Please connect a number first.</p>
                                 )}
                             </CardContent>
                         </Card>
                     </div>
-                    {whatsAppWebChatbotChannel ? (
-                        <WhatsappWebConnectedState chatbot={chatbot} channel={whatsAppWebChatbotChannel} />
-                    ):(
-                        <WhatsappWebConnection chatbot={chatbot} />
-                    )}
+                    {/* Render the unified WhatsappWebConnection component */}
+                    <WhatsappWebConnection chatbot={chatbot} chatbotChannel={whatsAppWebChatbotChannel} />
                 </div>
             </AppContentDefaultLayout>
         </AppLayout>

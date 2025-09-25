@@ -129,16 +129,33 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
             ] )->post( "{$this->wwebjs_url}/sessions/{$sessionId}/reconnect" );
 
             if ( $response->successful() ) {
-                Log::info( 'Reconnect command sent successfully to Node.js service.', [ 'session_id' => $sessionId ] );
-                $chatbotChannel->update(['status' => ChatbotChannel::STATUS_CONNECTING]);
-                return [ 'success' => true, 'message' => 'Reconnect command sent.' ];
+                $nodeServiceResponse = $response->json();
+                Log::info('Reconnect command sent successfully to Node.js service.', ['session_id' => $sessionId, 'response' => $nodeServiceResponse]);
+
+                // El servicio de Node.js devuelve 'Reconnection started' o 'Session already active'
+                if (isset($nodeServiceResponse['message']) && $nodeServiceResponse['message'] === 'Reconnection started') {
+                    // Si la reconexión se inició, establecer el estado a CONNECTING para esperar eventos
+                    $chatbotChannel->update(['status' => ChatbotChannel::STATUS_CONNECTING]);
+                    return ['success' => true, 'message' => 'Reconnection initiated. Waiting for events.'];
+                } elseif (isset($nodeServiceResponse['message']) && $nodeServiceResponse['message'] === 'Session already active') {
+                    // Si la sesión ya está activa, actualizar el estado a CONNECTED
+                    $chatbotChannel->update(['status' => ChatbotChannel::STATUS_CONNECTED]);
+                    return ['success' => true, 'message' => 'Session already active.'];
+                }
+                // Manejar otras respuestas exitosas si las hay, o por defecto a éxito genérico
+                return ['success' => true, 'message' => $nodeServiceResponse['message'] ?? 'Reconnect command sent.'];
+
             } else {
-                Log::error( 'Node.js service failed to reconnect session.', [
+                Log::error('Node.js service failed to reconnect session.', [
                     'session_id' => $sessionId,
-                    'status'     => $response->status(),
-                    'response'   => $response->body(),
-                ] );
-                return [ 'success' => false, 'message' => 'Failed to reconnect session.' ];
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+                // El servicio de Node.js podría devolver 409 para 'Cannot reconnect from status'
+                if ($response->status() === 409) {
+                    return ['success' => false, 'message' => $response->json('message', 'Cannot reconnect from current status.')];
+                }
+                return ['success' => false, 'message' => 'Failed to reconnect session.'];
             }
         } catch ( Exception $e ) {
             Log::error( 'Error communicating with Node.js service for reconnection.', [

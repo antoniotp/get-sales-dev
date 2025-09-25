@@ -41,6 +41,8 @@ class WhatsAppIntegrationController extends Controller
             'whatsAppWebChatbotChannel' => $whatsAppWebChatbotChannel ? [
                 'id' => $whatsAppWebChatbotChannel->id,
                 'data' => [
+                    'session_id' => $whatsAppWebChatbotChannel->credentials['session_id'] ?? '',
+                    'phone_number_verified_name' => $whatsAppWebChatbotChannel->credentials['phone_number_verified_name'] ?? '',
                     'display_phone_number' => $whatsAppWebChatbotChannel->credentials['display_phone_number'] ?? '',
                     'phone_number_id' => $whatsAppWebChatbotChannel->credentials['phone_number_id'] ?? '',
                 ],

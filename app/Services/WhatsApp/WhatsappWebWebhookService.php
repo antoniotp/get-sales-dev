@@ -3,17 +3,26 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Events\NewWhatsAppConversation;
+use App\Events\NewWhatsAppMessage;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
+use App\Jobs\ProcessAIResponse;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\Contact;
+use App\Models\ContactChannel;
+use App\Models\Conversation;
+use App\Models\Message;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 {
     private ?Channel $whatsAppWebChannel;
+    private ?ChatbotChannel $chatbotChannel = null;
+    private ?Conversation $conversation = null;
 
     public function __construct()
     {
@@ -96,7 +105,18 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleMessageReceived(array $data): void
     {
         Log::info('Handling message event', ['session_id' => $data['session_id']]);
-        // Future logic: Process the incoming message and store it.
+
+        if (!$this->identifyChatbotChannel($data['session_id'])) {
+            Log::error('WhatsApp channel not found for session ID: ' . $data['session_id']);
+            return;
+        }
+
+        if (!$this->getOrCreateContactAndConversation($data)) {
+            Log::error('Could not create or update conversation for message', ['data' => $data]);
+            return;
+        }
+
+        $this->handleTextMessage($data['message']);
     }
 
     /**
@@ -144,5 +164,118 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     {
         Log::info('Handling disconnected event', ['session_id' => $data['session_id']]);
         $this->updateChannelStatus($data['session_id'], ChatbotChannel::STATUS_DISCONNECTED, 'DISCONNECTED');
+    }
+
+    private function identifyChatbotChannel(string $sessionId): bool
+    {
+        $chatbot = $this->getValidatedChatbot($sessionId);
+        if (!$chatbot) {
+            return false;
+        }
+
+        $this->chatbotChannel = $chatbot->chatbotChannels()
+            ->where('channel_id', $this->whatsAppWebChannel->id)
+            ->first();
+
+        return $this->chatbotChannel !== null;
+    }
+
+    private function getOrCreateContactAndConversation(array $data): bool
+    {
+        try {
+            $organizationId = $this->chatbotChannel->chatbot->organization_id;
+            $channelIdentifier = $data['message']['sender_id'];
+            $senderName = $data['message']['sender_name'] ?? 'WhatsApp User';
+
+            // Find or create the contact channel
+            $contactChannel = ContactChannel::firstOrCreate(
+                [
+                    'chatbot_id' => $this->chatbotChannel->chatbot_id,
+                    'channel_id' => $this->whatsAppWebChannel->id,
+                    'channel_identifier' => $channelIdentifier,
+                ],
+                [
+                    'contact_id' => Contact::firstOrCreate(
+                        ['organization_id' => $organizationId, 'phone_number' => $channelIdentifier],
+                        ['first_name' => $senderName]
+                    )->id,
+                ]
+            );
+
+            // Find or create the conversation
+            $this->conversation = Conversation::firstOrCreate(
+                [
+                    'chatbot_channel_id' => $this->chatbotChannel->id,
+                    'external_conversation_id' => $channelIdentifier,
+                ],
+                [
+                    'contact_channel_id' => $contactChannel->id,
+                    'contact_name' => $contactChannel->contact->first_name,
+                    'contact_phone' => $channelIdentifier,
+                    'status' => 1,
+                    'mode' => 'human',
+                    'last_message_at' => now(),
+                ]
+            );
+
+            // If conversation existed but without contact channel, update it
+            if (!$this->conversation->wasRecentlyCreated && is_null($this->conversation->contact_channel_id)) {
+                $this->conversation->update(['contact_channel_id' => $contactChannel->id]);
+            }
+
+            // Dispatch the event if a conversation was created
+            if ($this->conversation->wasRecentlyCreated) {
+                Log::info('New conversation created', ['conversation' => $this->conversation]);
+                event(new NewWhatsAppConversation($this->conversation));
+            }
+
+            // Update last_message_at
+            if (!$this->conversation->wasRecentlyCreated) {
+                $this->conversation->update(['last_message_at' => now()]);
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Error creating/updating contact and conversation', [
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            return false;
+        }
+    }
+
+    private function handleTextMessage(array $message): void
+    {
+        try {
+            $messageData = [
+                'conversation_id' => $this->conversation->id,
+                'external_message_id' => $message['id'],
+                'type' => 'incoming',
+                'content' => $message['body'],
+                'content_type' => 'text',
+                'sender_type' => 'contact',
+                'metadata' => [
+                    'timestamp' => $message['timestamp'],
+                    'from' => $message['sender_id'],
+                ],
+            ];
+
+            $newMessage = Message::create($messageData);
+
+            // Dispatch the event for real-time updates
+            event(new NewWhatsAppMessage($newMessage));
+
+            // If conversation is in AI mode, dispatch job to process AI response
+            if ($this->conversation->mode === 'ai') {
+                Log::info('Processing AI response for message', ['message' => $newMessage]);
+//                ProcessAIResponse::dispatch($newMessage)->onQueue('ai-responses');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Error saving text message', [
+                'error' => $e->getMessage(),
+                'message' => $message
+            ]);
+        }
     }
 }

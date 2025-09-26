@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Contracts\Services\AI\AIServiceInterface;
+use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Models\Message;
 use App\Services\WhatsApp\WhatsAppService;
@@ -38,7 +39,7 @@ class ProcessAIResponse implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle( AIServiceInterface $aiService, WhatsAppService $whatsAppService ): void
+    public function handle( AIServiceInterface $aiService ): void
     {
         try {
             // Get conversation history
@@ -65,13 +66,8 @@ class ProcessAIResponse implements ShouldQueue
                 ],
             ] );
 
-            // Send message through WhatsApp
-            $whatsAppService->sendMessage(
-                $this->message->conversation->chatbotChannel,
-                $this->message->conversation->contact_phone,
-                $aiResponse
-            );
-
+            // Send message through corresponding channel
+            event( new MessageSent( $responseMessage ) );
             // Broadcast the message
             event( new NewWhatsAppMessage( $responseMessage ) );
 

@@ -2,12 +2,10 @@
 
 namespace App\Contracts\Services\WhatsApp;
 
-use App\Models\ChatbotChannel;
+use App\Contracts\Services\Chat\ChannelMessageSenderInterface;
 use App\Models\MessageTemplate;
 
-interface WhatsAppServiceInterface
+interface WhatsAppServiceInterface extends ChannelMessageSenderInterface
 {
-    public function sendMessage(ChatbotChannel $channel, string $to, string $message): array;
-
     public function submitTemplateForReview(MessageTemplate $template): array;
 }

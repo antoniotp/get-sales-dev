@@ -2,12 +2,13 @@
 
 namespace App\Contracts\Services\WhatsApp;
 
+use App\Contracts\Services\Chat\ChannelMessageSenderInterface;
 use App\Models\Chatbot;
 
 /**
  * Interface for the unofficial WhatsApp Web Service (whatsapp-web.js).
  */
-interface WhatsAppWebServiceInterface
+interface WhatsAppWebServiceInterface extends ChannelMessageSenderInterface
 {
     /**
      * Requests the Node.js service to start a new WhatsApp session.

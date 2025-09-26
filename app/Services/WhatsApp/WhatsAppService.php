@@ -3,16 +3,20 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
-use App\Models\ChatbotChannel;
+use App\Models\Message;
 use App\Models\MessageTemplate;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WhatsAppService implements WhatsAppServiceInterface
 {
-    public function sendMessage(ChatbotChannel $channel, string $to, string $message): array
+    public function sendMessage(Message $message): void
     {
         try {
+            $channel = $message->conversation->chatbotChannel;
+            $to = $message->conversation->contact_phone;
+            $content = $message->content;
+
             if ($channel->channel->slug !== 'whatsapp' || !$channel->status) {
                 throw new \Exception('Invalid or inactive WhatsApp channel');
             }
@@ -22,7 +26,7 @@ class WhatsAppService implements WhatsAppServiceInterface
             $accessToken = $credentials['phone_number_access_token'];
 
             Log::info('Sending WhatsApp message to ' . $to);
-            Log::info('Message: ' . $message);
+            Log::info('Message: ' . $content);
             Log::info('API URL: ' . $apiUrl);
 
             // Send a message using the channel-specific credentials
@@ -35,7 +39,7 @@ class WhatsAppService implements WhatsAppServiceInterface
                 'type' => 'text',
                 'text' => [
                     'preview_url' => false,
-                    'body' => $message
+                    'body' => $content
                 ]
             ]);
 
@@ -47,7 +51,6 @@ class WhatsAppService implements WhatsAppServiceInterface
             // Update last activity
             $channel->update(['last_activity_at' => now()]);
 
-            return $response->json();
         } catch (\Exception $e) {
             Log::error('WhatsApp message sending failed for channel ' . $channel->id . ': ' . $e->getMessage());
             throw $e;

@@ -6,6 +6,7 @@ use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\Message;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -163,6 +164,46 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
                 'error'      => $e->getMessage(),
             ] );
             return [ 'success' => false, 'message' => 'Error communicating with service.' ];
+        }
+    }
+
+    public function sendMessage(Message $message): void
+    {
+        if (empty($this->wwebjs_url)) {
+            Log::error('WhatsApp Web Service URL is not configured.');
+            // We don't throw an exception here to avoid stopping a queue
+            return;
+        }
+
+        try {
+            $chatbotChannel = $message->conversation->chatbotChannel;
+            $sessionId = $chatbotChannel->credentials['session_id'] ?? null;
+            $recipient = $message->conversation->contact_phone;
+            $text = $message->content;
+
+            if (!$sessionId || !$recipient) {
+                throw new Exception('Missing session_id or recipient phone number.');
+            }
+
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post("{$this->wwebjs_url}/sessions/{$sessionId}/messages", [
+                'to' => $recipient,
+                'text' => $text,
+            ]);
+
+            $response->throw(); // Throw an exception for 4xx/5xx responses
+
+            Log::info('Message sent successfully via wwebjs.', [
+                'message_id' => $message->id,
+                'session_id' => $sessionId
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to send message via wwebjs.', [
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
         }
     }
 }

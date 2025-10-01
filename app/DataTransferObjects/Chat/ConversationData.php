@@ -18,6 +18,7 @@ class ConversationData implements Arrayable
         public int $unreadCount,
         public ?int $assigned_user_id,
         public ?string $assigned_user_name,
+        public ?string $recipient,
     ) {
     }
 
@@ -37,6 +38,7 @@ class ConversationData implements Arrayable
                 ->count(),
             assigned_user_id: $conversation->assigned_user_id,
             assigned_user_name: $conversation->assignedUser?->name,
+            recipient: $conversation->chatbotChannel->credentials['phone_number'] ?? '',
         );
     }
 
@@ -53,6 +55,7 @@ class ConversationData implements Arrayable
             'unreadCount' => $this->unreadCount,
             'assigned_user_id' => $this->assigned_user_id,
             'assigned_user_name' => $this->assigned_user_name,
+            'recipient' => $this->recipient,
         ];
     }
 }

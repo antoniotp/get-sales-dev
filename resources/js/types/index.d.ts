@@ -125,4 +125,5 @@ export interface Chat {
     mode: 'ai' | 'human'
     assigned_user_id: number | null
     assigned_user_name: string | null
+    recipient: string | null
 }

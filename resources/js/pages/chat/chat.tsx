@@ -416,6 +416,9 @@ export default function Chat(
                                 </strong>
                             </small>
                         </div>
+                        <div>
+                            <small>Received on: {formatPhoneNumber(chat.recipient || '')}</small>
+                        </div>
                     </div>
                     {chat.unreadCount > 0 && (
                         <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-xs text-white flex-shrink-0">
@@ -468,11 +471,8 @@ export default function Chat(
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     {/* Chat List */}
                     <div className={`${selectedChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-1/3 border-r border-gray-200 dark:border-gray-700 flex-col`}>
-                        <div className="h-16 border-b border-gray-200 px-4 py-3 dark:border-gray-700 flex-shrink-0">
+                        <div className="border-b border-gray-200 px-4 py-1 dark:border-gray-700 flex-shrink-0">
                             <h2 className="text-lg font-semibold">Chats</h2>
-                            <p className="text-sm text-gray-900 mt-1">
-                                Messages Received on : <strong>{formatPhoneNumber(channelInfo.phone_number)}</strong>
-                            </p>
                         </div>
                         <div className="flex-1 overflow-y-auto">
                             {chats.length > 0 ? (
@@ -497,7 +497,7 @@ export default function Chat(
                                 </button>
                             </div>
                             {/* Chat Header */}
-                            <div className="flex h-16 items-center justify-between border-b border-gray-200 px-1 md:px-4 dark:border-gray-700 flex-shrink-0">
+                            <div className="flex h-16 items-center justify-between border-b border-gray-200 px-1 md:px-4 dark:border-gray-700 flex-shrink-0 relative">
                                 <div className="flex items-center space-x-1 md:space-x-4 w-1/2">
                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white">
                                         {selectedChat.avatar}
@@ -535,6 +535,7 @@ export default function Chat(
                                         onAgentAssigned={handleAgentAssigned}
                                     />
                                 </div>
+                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs bg-accent p-1 rounded">Received on: {formatPhoneNumber(selectedChat.recipient || '')}</div>
                             </div>
 
                             {/* Messages Container */}

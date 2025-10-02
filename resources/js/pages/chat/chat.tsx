@@ -61,7 +61,7 @@ const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
 };
 
 export default function Chat(
-    { chats: initialChats, channelInfo, organization, agents, canAssign }:
+    { chats: initialChats, organization, agents, canAssign }:
     {
         chats: Chat[];
         channelInfo: ChannelInfo;

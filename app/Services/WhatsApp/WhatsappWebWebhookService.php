@@ -2,8 +2,8 @@
 
 namespace App\Services\WhatsApp;
 
+use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
-use App\Events\NewWhatsAppConversation;
 use App\Events\NewWhatsAppMessage;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
@@ -11,8 +11,6 @@ use App\Jobs\ProcessAIResponse;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
-use App\Models\Contact;
-use App\Models\ContactChannel;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +22,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private ?ChatbotChannel $chatbotChannel = null;
     private ?Conversation $conversation = null;
 
-    public function __construct()
+    public function __construct(private readonly ConversationServiceInterface $conversationService)
     {
         $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
     }
@@ -183,60 +181,17 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function getOrCreateContactAndConversation(array $data): bool
     {
         try {
-            $organizationId = $this->chatbotChannel->chatbot->organization_id;
-            $channelIdentifier = $data['message']['sender_id'];
-            $senderName = $data['message']['sender_name'] ?? 'WhatsApp User';
-
-            // Find or create the contact channel
-            $contactChannel = ContactChannel::firstOrCreate(
-                [
-                    'chatbot_id' => $this->chatbotChannel->chatbot_id,
-                    'channel_id' => $this->whatsAppWebChannel->id,
-                    'channel_identifier' => $channelIdentifier,
-                ],
-                [
-                    'contact_id' => Contact::firstOrCreate(
-                        ['organization_id' => $organizationId, 'phone_number' => $channelIdentifier],
-                        ['first_name' => $senderName]
-                    )->id,
-                ]
+            $this->conversation = $this->conversationService->findOrCreate(
+                chatbotChannel: $this->chatbotChannel,
+                channelIdentifier: $data['message']['sender_id'],
+                contactName: $data['message']['sender_name'] ?? 'WhatsApp User',
+                initialMode: 'human', // WhatsApp Web conversations start in human mode
+                channelId: $this->whatsAppWebChannel->id
             );
-
-            // Find or create the conversation
-            $this->conversation = Conversation::firstOrCreate(
-                [
-                    'chatbot_channel_id' => $this->chatbotChannel->id,
-                    'external_conversation_id' => $channelIdentifier,
-                ],
-                [
-                    'contact_channel_id' => $contactChannel->id,
-                    'contact_name' => $contactChannel->contact->first_name,
-                    'contact_phone' => $channelIdentifier,
-                    'status' => 1,
-                    'mode' => 'human',
-                    'last_message_at' => now(),
-                ]
-            );
-
-            // If conversation existed but without contact channel, update it
-            if (!$this->conversation->wasRecentlyCreated && is_null($this->conversation->contact_channel_id)) {
-                $this->conversation->update(['contact_channel_id' => $contactChannel->id]);
-            }
-
-            // Dispatch the event if a conversation was created
-            if ($this->conversation->wasRecentlyCreated) {
-                Log::info('New conversation created', ['conversation' => $this->conversation]);
-                event(new NewWhatsAppConversation($this->conversation));
-            }
-
-            // Update last_message_at
-            if (!$this->conversation->wasRecentlyCreated) {
-                $this->conversation->update(['last_message_at' => now()]);
-            }
 
             return true;
         } catch (\Exception $e) {
-            Log::error('Error creating/updating contact and conversation', [
+            Log::error('Error in ConversationService from WhatsappWebWebhookService', [
                 'error' => $e->getMessage(),
                 'data' => $data
             ]);
@@ -268,7 +223,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             // If conversation is in AI mode, dispatch job to process AI response
             if ($this->conversation->mode === 'ai') {
                 Log::info('Processing AI response for message', ['message' => $newMessage]);
-//                ProcessAIResponse::dispatch($newMessage)->onQueue('ai-responses');
+                ProcessAIResponse::dispatch($newMessage)->onQueue('ai-responses');
             }
 
         } catch (\Exception $e) {

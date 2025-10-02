@@ -14,6 +14,7 @@ use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,12 +25,17 @@ class ChatController extends Controller
     {
     }
 
-    public function index(Request $request, Chatbot $chatbot): Response
+    public function index(Request $request, Chatbot $chatbot): RedirectResponse|Response
     {
         $chatbotId = $chatbot->id;
 
         //TODO: the following must be dynamic depending on messaging channel
         $chatbotChannel = ChatbotChannel::where('chatbot_id', $chatbotId)->first();
+        if (!$chatbotChannel) {
+            return redirect()
+                ->route('chatbots.integrations', [$chatbotId])
+                ->with('warning', 'You must connect your chatbot to a messaging channel before you can start chatting.');
+        }
 
         $conversations = Conversation::query()
             ->select([

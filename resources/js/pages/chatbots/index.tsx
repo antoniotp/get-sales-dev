@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { BreadcrumbItem, Chatbot, PageProps } from '@/types';
+import { BreadcrumbItem, Chatbot } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,9 +19,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Head, Link, usePage, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Bot, Plus, MoreHorizontal, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface ChatbotsIndexProps {
@@ -34,15 +34,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndexProps) {
-    const { props } = usePage<PageProps>();
-
-    useEffect(() => {
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        } else if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
-    }, [props.flash]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

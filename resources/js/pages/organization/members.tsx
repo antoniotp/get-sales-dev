@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { Head, useForm, router, usePage } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { User, Organization, PageProps, BreadcrumbItem } from '@/types';
+import { User, Organization, BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -18,7 +18,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
 
 interface Member extends User {
     pivot: {
@@ -127,15 +126,6 @@ export default function OrganizationMembers({
     invitations,
 }: MembersPageProps) {
     const [isInviteDialogOpen, setInviteDialogOpen] = useState(false);
-    const { props } = usePage<PageProps>();
-
-    useEffect(() => {
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        } else if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
-    }, [props.flash]);
 
     const formatDate = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };

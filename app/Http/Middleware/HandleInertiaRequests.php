@@ -68,13 +68,24 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'chatbot' => $chatbot,
         ];
-        if ( session('success') || session('error') ) {
-            $data['flash'] = [
-                'success' => session('success'),
-                'error' => session('error'),
-            ];
-        }
+        $this->addFlashMessagesToData( $data );
 
         return $data;
+    }
+
+    private function addFlashMessagesToData( array &$data ): void
+    {
+        if( session('success') ) {
+            $data['flash']['success'] = session('success');
+        }
+        if( session('error') ) {
+            $data['flash']['error'] = session('error');
+        }
+        if( session('warning') ) {
+            $data['flash']['warning'] = session('warning');
+        }
+        if( session('info') ) {
+            $data['flash']['info'] = session('info');
+        }
     }
 }

@@ -85,6 +85,8 @@ export interface ChatbotChannel {
 interface FlashMessages {
     success?: string;
     error?: string;
+    warning?: string;
+    info?: string;
 }
 
 interface Organization {

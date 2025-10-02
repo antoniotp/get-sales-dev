@@ -6,9 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { FormEventHandler, useEffect } from 'react';
+import { FormEventHandler } from 'react';
 import { PageProps } from '@/types';
-import { toast } from 'sonner';
 
 const timezones = {
     'America': [
@@ -48,14 +47,6 @@ export default function OrganizationForm() {
         timezone: organization?.timezone || '',
         locale: organization?.locale || '',
     });
-
-    useEffect(() => {
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        } else if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
-    }, [props.flash]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();

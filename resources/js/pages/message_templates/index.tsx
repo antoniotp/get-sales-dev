@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
 import { Head, Link, useForm, usePage } from '@inertiajs/react'
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { BreadcrumbItem, PageProps } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
@@ -19,7 +19,6 @@ import {
     Ban
 } from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner'
 
 interface Template {
     id: number;
@@ -45,7 +44,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
         if (confirm('Are you sure you want to delete this template?')) {
             inertiaDelete(route('message-templates.destroy', templateId), { // Use inertiaDelete for DELETE request
                 onSuccess: () => {
-                    // Optionally, you can add some feedback here,
+                    // Optionally, you can add some feedback here
                     // Inertia will automatically re-render the page with updated data.
                 },
                 onError: (errors) => {
@@ -197,15 +196,6 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
             href: route('message-templates.index', props.chatbot.id),
         },
     ], [props.chatbot]);
-
-    // Display the flash messages
-    useEffect(() => {
-        if (props.flash?.success) {
-            toast.success(props.flash.success);
-        } else if (props.flash?.error) {
-            toast.error(props.flash.error);
-        }
-    }, [props.flash]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

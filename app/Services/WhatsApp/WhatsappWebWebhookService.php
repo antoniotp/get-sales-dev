@@ -3,16 +3,14 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
+use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
-use App\Events\NewWhatsAppMessage;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
-use App\Jobs\ProcessAIResponse;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
-use App\Models\Message;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -22,7 +20,10 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private ?ChatbotChannel $chatbotChannel = null;
     private ?Conversation $conversation = null;
 
-    public function __construct(private readonly ConversationServiceInterface $conversationService)
+    public function __construct(
+        private readonly ConversationServiceInterface $conversationService,
+        private readonly MessageServiceInterface $messageService
+    )
     {
         $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
     }
@@ -202,32 +203,17 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleTextMessage(array $message): void
     {
         try {
-            $messageData = [
-                'conversation_id' => $this->conversation->id,
-                'external_message_id' => $message['id'],
-                'type' => 'incoming',
-                'content' => $message['body'],
-                'content_type' => 'text',
-                'sender_type' => 'contact',
-                'metadata' => [
+            $this->messageService->handleIncomingMessage(
+                conversation: $this->conversation,
+                externalMessageId: $message['id'],
+                content: $message['body'],
+                metadata: [
                     'timestamp' => $message['timestamp'],
                     'from' => $message['sender_id'],
-                ],
-            ];
-
-            $newMessage = Message::create($messageData);
-
-            // Dispatch the event for real-time updates
-            event(new NewWhatsAppMessage($newMessage));
-
-            // If conversation is in AI mode, dispatch job to process AI response
-            if ($this->conversation->mode === 'ai') {
-                Log::info('Processing AI response for message', ['message' => $newMessage]);
-                ProcessAIResponse::dispatch($newMessage)->onQueue('ai-responses');
-            }
-
+                ]
+            );
         } catch (\Exception $e) {
-            Log::error('Error saving text message', [
+            Log::error('Error in MessageService from WhatsappWebWebhookService', [
                 'error' => $e->getMessage(),
                 'message' => $message
             ]);

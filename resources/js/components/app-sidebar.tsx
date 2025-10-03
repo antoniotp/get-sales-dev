@@ -48,6 +48,8 @@ export function AppSidebar() {
         },
     ];
 
+    const isChatbotContext = chatbot?.id > 0;
+
     const chatbotNavItems: NavItems[] = [
         {
             title: 'Agent Switcher',
@@ -56,22 +58,22 @@ export function AppSidebar() {
         },
         {
             title: 'Chats',
-            href: route('chats', { chatbot: chatbot?.id || 0 }),
+            href: isChatbotContext ? route('chats', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: MessagesSquare,
         },
         {
             title: 'Template Messages',
-            href: route('message-templates.index', { chatbot: chatbot?.id || 0 }),
+            href: isChatbotContext ? route('message-templates.index', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Layers,
         },
         {
             title: 'Integrations',
-            href: route('chatbots.integrations', { chatbot: chatbot?.id || 0 }),
+            href: isChatbotContext ? route('chatbots.integrations', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Unplug,
         },
         {
             title: 'Settings',
-            href: route('chatbots.edit', { chatbot: chatbot?.id || 0 }),
+            href: isChatbotContext ? route('chatbots.edit', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Settings,
         },
         /*{
@@ -81,8 +83,6 @@ export function AppSidebar() {
         },*/
     ];
 
-    const isChatbotContext = chatbot?.id > 0;
-
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader className="relative border-b">
@@ -90,11 +90,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="mt-3">
-                {isChatbotContext && (
-                    <>
-                    <NavMain items={chatbotNavItems} groupLabel='' />
-                    </>
-                )}
+                <NavMain items={chatbotNavItems} groupLabel='' />
                 <NavMain items={mainNavItems} groupLabel='Organization' />
 
             </SidebarContent>

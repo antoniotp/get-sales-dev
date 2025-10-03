@@ -43,7 +43,7 @@ export function AgentSwitcher() {
                             <BotMessageSquare className="size-4" />
                         </div>
                         <div className="grid flex-1 text-left text-sm overflow-hidden whitespace-nowrap">
-                            {chatbot.name}
+                            {chatbot?.name || "Select An Agent"}
                         </div>
                         <ChevronsUpDown className="ml-auto" />
                     </SidebarMenuButton>

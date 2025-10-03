@@ -15,11 +15,10 @@ import { ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const isUrlActive = (pageUrl: string, href: string): boolean => {
-    if (!href || href === '#') {
-        return false;
-    }
+    if (!href || href === '#') return false;
     try {
-        return pageUrl.startsWith(new URL(href).pathname);
+        const path = new URL(href, window.location.origin).pathname;
+        return pageUrl === path; // exact match
     } catch {
         return false;
     }
@@ -85,10 +84,17 @@ export function NavMain({ items = [], groupLabel = '' }: { items: NavItems[], gr
                                 isActive={isUrlActive(page.url, item.href)}
                                 tooltip={{ children: item.title }}
                             >
-                                <Link href={item.href} prefetch>
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
-                                </Link>
+                                {item.href === 'disabled' ? (
+                                    <span className="cursor-not-allowed text-gray-400">
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                    </span>
+                                ) : (
+                                    <Link href={item.href} prefetch>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                    </Link>
+                                )}
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     );

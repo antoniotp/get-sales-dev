@@ -8,6 +8,8 @@ use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Services\Chat\ConversationService;
+use App\Services\Chat\MessageService;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,8 +31,9 @@ class WhatsappWebWebhookServiceTest extends TestCase
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
-
-        $this->service = new WhatsappWebWebhookService();
+        $conversationService = new ConversationService();
+        $messageService = new MessageService();
+        $this->service = new WhatsappWebWebhookService( $conversationService, $messageService);
         $this->whatsappWebChannel = Channel::where('slug', 'whatsapp-web')->first();
         $this->chatbot = Chatbot::find(1);
 

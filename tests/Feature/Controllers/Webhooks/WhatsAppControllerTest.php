@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Controllers\Webhooks;
 
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Services\WhatsApp\WebhookHandlerService;
 use Mockery;
@@ -9,9 +11,12 @@ use Illuminate\Support\Facades\Config;
 
 class WhatsAppControllerTest extends TestCase
 {
+    use RefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
+        $this->seed(DatabaseSeeder::class);
         Config::set('services.whatsapp.verify_token', 'test-token');
     }
 

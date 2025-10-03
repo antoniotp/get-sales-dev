@@ -186,7 +186,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                 chatbotChannel: $this->chatbotChannel,
                 channelIdentifier: $data['message']['sender_id'],
                 contactName: $data['message']['sender_name'] ?? 'WhatsApp User',
-                initialMode: 'human', // WhatsApp Web conversations start in human mode
                 channelId: $this->whatsAppWebChannel->id
             );
 

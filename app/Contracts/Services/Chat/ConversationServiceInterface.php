@@ -15,7 +15,6 @@ interface ConversationServiceInterface
      * @param ChatbotChannel $chatbotChannel The chatbot channel receiving the interaction.
      * @param string $channelIdentifier The contact's unique identifier on the channel (e.g., phone number).
      * @param string $contactName The display name of the contact.
-     * @param string $initialMode The mode to set for a newly created conversation (e.g., 'ai', 'human').
      * @param int $channelId The ID of the communication channel (e.g., WhatsApp, WhatsApp Web).
      * @return Conversation The found or newly created conversation instance.
      */
@@ -23,7 +22,6 @@ interface ConversationServiceInterface
         ChatbotChannel $chatbotChannel,
         string $channelIdentifier,
         string $contactName,
-        string $initialMode,
         int $channelId
     ): Conversation;
 }

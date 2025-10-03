@@ -16,7 +16,6 @@ class ConversationService implements ConversationServiceInterface
         ChatbotChannel $chatbotChannel,
         string $channelIdentifier,
         string $contactName,
-        string $initialMode,
         int $channelId
     ): Conversation
     {
@@ -36,6 +35,9 @@ class ConversationService implements ConversationServiceInterface
                 )->id,
             ]
         );
+
+        // Determine the initial mode based on the chatbot's settings.
+        $initialMode = $chatbotChannel->chatbot->ai_enabled ? 'ai' : 'human';
 
         // Now, find or create the conversation.
         $conversation = Conversation::firstOrCreate(

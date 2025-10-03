@@ -260,8 +260,7 @@ class WebhookHandlerService
                 chatbotChannel: $this->chatbotChannel,
                 channelIdentifier: $message['from'],
                 contactName: $contactName,
-                initialMode: 'ai', // WhatsApp Business API conversations start in AI mode
-                channelId: $this->whatsAppChannel->id,
+                channelId: $this->whatsAppChannel->id
             );
 
             return true;

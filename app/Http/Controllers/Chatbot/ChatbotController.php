@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Chatbot;
 
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
+use App\Enums\Chatbot\AgentVisibility;
 use App\Http\Controllers\Controller;
 use App\Models\Chatbot;
 use App\Models\Organization;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,6 +51,8 @@ class ChatbotController extends Controller
             'system_prompt' => 'nullable|string',
             'response_delay_min' => 'nullable|integer|min:0',
             'response_delay_max' => 'nullable|integer|min:0',
+            'ai_enabled' => 'required|boolean',
+            'agent_visibility' => ['required', Rule::enum(AgentVisibility::class)],
         ]);
 
         $chatbot = $this->organization->chatbots()->create([
@@ -92,6 +96,8 @@ class ChatbotController extends Controller
             'response_delay_min' => 'nullable|integer|min:0',
             'response_delay_max' => 'nullable|integer|min:0',
             'status' => 'required|integer|in:0,1',
+            'ai_enabled' => 'required|boolean',
+            'agent_visibility' => ['required', Rule::enum(AgentVisibility::class)],
         ]);
 
         $chatbot->update($validated);

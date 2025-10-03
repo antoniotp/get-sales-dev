@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
     Form,
     FormControl,
@@ -30,6 +31,8 @@ interface Chatbot {
     response_delay_min: number;
     response_delay_max: number;
     status: number;
+    ai_enabled: boolean;
+    agent_visibility: 'all' | 'assigned_only';
 }
 
 interface Props {
@@ -44,6 +47,8 @@ const formSchema = z.object({
     response_delay_min: z.number().min(0, 'Minimum delay must be 0 or greater'),
     response_delay_max: z.number().min(0, 'Maximum delay must be 0 or greater'),
     status: z.number().optional(),
+    ai_enabled: z.boolean().optional(),
+    agent_visibility: z.enum(['all', 'assigned_only']).optional(),
 }).refine((data) => data.response_delay_max >= data.response_delay_min, {
     message: "Maximum delay must be greater than or equal to minimum delay",
     path: ["response_delay_max"],
@@ -80,12 +85,16 @@ export default function ChatbotForm({ chatbot }: Props) {
             response_delay_min: chatbot.response_delay_min,
             response_delay_max: chatbot.response_delay_max,
             status: chatbot.status,
+            ai_enabled: chatbot.ai_enabled,
+            agent_visibility: chatbot.agent_visibility,
         } : {
             name: '',
             description: '',
             system_prompt: '',
             response_delay_min: 0,
             response_delay_max: 3,
+            ai_enabled: false,
+            agent_visibility: 'all',
         }
     );
 
@@ -95,6 +104,8 @@ export default function ChatbotForm({ chatbot }: Props) {
         defaultValues: inertiaData,
         mode: 'onBlur',
     });
+
+    const aiEnabled = form.watch('ai_enabled');
 
     // Synchronize react-hook-form with Inertia data
     useEffect(() => {
@@ -191,28 +202,92 @@ export default function ChatbotForm({ chatbot }: Props) {
                                             )}
                                         />
 
-                                        {/* System Prompt */}
+                                        {/* Agent Visibility */}
                                         <FormField
                                             control={form.control}
-                                            name="system_prompt"
+                                            name="agent_visibility"
+                                            render={({ field }) => (
+                                                <FormItem className="space-y-3">
+                                                    <FormLabel>Agent Chat Visibility</FormLabel>
+                                                    <FormControl>
+                                                        <RadioGroup
+                                                            onValueChange={field.onChange}
+                                                            defaultValue={field.value}
+                                                            className="flex flex-col space-y-1"
+                                                        >
+                                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                                <FormControl>
+                                                                    <RadioGroupItem value="all" />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal">
+                                                                    Agents can see all conversations in this chatbot.
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                            <FormItem className="flex items-center space-x-3 space-y-0">
+                                                                <FormControl>
+                                                                    <RadioGroupItem value="assigned_only" />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal">
+                                                                    Agents can only see conversations assigned to them.
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        </RadioGroup>
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        {/* AI Enabled */}
+                                        <FormField
+                                            control={form.control}
+                                            name="ai_enabled"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>System Prompt</FormLabel>
-                                                    <FormControl>
-                                                        <Textarea
-                                                            placeholder="Enter system instructions for the AI (optional)"
-                                                            rows={4}
-                                                            {...field}
-                                                            className="overflow-auto max-h-80"
-                                                        />
-                                                    </FormControl>
+                                                    <FormLabel>Enable AI</FormLabel>
+                                                    <div className="flex items-center space-x-2 relative">
+                                                        <FormControl>
+                                                            <Switch
+                                                                checked={field.value}
+                                                                onCheckedChange={field.onChange}
+                                                            />
+                                                        </FormControl>
+                                                        <Label className="text-sm font-normal">
+                                                            {field.value ? 'AI is Active' : 'AI is Inactive'}
+                                                        </Label>
+                                                    </div>
                                                     <FormDescription>
-                                                        Optional instructions that define how the AI should behave
+                                                        If enabled, the AI will handle new conversations automatically.
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
+
+                                        {/* System Prompt (Conditional) */}
+                                        {aiEnabled && (
+                                            <FormField
+                                                control={form.control}
+                                                name="system_prompt"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>System Prompt</FormLabel>
+                                                        <FormControl>
+                                                            <Textarea
+                                                                placeholder="Enter system instructions for the AI (optional)"
+                                                                rows={4}
+                                                                {...field}
+                                                                className="overflow-auto max-h-80"
+                                                            />
+                                                        </FormControl>
+                                                        <FormDescription>
+                                                            Optional instructions that define how the AI should behave
+                                                        </FormDescription>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        )}
 
                                         {/* Response Delays */}
                                         <div className="grid grid-cols-2 gap-4">

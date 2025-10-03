@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Chatbot\AgentVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property string|null $system_prompt
  * @property int $status
+ * @property boolean $ai_enabled
+ * @property AgentVisibility $agent_visibility
  * @property int $response_delay_min
  * @property int $response_delay_max
  * @property Carbon|null $created_at
@@ -32,12 +35,16 @@ class Chatbot extends Model
         'description',
         'system_prompt',
         'status',
+        'ai_enabled',
+        'agent_visibility',
         'response_delay_min',
         'response_delay_max',
     ];
 
     protected $casts = [
         'status' => 'integer',
+        'ai_enabled' => 'boolean',
+        'agent_visibility' => AgentVisibility::class,
         'response_delay_min' => 'integer',
         'response_delay_max' => 'integer',
     ];

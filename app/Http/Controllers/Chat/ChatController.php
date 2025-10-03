@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Chat;
 
 use App\DataTransferObjects\Chat\ConversationData;
 use App\DataTransferObjects\Chat\MessageData;
+use App\Enums\Chatbot\AgentVisibility;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
@@ -37,7 +38,9 @@ class ChatController extends Controller
                 ->with('warning', 'You must connect your chatbot to a messaging channel before you can start chatting.');
         }
 
-        $conversations = Conversation::query()
+        $user = $request->user();
+
+        $conversationsQuery = Conversation::query()
             ->select([
                 'conversations.*',
             ])
@@ -45,13 +48,18 @@ class ChatController extends Controller
             ->whereHas('chatbotChannel.chatbot', function ($query) use ($chatbotId) {
                 $query->where('chatbots.organization_id', $this->organization->id)
                     ->where('chatbots.id', $chatbotId);
-            })
-            ->orderBy('last_message_at', 'desc')
+            });
+
+        // Apply agent visibility filter
+        $role = $user->getRoleInOrganization($this->organization);
+        if ($role && $role->slug === 'agent' && $chatbot->agent_visibility === AgentVisibility::ASSIGNED_ONLY) {
+            $conversationsQuery->where('conversations.assigned_user_id', $user->id);
+        }
+
+        $conversations = $conversationsQuery->orderBy('last_message_at', 'desc')
             ->get()
             ->map(fn(Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
 
-        $user = $request->user();
-        $role = $user->getRoleInOrganization($this->organization);
         $canAssign = $role && $role->level > 40;
 
         $agents = [];

@@ -5,9 +5,10 @@ import * as z from 'zod';
 import axios from 'axios';
 import { useRoute } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, UserPlus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
@@ -52,6 +53,7 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
     const [searchResults, setSearchResults] = useState<ContactSearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [selectedContact, setSelectedContact] = useState<ContactSearchResult | null>(null);
+    const [isCreatingNew, setIsCreatingNew] = useState(false);
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -66,7 +68,7 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
     const selectedChannelId = form.watch('chatbot_channel_id');
     const { setValue } = form;
 
-    // Auto-select channel if there is only one
+    // Auto-select a channel if there is only one
     useEffect(() => {
         if (chatbotChannels.length === 1) {
             setValue('chatbot_channel_id', chatbotChannels[0].id);
@@ -99,6 +101,18 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
         form.setValue('last_name', '');
         form.setValue('phone_number', '');
         setSelectedContact(contact);
+        setIsCreatingNew(false);
+        setSearchQuery('');
+        setSearchResults([]);
+    };
+
+    const handleCreatingNew = () => {
+        form.setValue('contact_id', null);
+        form.setValue('phone_number', '');
+        form.setValue('first_name', '');
+        form.setValue('last_name', '');
+        setSelectedContact(null);
+        setIsCreatingNew(true);
         setSearchQuery('');
         setSearchResults([]);
     };
@@ -152,8 +166,12 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
                         />
 
                         <div className={`mt-4 transition-opacity ${!selectedChannelId ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                            {!selectedContact && (
+                            {!selectedContact && !isCreatingNew && (
                                 <div className="py-2">
+                                    <Button variant="ghost" onClick={handleCreatingNew} className="justify-start w-full p-4 border-b">
+                                        <UserPlus className="mr-2 h-4 w-4" />
+                                        New Contact
+                                    </Button>
                                     <Command shouldFilter={false}>
                                         <div className="py-4">
                                             <CommandInput
@@ -189,6 +207,58 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
                                     <div className="mt-4">
                                         <Button type="submit" className="w-full">
                                             Start Conversation
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isCreatingNew && (
+                                <div className="my-4 flex-grow flex flex-col">
+                                    <h3 className="mb-4 font-medium">Create New Contact</h3>
+                                    <div className="space-y-4 rounded-md border p-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="phone_number"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Phone Number</FormLabel>
+                                                    <FormControl><Input placeholder="+15551234567" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="first_name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>First Name (Optional)</FormLabel>
+                                                    <FormControl><Input placeholder="John" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <FormField
+                                            control={form.control}
+                                            name="last_name"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>Last Name (Optional)</FormLabel>
+                                                    <FormControl><Input placeholder="Doe" {...field} /></FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="flex-grow" />
+
+                                    <div className="mt-auto py-4">
+                                        <Button type="submit" className="w-full">
+                                            Start Conversation
+                                        </Button>
+                                        <Button variant="ghost" onClick={() => setIsCreatingNew(false)} className="w-full mt-2">
+                                            Back to Search
                                         </Button>
                                     </div>
                                 </div>

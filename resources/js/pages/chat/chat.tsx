@@ -11,6 +11,9 @@ import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft } from 'lucide-react';
 import AgentAssignmentDropdown from '@/components/chat/AgentAssignmentDropdown';
 import { Badge } from '@/components/ui/badge';
+import { NewConversationView } from '@/pages/chat/partials/NewConversationView';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
 
 interface Message {
     id: number;
@@ -32,11 +35,8 @@ interface NewConversationEvent {
     conversation: Chat;
 }
 
-interface ChannelInfo {
-    phone_number: string;
-}
-
 const formatPhoneNumber = (phone: string): string => {
+    if (!phone) return '';
     if (!phone.startsWith('+')) {
         phone = '+' + phone;
     }
@@ -64,7 +64,6 @@ export default function Chat(
     { chats: initialChats, organization, agents, canAssign }:
     {
         chats: Chat[];
-        channelInfo: ChannelInfo;
         organization: Organizations;
         agents: Agent[];
         canAssign: boolean;
@@ -76,6 +75,7 @@ export default function Chat(
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const [view, setView] = useState<'list' | 'new'>('list');
     const [conversationMode, setConversationMode] = useState<'ai' | 'human'>('ai');
     const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
 
@@ -271,7 +271,7 @@ export default function Chat(
 
         setSelectedChat(chat);
         setConversationMode(chat.mode);
-        setMessages([]); // Clear previous messages immediately
+        setMessages([]);
         loadChatMessages(chat.id);
     }, [selectedChat?.id, loadChatMessages]);
 
@@ -283,7 +283,7 @@ export default function Chat(
 
         const messageContent = newMessage.trim();
         setIsSending(true);
-        setNewMessage(''); // Clear input immediately for better UX
+        setNewMessage('');
 
         try {
             const response = await axios.post(
@@ -471,18 +471,29 @@ export default function Chat(
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     {/* Chat List */}
                     <div className={`${selectedChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-1/3 border-r border-gray-200 dark:border-gray-700 flex-col`}>
-                        <div className="border-b border-gray-200 px-4 py-1 dark:border-gray-700 flex-shrink-0">
-                            <h2 className="text-lg font-semibold">Chats</h2>
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                            {chats.length > 0 ? (
-                                chatList
-                            ) : (
-                                <div className="flex items-center justify-center h-full">
-                                    <p className="text-gray-500">No chats available</p>
+                        {view === 'list' ? (
+                            <>
+                                <div className="border-b border-gray-200 px-4 py-1 dark:border-gray-700 flex-shrink-0 flex items-center justify-between">
+                                    <h2 className="text-lg font-semibold">Chats</h2>
+                                    <Button variant="ghost" size="icon" onClick={() => setView('new')}>
+                                        <PlusCircle className="h-6 w-6" />
+                                    </Button>
                                 </div>
-                            )}
-                        </div>
+                                <div className="flex-1 overflow-y-auto">
+                                    {chats.length > 0 ? (
+                                        chatList
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <p className="text-gray-500">No chats available</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        ) : (
+                            <NewConversationView
+                                onBack={() => setView('list')}
+                            />
+                        )}
                     </div>
 
                     {/* Chat Messages */}

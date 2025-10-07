@@ -101,6 +101,12 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
             await axios.post(route('chats.store', { chatbot: chatbot.id }), data);
         } catch (error) {
             console.error('Failed to create conversation:', error);
+            if (axios.isAxiosError(error) && error.response?.data.errors) {
+                const errors = error.response.data.errors;
+                if (errors.phone_number) {
+                    form.setError('phone_number', { type: 'manual', message: errors.phone_number[0] });
+                }
+            }
         } finally {
             setIsSubmitting(false);
         }

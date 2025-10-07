@@ -8,6 +8,7 @@ use App\Enums\Chatbot\AgentVisibility;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Chat\StoreChatRequest;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
@@ -27,9 +28,16 @@ class ChatController extends Controller
     {
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreChatRequest $request, Chatbot $chatbot): JsonResponse
     {
-        Log::info( 'Request Data: ', [ $request->all() ] );
+        if ($chatbot->organization_id !== $this->organization->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validatedData = $request->validated();
+
+        Log::info('Creating conversation with data: ', $validatedData);
+
         return response()->json(
             ['message' => 'Chat created successfully'],
             201

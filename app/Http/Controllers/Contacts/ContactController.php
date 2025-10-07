@@ -99,4 +99,25 @@ class ContactController extends Controller
 
         return redirect()->route('contacts.index');
     }
+
+    public function search(Request $request)
+    {
+        $searchTerm = $request->input('q');
+
+        if (empty($searchTerm)) {
+            return response()->json([]);
+        }
+
+        $contacts = Contact::where('organization_id', $this->organization->id)
+            ->where(function ($query) use ($searchTerm) {
+                $query->where('first_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('last_name', 'like', "%{$searchTerm}%")
+                    ->orWhere('phone_number', 'like', "%{$searchTerm}%");
+            })
+            ->select(['id', 'first_name', 'last_name', 'phone_number'])
+            ->take(10)
+            ->get();
+
+        return response()->json($contacts);
+    }
 }

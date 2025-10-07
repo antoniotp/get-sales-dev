@@ -1,9 +1,12 @@
-import {useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import axios from 'axios';
+import { useRoute } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ArrowLeft } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -25,6 +28,13 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+interface ContactSearchResult {
+    id: number;
+    first_name: string;
+    last_name: string;
+    phone_number: string;
+}
+
 interface ChatbotChannel {
     id: number;
     channel: { name: string };
@@ -36,6 +46,12 @@ interface Props {
 }
 
 export function NewConversationView({ onBack, chatbotChannels }: Props) {
+    const route = useRoute();
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<ContactSearchResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedContact, setSelectedContact] = useState<ContactSearchResult | null>(null);
 
     const form = useForm<FormData>({
         resolver: zodResolver(formSchema),
@@ -47,6 +63,7 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
         },
     });
 
+    const selectedChannelId = form.watch('chatbot_channel_id');
     const { setValue } = form;
 
     // Auto-select channel if there is only one
@@ -56,8 +73,34 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
         }
     }, [chatbotChannels, setValue]);
 
+    // Debounced search effect
+    useEffect(() => {
+        if (searchQuery.length > 2 && selectedChannelId) {
+            const handler = setTimeout(() => {
+                setIsSearching(true);
+                axios.get(route('contacts.search', { q: searchQuery }))
+                    .then(response => setSearchResults(response.data))
+                    .finally(() => setIsSearching(false));
+            }, 500);
+            return () => clearTimeout(handler);
+        } else {
+            setSearchResults([]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchQuery, selectedChannelId]);
+
     const onSubmit = async (data: FormData) => {
         console.log('Sending form:', data);
+    };
+
+    const handleSelectContact = (contact: ContactSearchResult) => {
+        form.setValue('contact_id', contact.id);
+        form.setValue('first_name', '');
+        form.setValue('last_name', '');
+        form.setValue('phone_number', '');
+        setSelectedContact(contact);
+        setSearchQuery('');
+        setSearchResults([]);
     };
 
     return (
@@ -107,6 +150,50 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
                                 </FormItem>
                             )}
                         />
+
+                        <div className={`mt-4 transition-opacity ${!selectedChannelId ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+                            {!selectedContact && (
+                                <div className="py-2">
+                                    <Command shouldFilter={false}>
+                                        <div className="py-4">
+                                            <CommandInput
+                                                value={searchQuery}
+                                                placeholder="Search by name or phone..."
+                                                onValueChange={setSearchQuery}
+                                            />
+                                        </div>
+                                        <CommandList>
+                                            <CommandEmpty>{isSearching ? 'Searching...' : 'No results found.'}</CommandEmpty>
+                                            <CommandGroup>
+                                                {searchResults.map((contact) => (
+                                                    <CommandItem
+                                                        key={contact.id}
+                                                        onSelect={() => handleSelectContact(contact)}
+                                                    >
+                                                        {`${contact.first_name} ${contact.last_name || ''} (${contact.phone_number})`}
+                                                    </CommandItem>
+                                                ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </div>
+                            )}
+
+                            {selectedContact && (
+                                <div className="my-4">
+                                    <div className="p-4 border rounded-md relative">
+                                        <p className="font-medium">{`${selectedContact.first_name} ${selectedContact.last_name || ''}`}</p>
+                                        <p className="text-sm text-muted-foreground">{selectedContact.phone_number}</p>
+                                        <Button variant="ghost" size="sm" className="absolute top-1 right-1" onClick={() => setSelectedContact(null)}>Change</Button>
+                                    </div>
+                                    <div className="mt-4">
+                                        <Button type="submit" className="w-full">
+                                            Start Conversation
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </form>
                 </Form>
             </div>

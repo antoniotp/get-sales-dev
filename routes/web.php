@@ -57,6 +57,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/contacts', [ContactController::class, 'upsert'])->name('contacts.store');
     Route::put('/contacts/{contact}', [ContactController::class, 'upsert'])->name('contacts.update');
     Route::delete('/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+    Route::get('/contacts/search', [ContactController::class, 'search'])->name('contacts.search');
     Route::post('/organizations/switch', [OrganizationSwitchController::class, 'switch'])->name('organizations.switch');
     Route::get('/organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');

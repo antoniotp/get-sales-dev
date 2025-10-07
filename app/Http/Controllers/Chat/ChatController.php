@@ -30,9 +30,8 @@ class ChatController extends Controller
     {
         $chatbotId = $chatbot->id;
 
-        //TODO: the following must be dynamic depending on messaging channel
-        $chatbotChannel = ChatbotChannel::where('chatbot_id', $chatbotId)->first();
-        if (!$chatbotChannel) {
+        $chatbotChannels = ChatbotChannel::where('chatbot_id', $chatbotId)->with('channel')->get();
+        if ($chatbotChannels->isEmpty()) {
             return redirect()
                 ->route('chatbots.integrations', [$chatbotId])
                 ->with('warning', 'You must connect your chatbot to a messaging channel before you can start chatting.');
@@ -75,11 +74,10 @@ class ChatController extends Controller
 
         return Inertia::render('chat/chat', [
             'chats' => $conversations,
-            'channelInfo' => $chatbotChannel->credentials,
+            'chatbotChannels' => $chatbotChannels,
             'agents' => $agents,
             'canAssign' => $canAssign,
         ]);
-
     }
 
     public function getMessages(Conversation $conversation, Request $request): JsonResponse
@@ -158,5 +156,4 @@ class ChatController extends Controller
             'mode' => $conversation->mode,
         ]);
     }
-
-    }
+}

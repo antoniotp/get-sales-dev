@@ -61,9 +61,10 @@ const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
 };
 
 export default function Chat(
-    { chats: initialChats, organization, agents, canAssign }:
+    { chats: initialChats, organization, agents, canAssign, chatbotChannels }:
     {
         chats: Chat[];
+        chatbotChannels: { id: number, channel: { name: string } }[];
         organization: Organizations;
         agents: Agent[];
         canAssign: boolean;
@@ -408,11 +409,11 @@ export default function Chat(
                             <small>
                                 AI Response
                                 <strong className="border border-gray-300 rounded-md px-1 py-1 text-xs font-medium ml-1 not-italic">
-                                {chat.mode === 'ai' ? (
-                                    <span className="text-blue-600">ON</span>
-                                ) : (
-                                    <span className="text-gray-500">OFF</span>
-                                )}
+                                    {chat.mode === 'ai' ? (
+                                        <span className="text-blue-600">ON</span>
+                                    ) : (
+                                        <span className="text-gray-500">OFF</span>
+                                    )}
                                 </strong>
                             </small>
                         </div>
@@ -492,6 +493,7 @@ export default function Chat(
                         ) : (
                             <NewConversationView
                                 onBack={() => setView('list')}
+                                chatbotChannels={chatbotChannels}
                             />
                         )}
                     </div>

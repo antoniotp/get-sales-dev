@@ -17,6 +17,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -24,6 +25,15 @@ class ChatController extends Controller
 {
     public function __construct(private Organization $organization)
     {
+    }
+
+    public function store(Request $request): JsonResponse
+    {
+        Log::info( 'Request Data: ', [ $request->all() ] );
+        return response()->json(
+            ['message' => 'Chat created successfully'],
+            201
+        );
     }
 
     public function index(Request $request, Chatbot $chatbot): RedirectResponse|Response

@@ -7,6 +7,8 @@ import { useRoute } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { usePage } from '@inertiajs/react';
+import type { Chatbot, PageProps } from '@/types';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -48,6 +50,8 @@ interface Props {
 
 export function NewConversationView({ onBack, chatbotChannels }: Props) {
     const route = useRoute();
+    const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<ContactSearchResult[]>([]);
@@ -92,7 +96,14 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
     }, [searchQuery, selectedChannelId]);
 
     const onSubmit = async (data: FormData) => {
-        console.log('Sending form:', data);
+        setIsSubmitting(true);
+        try {
+            await axios.post(route('chats.store', { chatbot: chatbot.id }), data);
+        } catch (error) {
+            console.error('Failed to create conversation:', error);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleSelectContact = (contact: ContactSearchResult) => {
@@ -205,8 +216,8 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
                                         <Button variant="ghost" size="sm" className="absolute top-1 right-1" onClick={() => setSelectedContact(null)}>Change</Button>
                                     </div>
                                     <div className="mt-4">
-                                        <Button type="submit" className="w-full">
-                                            Start Conversation
+                                        <Button type="submit" disabled={isSubmitting} className="w-full">
+                                            {isSubmitting ? 'Starting...' : 'Start Conversation'}
                                         </Button>
                                     </div>
                                 </div>
@@ -254,8 +265,8 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
                                     <div className="flex-grow" />
 
                                     <div className="mt-auto py-4">
-                                        <Button type="submit" className="w-full">
-                                            Start Conversation
+                                        <Button type="submit" disabled={isSubmitting} className="w-full">
+                                            {isSubmitting ? 'Starting...' : 'Start Conversation'}
                                         </Button>
                                         <Button variant="ghost" onClick={() => setIsCreatingNew(false)} className="w-full mt-2">
                                             Back to Search

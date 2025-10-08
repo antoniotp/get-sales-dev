@@ -356,6 +356,18 @@ export default function Chat(
         );
     }, [setChats]);
 
+    const handleNewChatSuccess = useCallback((newChat: Chat) => {
+        setChats(prevChats => {
+            // Remove the chat if it already exists to avoid duplicates
+            const filteredChats = prevChats.filter(chat => chat.id !== newChat.id);
+            // Add the new/updated chat to the beginning and re-sort
+            return sortChatsByLastMessageTime([newChat, ...filteredChats]);
+        });
+
+        handleChatSelect(newChat);
+        setView('list');
+    }, [setChats, handleChatSelect, setView]);
+
     const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setNewMessage(value);
@@ -493,6 +505,7 @@ export default function Chat(
                         ) : (
                             <NewConversationView
                                 onBack={() => setView('list')}
+                                onSuccess={handleNewChatSuccess}
                                 chatbotChannels={chatbotChannels}
                             />
                         )}

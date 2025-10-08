@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { usePage } from '@inertiajs/react';
-import type { Chatbot, PageProps } from '@/types';
+import type { Chat, Chatbot, PageProps } from '@/types';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -45,10 +45,11 @@ interface ChatbotChannel {
 
 interface Props {
     onBack: () => void;
+    onSuccess: (newChat: Chat) => void;
     chatbotChannels: ChatbotChannel[];
 }
 
-export function NewConversationView({ onBack, chatbotChannels }: Props) {
+export function NewConversationView({ onBack, onSuccess, chatbotChannels }: Props) {
     const route = useRoute();
     const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -98,7 +99,8 @@ export function NewConversationView({ onBack, chatbotChannels }: Props) {
     const onSubmit = async (data: FormData) => {
         setIsSubmitting(true);
         try {
-            await axios.post(route('chats.store', { chatbot: chatbot.id }), data);
+            const response = await axios.post(route('chats.store', { chatbot: chatbot.id }), data);
+            onSuccess(response.data);
         } catch (error) {
             console.error('Failed to create conversation:', error);
             if (axios.isAxiosError(error) && error.response?.data.errors) {

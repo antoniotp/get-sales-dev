@@ -41,13 +41,6 @@ class RoleSeeder extends Seeder
                 'can_manage_chats' => true,
                 'level' => 40,
             ],
-            [
-                'name' => 'Viewer',
-                'slug' => 'viewer',
-                'description' => 'Read-only access to organization data',
-                'can_manage_chats' => false,
-                'level' => 20,
-            ],
         ];
 
         foreach ($roles as $role) {

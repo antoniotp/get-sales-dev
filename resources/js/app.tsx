@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client';
 import { initializeTheme } from './hooks/use-appearance';
 import { configureEcho } from '@laravel/echo-react';
 
-import { ChatbotProvider } from '@/context/ChatbotProvider';
+
 
 configureEcho({
     broadcaster: 'pusher',
@@ -20,11 +20,7 @@ createInertiaApp({
     setup({ el, App, props }) {
         const root = createRoot(el);
 
-        root.render(
-            <ChatbotProvider>
-                <App {...props} />
-            </ChatbotProvider>
-        );
+        root.render(<App {...props} />);
     },
     progress: {
         color: '#4B5563',

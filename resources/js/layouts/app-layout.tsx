@@ -3,6 +3,7 @@ import { type BreadcrumbItem, PageProps } from '@/types';
 import { type ReactNode, useEffect } from 'react';
 import { toast, Toaster } from 'sonner';
 import { usePage } from '@inertiajs/react';
+import { ChatbotProvider } from '@/context/ChatbotProvider';
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -27,9 +28,11 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
     }, [flash]);
 
     return (
-        <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
-            <Toaster position="top-center" richColors closeButton />
-            {children}
-        </AppLayoutTemplate>
-    )
+        <ChatbotProvider>
+            <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
+                <Toaster position="top-center" richColors closeButton />
+                {children}
+            </AppLayoutTemplate>
+        </ChatbotProvider>
+    );
 }

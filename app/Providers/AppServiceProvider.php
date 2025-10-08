@@ -5,11 +5,13 @@ namespace App\Providers;
 use App\Contracts\Services\AI\AIServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
+use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Services\AI\ChatGPTService;
 use App\Services\Chatbot\ChatbotService;
 use App\Services\Organization\OrganizationService;
+use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Contracts\Services\Auth\RegistrationServiceInterface;
 use App\Services\Auth\RegistrationService;
@@ -55,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookService::class);
         $this->app->bind(WhatsAppWebServiceInterface::class, WhatsappWebService::class);
+        $this->app->bind(PhoneNumberNormalizerInterface::class, PhoneNumberNormalizer::class);
     }
 
     /**

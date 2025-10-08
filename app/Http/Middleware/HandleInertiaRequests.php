@@ -44,9 +44,16 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
         $currentOrganization = null;
+        $userRoleLevel = null;
 
         if ( $user ) {
             $currentOrganization = $this->organizationService->getCurrentOrganization( $request, $user);
+            if ($currentOrganization) {
+                $role = $user->getRoleInOrganization($currentOrganization);
+                if ($role) {
+                    $userRoleLevel = $role->level;
+                }
+            }
         }
 
         $chatbot = $request->route('chatbot');
@@ -55,7 +62,7 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'quote' => ['message' => '', 'author' => ''],
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? array_merge($user->toArray(), ['level' => $userRoleLevel]) : null,
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),

@@ -17,8 +17,10 @@ import { AgentSwitcher } from '@/components/agent-switcher';
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
-    const { props } = usePage<PageProps>()
+    const { props } = usePage<PageProps>();
     const chatbot = props.chatbot as { id: number };
+    const user = props.auth.user;
+    const userLevel = user?.level || 0;
 
     const mainNavItems: NavItems[] = [
         {
@@ -73,7 +75,7 @@ export function AppSidebar() {
         },
         {
             title: 'Settings',
-            href: isChatbotContext ? route('chatbots.edit', { chatbot: chatbot?.id || 0 }) : "disabled",
+            href: isChatbotContext && userLevel > 40 ? route('chatbots.edit', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Settings,
         },
         /*{

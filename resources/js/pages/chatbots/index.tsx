@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
-import { BreadcrumbItem, Chatbot } from '@/types';
+import { BreadcrumbItem, Chatbot, PageProps } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Bot, Plus, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -34,6 +34,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndexProps) {
+    const { auth } = usePage<PageProps>().props;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -48,12 +49,14 @@ export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndex
                                 Manage your AI Agents and their configurations
                             </p>
                         </div>
-                        <Button asChild>
-                            <Link href={route('chatbots.create')}>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Create Agent
-                            </Link>
-                        </Button>
+                        {(auth.user.level !== null && auth.user.level > 40) && (
+                            <Button asChild>
+                                <Link href={route('chatbots.create')}>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Create Agent
+                                </Link>
+                            </Button>
+                        )}
                     </div>
 
                     {/* Content Section */}
@@ -99,6 +102,7 @@ function ChatbotGrid({ chatbots }: { chatbots: Chatbot[] }) {
 }
 
 function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
+    const { auth } = usePage<PageProps>().props;
     const isActive = chatbot.status === 1;
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -154,38 +158,40 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                         <span className="text-xs text-muted-foreground">
                             Created {chatbot.created_at}
                         </span>
-                            <div className="flex items-center space-x-2">
-                                <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                            }}
-                                        >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Open menu</span>
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                setMenuOpen(false);
-                                                setShowDeleteDialog(true);
-                                            }}
-                                            className="text-red-600 focus:text-red-600"
-                                        >
-                                            <Trash2 className="mr-2 h-4 w-4" />
-                                            Delete Agent
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
+                            {(auth.user.level !== null && auth.user.level > 40) && (
+                                <div className="flex items-center space-x-2">
+                                    <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 w-8 p-0"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                }}
+                                            >
+                                                <MoreHorizontal className="h-4 w-4" />
+                                                <span className="sr-only">Open menu</span>
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setMenuOpen(false);
+                                                    setShowDeleteDialog(true);
+                                                }}
+                                                className="text-red-600 focus:text-red-600"
+                                            >
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                Delete Agent
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

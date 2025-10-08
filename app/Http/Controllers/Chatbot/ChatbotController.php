@@ -37,6 +37,8 @@ class ChatbotController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('create', [Chatbot::class, $this->organization]);
+
         return Inertia::render('chatbots/form');
     }
 
@@ -45,6 +47,8 @@ class ChatbotController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', [Chatbot::class, $this->organization]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:500',
@@ -79,6 +83,8 @@ class ChatbotController extends Controller
      */
     public function edit(Chatbot $chatbot)
     {
+        $this->authorize('update', $chatbot);
+
         return Inertia::render('chatbots/form', [
             'chatbot' => $chatbot,
         ]);
@@ -89,6 +95,8 @@ class ChatbotController extends Controller
      */
     public function update(Request $request, Chatbot $chatbot)
     {
+        $this->authorize('update', $chatbot);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string|max:500',
@@ -111,6 +119,8 @@ class ChatbotController extends Controller
      */
     public function destroy(Chatbot $chatbot)
     {
+        $this->authorize('delete', $chatbot);
+
         $chatbot->delete();
 
         return redirect()->route('chatbots.index')

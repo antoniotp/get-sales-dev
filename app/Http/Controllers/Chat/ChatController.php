@@ -15,10 +15,10 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
+use App\Services\Chat\ConversationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,7 +28,7 @@ class ChatController extends Controller
     {
     }
 
-    public function store(StoreChatRequest $request, Chatbot $chatbot): JsonResponse
+    public function store(StoreChatRequest $request, Chatbot $chatbot, ConversationService $conversationService): JsonResponse
     {
         if ($chatbot->organization_id !== $this->organization->id) {
             return response()->json(['error' => 'Unauthorized'], 403);
@@ -36,10 +36,14 @@ class ChatController extends Controller
 
         $validatedData = $request->validated();
 
-        Log::info('Creating conversation with data: ', $validatedData);
+        $conversation = $conversationService->startHumanConversation(
+            $chatbot,
+            $validatedData, // contains contact_id or phone_number (for new contact)
+            $validatedData['chatbot_channel_id']
+        );
 
         return response()->json(
-            ['message' => 'Chat created successfully'],
+            ConversationData::fromConversation($conversation)->toArray(),
             201
         );
     }

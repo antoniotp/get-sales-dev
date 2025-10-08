@@ -2,6 +2,7 @@
 
 namespace App\Contracts\Services\Chat;
 
+use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 
@@ -23,5 +24,11 @@ interface ConversationServiceInterface
         string $channelIdentifier,
         string $contactName,
         int $channelId
+    ): Conversation;
+
+    public function startHumanConversation(
+        Chatbot $chatbot,
+        array $contactData,
+        int $chatbotChannelId
     ): Conversation;
 }

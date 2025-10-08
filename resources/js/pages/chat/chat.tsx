@@ -35,13 +35,16 @@ interface NewConversationEvent {
     conversation: Chat;
 }
 
+interface ChatbotChannel {
+    id: number;
+    name: string;
+    phone_number: string | null;
+}
+
 const formatPhoneNumber = (phone: string): string => {
     if (!phone) return '';
     if (!phone.startsWith('+')) {
         phone = '+' + phone;
-    }
-    if (phone.startsWith('+521')) {
-        phone = phone.replace('+521', '+52');
     }
     try {
         const phoneNumber = parsePhoneNumber(phone);
@@ -64,7 +67,7 @@ export default function Chat(
     { chats: initialChats, organization, agents, canAssign, chatbotChannels }:
     {
         chats: Chat[];
-        chatbotChannels: { id: number, channel: { name: string } }[];
+        chatbotChannels: ChatbotChannel[];
         organization: Organizations;
         agents: Agent[];
         canAssign: boolean;

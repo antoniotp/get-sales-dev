@@ -14,6 +14,7 @@ import { ArrowLeft, UserPlus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 const formSchema = z.object({
     contact_id: z.number().nullable(),
@@ -42,7 +43,8 @@ interface ContactSearchResult {
 
 interface ChatbotChannel {
     id: number;
-    channel: { name: string };
+    name: string;
+    phone_number: string | null;
 }
 
 interface Props {
@@ -55,6 +57,7 @@ export function NewConversationView({ onBack, onSuccess, chatbotChannels }: Prop
     const route = useRoute();
     const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [defaultCountry, setDefaultCountry] = useState('us');
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<ContactSearchResult[]>([]);
@@ -74,6 +77,23 @@ export function NewConversationView({ onBack, onSuccess, chatbotChannels }: Prop
 
     const selectedChannelId = form.watch('chatbot_channel_id');
     const { setValue } = form;
+
+    // Set the default country based on the selected channel
+    useEffect(() => {
+        if (selectedChannelId) {
+            const selectedChannel = chatbotChannels.find(c => c.id === selectedChannelId);
+            if (selectedChannel?.phone_number) {
+                let parsableNumber = selectedChannel.phone_number;
+                if (!parsableNumber.startsWith('+')) {
+                    parsableNumber = '+' + parsableNumber;
+                }
+                const phoneNumber = parsePhoneNumberFromString(parsableNumber);
+                if (phoneNumber?.country) {
+                    setDefaultCountry(phoneNumber.country.toLowerCase());
+                }
+            }
+        }
+    }, [selectedChannelId, chatbotChannels]);
 
     // Auto-select a channel if there is only one
     useEffect(() => {
@@ -167,14 +187,14 @@ export function NewConversationView({ onBack, onSuccess, chatbotChannels }: Prop
                                             <SelectContent>
                                                 {chatbotChannels.map(channel => (
                                                     <SelectItem key={channel.id} value={String(channel.id)}>
-                                                        {channel.channel.name}
+                                                        {channel.name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     ) : chatbotChannels.length === 1 ? (
                                         <div className="text-sm p-3 font-medium text-gray-700 dark:text-gray-300 rounded-md bg-gray-100 dark:bg-gray-800">
-                                            Via: <strong>{chatbotChannels[0]?.channel.name}</strong>
+                                            Via: <strong>{chatbotChannels[0]?.name}</strong>
                                         </div>
                                     ) : (
                                         <div className="text-sm p-3 font-medium text-red-700 dark:text-red-300 rounded-md bg-red-100 dark:bg-red-900">
@@ -245,7 +265,7 @@ export function NewConversationView({ onBack, onSuccess, chatbotChannels }: Prop
                                                     <FormLabel>Phone Number</FormLabel>
                                                     <FormControl>
                                                         <PhoneInput
-                                                            country={'us'}
+                                                            country={defaultCountry}
                                                             value={field.value}
                                                             onChange={field.onChange}
                                                             inputClass="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

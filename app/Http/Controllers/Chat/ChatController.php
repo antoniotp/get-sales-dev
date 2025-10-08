@@ -94,9 +94,17 @@ class ChatController extends Controller
                 ->get();
         }
 
+        $transformedChannels = $chatbotChannels->map(function ($chatbotChannel) {
+            return [
+                'id' => $chatbotChannel->id,
+                'name' => $chatbotChannel->channel->name,
+                'phone_number' => $chatbotChannel->credentials['phone_number'] ?? null,
+            ];
+        });
+
         return Inertia::render('chat/chat', [
             'chats' => $conversations,
-            'chatbotChannels' => $chatbotChannels,
+            'chatbotChannels' => $transformedChannels,
             'agents' => $agents,
             'canAssign' => $canAssign,
         ]);

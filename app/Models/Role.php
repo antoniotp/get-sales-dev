@@ -71,7 +71,7 @@ class Role extends Model
     /**
      * Get roles with a higher level than the current role.
      */
-    public function scopeHigherLevel($query, int $level = null)
+    public function scopeHigherLevel($query, ?int $level = null)
     {
         $compareLevel = $level ?? $this->level;
         return $query->where('level', '>', $compareLevel);
@@ -80,7 +80,7 @@ class Role extends Model
     /**
      * Get roles with a lower level than the current role.
      */
-    public function scopeLowerLevel($query, int $level = null)
+    public function scopeLowerLevel($query, ?int $level = null)
     {
         $compareLevel = $level ?? $this->level;
         return $query->where('level', '<', $compareLevel);

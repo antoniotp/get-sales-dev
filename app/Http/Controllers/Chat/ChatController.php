@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Chat;
 
+use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\DataTransferObjects\Chat\ConversationData;
 use App\DataTransferObjects\Chat\MessageData;
 use App\Enums\Chatbot\AgentVisibility;
-use App\Events\MessageSent;
-use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Chat\StoreChatRequest;
 use App\Models\Chatbot;
@@ -24,9 +23,7 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function __construct(private Organization $organization)
-    {
-    }
+    public function __construct(private Organization $organization) {}
 
     public function store(StoreChatRequest $request, Chatbot $chatbot, ConversationService $conversationService): JsonResponse
     {
@@ -79,7 +76,7 @@ class ChatController extends Controller
 
         $conversations = $conversationsQuery->orderBy('last_message_at', 'desc')
             ->get()
-            ->map(fn(Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
+            ->map(fn (Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
 
         $canAssign = $role && $role->level > 40;
 
@@ -120,7 +117,7 @@ class ChatController extends Controller
             ->with(['senderUser'])
             ->orderBy('created_at', 'asc')
             ->get()
-            ->map(fn(Message $message) => MessageData::fromMessage($message)->toArray());
+            ->map(fn (Message $message) => MessageData::fromMessage($message)->toArray());
 
         // Mark messages as read
         $conversation->messages()
@@ -133,7 +130,7 @@ class ChatController extends Controller
         ]);
     }
 
-    public function storeMessage(Conversation $conversation, Request $request): JsonResponse
+    public function storeMessage(Conversation $conversation, Request $request, MessageServiceInterface $messageService): JsonResponse
     {
         // Validate request
         $validated = $request->validate([
@@ -141,23 +138,14 @@ class ChatController extends Controller
             'content_type' => 'required|in:text,image,audio,video,document,location',
         ]);
 
-        // Create the message
-        $message = $conversation->messages()->create([
-            'type' => 'outgoing',
+        $messageData = [
             'content' => $validated['content'],
             'content_type' => $validated['content_type'],
             'sender_type' => 'human',
-            'sender_user_id' => auth()->id(), // Assuming user is authenticated
-        ]);
+            'sender_user_id' => auth()->id(),
+        ];
 
-        // Update conversation's last_message_at
-        $conversation->update([
-            'last_message_at' => now(),
-        ]);
-
-        // Dispatch the MessageSent event
-        event(new MessageSent($message));
-        event(new NewWhatsAppMessage($message));
+        $message = $messageService->createAndSendOutgoingMessage($conversation, $messageData);
 
         // Return the created message with the same format as getMessages
         return response()->json([

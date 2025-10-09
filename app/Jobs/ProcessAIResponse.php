@@ -3,10 +3,8 @@
 namespace App\Jobs;
 
 use App\Contracts\Services\AI\AIServiceInterface;
-use App\Events\MessageSent;
-use App\Events\NewWhatsAppMessage;
+use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Models\Message;
-use App\Services\WhatsApp\WhatsAppService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
@@ -31,7 +29,7 @@ class ProcessAIResponse implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct( private readonly Message $message )
+    public function __construct(private readonly Message $message)
     {
         //
     }
@@ -39,7 +37,7 @@ class ProcessAIResponse implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle( AIServiceInterface $aiService ): void
+    public function handle(AIServiceInterface $aiService, MessageServiceInterface $messageService): void
     {
         try {
             // Get conversation history
@@ -50,48 +48,41 @@ class ProcessAIResponse implements ShouldQueue
                 'You are a helpful assistant. Respond professionally and concisely.';
 
             // Generate AI response
-            $aiResponse = $aiService->generateResponse( $prompt, $history );
+            $aiResponse = $aiService->generateResponse($prompt, $history);
 
-            Log::info( 'AI Response: ' . $aiResponse );
+            Log::info('AI Response: '.$aiResponse);
 
-            // Create and save the AI response message
-            $responseMessage = Message::create( [
-                'conversation_id' => $this->message->conversation_id,
-                'content'         => $aiResponse,
-                'content_type'    => 'text',
-                'type'            => 'outgoing',
-                'sender_type'     => 'ai',
-                'metadata'        => [
+            $messageData = [
+                'content' => $aiResponse,
+                'content_type' => 'text',
+                'sender_type' => 'ai',
+                'metadata' => [
                     'timestamp' => now()->timestamp,
                 ],
-            ] );
+            ];
 
-            // Send message through corresponding channel
-            event( new MessageSent( $responseMessage ) );
-            // Broadcast the message
-            event( new NewWhatsAppMessage( $responseMessage ) );
+            $messageService->createAndSendOutgoingMessage($this->message->conversation, $messageData);
 
-            // Update conversation's last message timestamp
-            $this->message->conversation->update( [ 'last_message_at' => now() ] );
-        } catch ( \Exception $e ) {
-            Log::error( 'Error processing AI response', [
-                'error'      => $e->getMessage(),
+        } catch (\Exception $e) {
+            Log::error('Error processing AI response', [
+                'error' => $e->getMessage(),
                 'message_id' => $this->message->id,
-                'attempt'    => $this->attempts(),
-            ] );
+                'attempt' => $this->attempts(),
+            ]);
 
             // If we've tried 3 times and still failing, we should notify someone
-            if ( $this->attempts() === 3 ) {
+            if ($this->attempts() === 3) {
                 // Here you could implement a notification to administrators
-                Log::critical( 'AI response processing failed after 3 attempts', [
-                    'message_id'      => $this->message->id,
+                Log::critical('AI response processing failed after 3 attempts', [
+                    'message_id' => $this->message->id,
                     'conversation_id' => $this->message->conversation_id,
-                ] );
+                ]);
             }
 
             throw $e; // This will trigger a retry if attempts are remaining
         }
     }
+
     /**
      * Get formatted conversation history
      *
@@ -106,7 +97,7 @@ class ProcessAIResponse implements ShouldQueue
             ->map(function ($message) {
                 return [
                     'role' => $message->sender_type === 'contact' ? 'user' : 'assistant',
-                    'content' => $message->content
+                    'content' => $message->content,
                 ];
             })
             ->toArray();

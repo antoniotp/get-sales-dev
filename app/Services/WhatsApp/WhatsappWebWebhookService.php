@@ -17,14 +17,15 @@ use Illuminate\Support\Str;
 class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 {
     private ?Channel $whatsAppWebChannel;
+
     private ?ChatbotChannel $chatbotChannel = null;
+
     private ?Conversation $conversation = null;
 
     public function __construct(
         private readonly ConversationServiceInterface $conversationService,
         private readonly MessageServiceInterface $messageService
-    )
-    {
+    ) {
         $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
     }
 
@@ -33,7 +34,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         Log::info('Handling WhatsApp Web webhook event', $data);
         $eventType = $data['event_type'];
 
-        $methodName = 'handle' . Str::studly($eventType);
+        $methodName = 'handle'.Str::studly($eventType);
 
         if (method_exists($this, $methodName)) {
             $this->$methodName($data);
@@ -45,27 +46,31 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function findChatbotBySessionId(string $sessionId): ?Chatbot
     {
         $chatbotId = Str::after($sessionId, 'chatbot-');
+
         return Chatbot::find($chatbotId);
     }
 
     private function getValidatedChatbot(string $sessionId): ?Chatbot
     {
-        if (!$this->whatsAppWebChannel) {
+        if (! $this->whatsAppWebChannel) {
             Log::error('WhatsApp Web channel not found in database.');
+
             return null;
         }
         $chatbot = $this->findChatbotBySessionId($sessionId);
-        if (!$chatbot) {
+        if (! $chatbot) {
             Log::error('Could not find chatbot for session.', ['session_id' => $sessionId]);
+
             return null;
         }
+
         return $chatbot;
     }
 
     private function updateChannelStatus(string $sessionId, int $newStatus, string $statusNameForEvent): void
     {
         $chatbot = $this->getValidatedChatbot($sessionId);
-        if (!$chatbot) {
+        if (! $chatbot) {
             return;
         }
 
@@ -90,7 +95,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     {
         Log::info('Handling QR code event', ['session_id' => $data['session_id']]);
 
-        if (!empty($data['qr_code'])) {
+        if (! empty($data['qr_code'])) {
             WhatsappQrCodeReceived::dispatch($data['session_id'], $data['qr_code']);
         } else {
             Log::warning('QR code event received without QR code data.', ['session_id' => $data['session_id']]);
@@ -103,19 +108,64 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
      */
     private function handleMessageReceived(array $data): void
     {
-        Log::info('Handling message event', ['session_id' => $data['session_id']]);
+        Log::info('Handling message received event', ['session_id' => $data['session_id']]);
 
-        if (!$this->identifyChatbotChannel($data['session_id'])) {
-            Log::error('WhatsApp channel not found for session ID: ' . $data['session_id']);
+        if (! $this->identifyChatbotChannel($data['session_id'])) {
+            Log::error('WhatsApp channel not found for session ID: '.$data['session_id']);
+
             return;
         }
 
-        if (!$this->getOrCreateContactAndConversation($data)) {
+        if (! $this->getOrCreateContactAndConversation(
+            $data['message']['sender_id'],
+            $data['message']['sender_name'] ?? 'WhatsApp User'
+        )) {
             Log::error('Could not create or update conversation for message', ['data' => $data]);
+
             return;
         }
 
         $this->handleTextMessage($data['message']);
+    }
+
+    /**
+     * Handles the 'message_sent' event.
+     * This event is triggered when a message is sent from the user's phone.
+     */
+    private function handleMessageSent(array $data): void
+    {
+        Log::info('Handling message sent event', ['session_id' => $data['session_id']]);
+        $messagePayload = $data['message'];
+
+        if (! $this->identifyChatbotChannel($data['session_id'])) {
+            Log::error('WhatsApp channel not found for session ID: '.$data['session_id']);
+
+            return;
+        }
+
+        // For outgoing messages, the conversation is with the 'to' field
+        if (! $this->getOrCreateContactAndConversation(
+            $messagePayload['to'],
+            $messagePayload['sender_name'] ?? 'WhatsApp User'
+        )) {
+            Log::error('Could not create or update conversation for sent message', ['data' => $data]);
+
+            return;
+        }
+
+        $messageData = [
+            'external_id' => $messagePayload['id'],
+            'content' => $messagePayload['body'],
+            'content_type' => 'text',
+            'sender_type' => 'human', // It's the human user sending from their phone
+            'sender_user_id' => $this->conversation->assigned_user_id, // Assign to the user managing the conversation
+            'metadata' => [
+                'fromMe' => $messagePayload['fromMe'],
+                'timestamp' => $messagePayload['timestamp'],
+            ],
+        ];
+
+        $this->messageService->storeExternalOutgoingMessage($this->conversation, $messageData);
     }
 
     /**
@@ -126,28 +176,29 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     {
         Log::info('Handling ready event', ['session_id' => $data['session_id']]);
         $chatbot = $this->getValidatedChatbot($data['session_id']);
-        if (!$chatbot) {
+        if (! $chatbot) {
             return;
         }
         $wid = $data['phone_number_id'] ?? null;
-        if (!$wid) {
+        if (! $wid) {
             Log::error('ready event received without WID.', ['session_id' => $data['session_id']]);
+
             return;
         }
 
         ChatbotChannel::updateOrCreate(
             [
                 'chatbot_id' => $chatbot->id,
-                'channel_id' => $this->whatsAppWebChannel->id
+                'channel_id' => $this->whatsAppWebChannel->id,
             ],
             [
-                'name' => 'WA-Web ' . $chatbot->name,
+                'name' => 'WA-Web '.$chatbot->name,
                 'credentials' => [
-                    'session_id'                     => $data['session_id'],
-                    'phone_number'                   => $wid,
-                    'phone_number_id'                => $wid,
-                    'phone_number_verified_name'     => $wid,
-                    'display_phone_number'           => $wid,
+                    'session_id' => $data['session_id'],
+                    'phone_number' => $wid,
+                    'phone_number_id' => $wid,
+                    'phone_number_verified_name' => $wid,
+                    'display_phone_number' => $wid,
                 ],
                 'status' => ChatbotChannel::STATUS_CONNECTED,
             ]
@@ -168,7 +219,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function identifyChatbotChannel(string $sessionId): bool
     {
         $chatbot = $this->getValidatedChatbot($sessionId);
-        if (!$chatbot) {
+        if (! $chatbot) {
             return false;
         }
 
@@ -179,13 +230,13 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         return $this->chatbotChannel !== null;
     }
 
-    private function getOrCreateContactAndConversation(array $data): bool
+    private function getOrCreateContactAndConversation(string $contactIdentifier, string $contactName): bool
     {
         try {
             $this->conversation = $this->conversationService->findOrCreate(
                 chatbotChannel: $this->chatbotChannel,
-                channelIdentifier: $data['message']['sender_id'],
-                contactName: $data['message']['sender_name'] ?? 'WhatsApp User',
+                channelIdentifier: $contactIdentifier,
+                contactName: $contactName,
                 channelId: $this->whatsAppWebChannel->id
             );
 
@@ -193,8 +244,9 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         } catch (\Exception $e) {
             Log::error('Error in ConversationService from WhatsappWebWebhookService', [
                 'error' => $e->getMessage(),
-                'data' => $data
+                'contactIdentifier' => $contactIdentifier,
             ]);
+
             return false;
         }
     }
@@ -214,7 +266,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         } catch (\Exception $e) {
             Log::error('Error in MessageService from WhatsappWebWebhookService', [
                 'error' => $e->getMessage(),
-                'message' => $message
+                'message' => $message,
             ]);
         }
     }

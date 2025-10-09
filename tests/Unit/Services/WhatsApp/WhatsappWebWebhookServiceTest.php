@@ -8,6 +8,7 @@ use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\Conversation;
 use App\Services\Chat\ConversationService;
 use App\Services\Chat\MessageService;
 use App\Services\Util\PhoneNumberNormalizer;
@@ -24,7 +25,9 @@ class WhatsappWebWebhookServiceTest extends TestCase
     use RefreshDatabase;
 
     private WhatsappWebWebhookServiceInterface $service;
+
     private Channel $whatsappWebChannel;
+
     private Chatbot $chatbot;
 
     protected function setUp(): void
@@ -32,10 +35,10 @@ class WhatsappWebWebhookServiceTest extends TestCase
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
-        $phoneNormalizer = new PhoneNumberNormalizer();
-        $conversationService = new ConversationService( $phoneNormalizer );
-        $messageService = new MessageService();
-        $this->service = new WhatsappWebWebhookService( $conversationService, $messageService);
+        $phoneNormalizer = new PhoneNumberNormalizer;
+        $conversationService = new ConversationService($phoneNormalizer);
+        $messageService = new MessageService;
+        $this->service = new WhatsappWebWebhookService($conversationService, $messageService);
         $this->whatsappWebChannel = Channel::where('slug', 'whatsapp-web')->first();
         $this->chatbot = Chatbot::find(1);
 
@@ -103,7 +106,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
     public function it_handles_client_ready_event_and_creates_channel(): void
     {
         // Arrange
-        $sessionId = 'chatbot-' . $this->chatbot->id;
+        $sessionId = 'chatbot-'.$this->chatbot->id;
         $phoneNumberId = '1234567890';
 
         $payload = [
@@ -145,16 +148,16 @@ class WhatsappWebWebhookServiceTest extends TestCase
     }
 
     #[Test]
-    public function it_handles_disconnected_event_correctly():void
+    public function it_handles_disconnected_event_correctly(): void
     {
         // Arrange
-        $sessionId = 'chatbot-' . $this->chatbot->id;
+        $sessionId = 'chatbot-'.$this->chatbot->id;
 
         // Create a ChatbotChannel that is initially connected
         $chatbotChannel = ChatbotChannel::create([
             'chatbot_id' => $this->chatbot->id,
             'channel_id' => $this->whatsappWebChannel->id,
-            'name' => 'WA-Web ' . $this->chatbot->name,
+            'name' => 'WA-Web '.$this->chatbot->name,
             'credentials' => ['session_id' => $sessionId, 'phone_number_id' => '1234567890'],
             'status' => ChatbotChannel::STATUS_CONNECTED,
         ]);
@@ -185,7 +188,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
     {
         // Arrange
         $invalidChatbotId = 99999; // A chatbot ID that does not exist
-        $sessionId = 'chatbot-' . $invalidChatbotId;
+        $sessionId = 'chatbot-'.$invalidChatbotId;
         $phoneNumberId = '1234567890';
 
         $payload = [
@@ -213,4 +216,55 @@ class WhatsappWebWebhookServiceTest extends TestCase
             ->once();
     }
 
+    #[Test]
+    public function it_handles_message_sent_event(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $contactPhone = '5212221931663';
+        $messageBody = 'Enviando mensaje de prueba';
+
+        // Create a chatbot channel for the service to find
+        ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId, 'phone_number_id' => '1234567890'],
+            'status' => ChatbotChannel::STATUS_CONNECTED,
+        ]);
+
+        $payload = [
+            'event_type' => 'message_sent',
+            'session_id' => $sessionId,
+            'message' => [
+                'id' => 'AC683E24B45750DE3549960203F18272',
+                'fromMe' => true,
+                'to' => $contactPhone,
+                'sender_id' => '5212213835257',
+                'sender_name' => 'CGM 2',
+                'body' => $messageBody,
+                'timestamp' => 1760033874,
+            ],
+        ];
+
+        // Mock the MessageService to ensure our new method is called
+        $messageServiceMock = $this->createMock(MessageService::class);
+        $messageServiceMock->expects($this->once())
+            ->method('storeExternalOutgoingMessage')
+            ->with(
+                $this->isInstanceOf(Conversation::class),
+                $this->callback(function ($messageData) use ($messageBody) {
+                    return $messageData['content'] === $messageBody && $messageData['sender_type'] === 'human';
+                })
+            );
+
+        // Re-instantiate the service with the mock
+        $conversationService = new ConversationService(new PhoneNumberNormalizer);
+        $this->service = new WhatsappWebWebhookService($conversationService, $messageServiceMock);
+
+        // Act
+        $this->service->handle($payload);
+
+        // Assert: The mock expectation 'expects($this->once())' serves as the primary assertion.
+    }
 }

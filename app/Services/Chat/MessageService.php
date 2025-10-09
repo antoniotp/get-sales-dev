@@ -3,6 +3,7 @@
 namespace App\Services\Chat;
 
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Jobs\ProcessAIResponse;
 use App\Models\Conversation;
@@ -16,8 +17,7 @@ class MessageService implements MessageServiceInterface
         string $externalMessageId,
         string $content,
         array $metadata
-    ): Message
-    {
+    ): Message {
         $messageData = [
             'conversation_id' => $conversation->id,
             'external_message_id' => $externalMessageId,
@@ -40,5 +40,37 @@ class MessageService implements MessageServiceInterface
         }
 
         return $newMessage;
+    }
+
+    public function storeExternalOutgoingMessage(Conversation $conversation, array $messageData): Message
+    {
+        return $this->createMessage($conversation, $messageData);
+    }
+
+    public function createAndSendOutgoingMessage(Conversation $conversation, array $messageData): Message
+    {
+        $message = $this->createMessage($conversation, $messageData);
+        event(new MessageSent($message));
+
+        return $message;
+    }
+
+    private function createMessage(Conversation $conversation, array $messageData): Message
+    {
+        $message = $conversation->messages()->create([
+            'external_message_id' => $messageData['external_id'] ?? '',
+            'type' => $messageData['type'] ?? 'outgoing',
+            'content' => $messageData['content'],
+            'content_type' => $messageData['content_type'] ?? 'text',
+            'sender_type' => $messageData['sender_type'] ?? 'human',
+            'sender_user_id' => $messageData['sender_user_id'] ?? null,
+            'metadata' => $messageData['metadata'] ?? [],
+        ]);
+
+        $conversation->update(['last_message_at' => now()]);
+
+        event(new NewWhatsAppMessage($message));
+
+        return $message;
     }
 }

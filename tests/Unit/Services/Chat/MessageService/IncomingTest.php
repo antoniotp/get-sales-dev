@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\Services\Chat;
+namespace Tests\Unit\Services\Chat\MessageService;
 
 use App\Events\NewWhatsAppMessage;
 use App\Jobs\ProcessAIResponse;
@@ -13,11 +13,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
 use Tests\TestCase;
 
-class MessageServiceTest extends TestCase
+#[CoversClass( MessageService::class )]
+class IncomingTest extends TestCase
 {
     use RefreshDatabase;
 

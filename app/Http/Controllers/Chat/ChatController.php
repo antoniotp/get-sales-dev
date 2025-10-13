@@ -25,26 +25,6 @@ class ChatController extends Controller
 {
     public function __construct(private Organization $organization) {}
 
-    public function store(StoreChatRequest $request, Chatbot $chatbot, ConversationService $conversationService): JsonResponse
-    {
-        if ($chatbot->organization_id !== $this->organization->id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
-        $validatedData = $request->validated();
-
-        $conversation = $conversationService->startHumanConversation(
-            $chatbot,
-            $validatedData, // contains contact_id or phone_number (for new contact)
-            $validatedData['chatbot_channel_id']
-        );
-
-        return response()->json(
-            ConversationData::fromConversation($conversation)->toArray(),
-            201
-        );
-    }
-
     public function index(Request $request, Chatbot $chatbot): RedirectResponse|Response
     {
         $chatbotId = $chatbot->id;
@@ -105,6 +85,26 @@ class ChatController extends Controller
             'agents' => $agents,
             'canAssign' => $canAssign,
         ]);
+    }
+
+    public function store(StoreChatRequest $request, Chatbot $chatbot, ConversationService $conversationService): JsonResponse
+    {
+        if ($chatbot->organization_id !== $this->organization->id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $validatedData = $request->validated();
+
+        $conversation = $conversationService->startHumanConversation(
+            $chatbot,
+            $validatedData, // contains contact_id or phone_number (for new contact)
+            $validatedData['chatbot_channel_id']
+        );
+
+        return response()->json(
+            ConversationData::fromConversation($conversation)->toArray(),
+            201
+        );
     }
 
     public function getMessages(Conversation $conversation, Request $request): JsonResponse

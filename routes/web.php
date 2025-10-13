@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chat\ChatAssignmentController;
+use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\Chatbot\ChatbotSwitcherController;
 use App\Http\Controllers\Chatbot\IntegrationsController;
@@ -9,17 +9,21 @@ use App\Http\Controllers\Chatbot\WhatsAppIntegrationController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
+use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
-use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\WhatsAppWebController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () { return Inertia::render('home'); })->name('home');
-Route::get('/policies', function () { return Inertia::render('policies'); })->name('policies');
+Route::get('/', function () {
+    return Inertia::render('home');
+})->name('home');
+Route::get('/policies', function () {
+    return Inertia::render('policies');
+})->name('policies');
 Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify']);
 Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
 Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle']);
@@ -27,9 +31,10 @@ Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle']);
 // Public invitation acceptance page
 Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');
 
-
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () { return redirect()->route('chatbots.index'); })->name('dashboard');
+    Route::get('dashboard', function () {
+        return redirect()->route('chatbots.index');
+    })->name('dashboard');
     Route::get('/chatbots', [ChatbotController::class, 'index'])->name('chatbots.index');
     Route::get('/chatbots/create', [ChatbotController::class, 'create'])->name('chatbots.create');
     Route::post('/chatbots', [ChatbotController::class, 'store'])->name('chatbots.store');
@@ -37,8 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chatbots/{chatbot}/edit', [ChatbotController::class, 'edit'])->name('chatbots.edit');
     Route::put('/chatbots/{chatbot}', [ChatbotController::class, 'update'])->name('chatbots.update');
     Route::delete('/chatbots/{chatbot}', [ChatbotController::class, 'destroy'])->name('chatbots.destroy');
-    Route::get('/chatbots/{chatbot}/integrations', [ IntegrationsController::class, 'index'])->name('chatbots.integrations');
-    Route::get('/chatbots/{chatbot}/integrations/whatsapp', [ WhatsAppIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp');
+    Route::get('/chatbots/{chatbot}/integrations', [IntegrationsController::class, 'index'])->name('chatbots.integrations');
+    Route::get('/chatbots/{chatbot}/integrations/whatsapp', [WhatsAppIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp');
     Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/start', [WhatsAppIntegrationController::class, 'startWhatsappWebServer'])->name('chatbots.integrations.whatsapp-web.start');
     Route::get('/chatbots/{chatbot}/integrations/whatsapp-web/status', [WhatsAppIntegrationController::class, 'getWhatsAppWebStatus'])->name('chatbots.integrations.whatsapp-web.status');
     Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/reconnect', [WhatsAppIntegrationController::class, 'reconnectWhatsappWebSession'])->name('chatbots.integrations.whatsapp-web.reconnect');
@@ -48,7 +53,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');
     Route::put('/chats/{conversation}/mode', [ChatController::class, 'updateConversationMode'])->name('chats.mode.update');
     Route::put('/chats/{conversation}/assignment', [ChatAssignmentController::class, 'update'])->name('chats.assignment.update');
-    Route::get('/chatbots/{chatbot}/message_templates', [ MessageTemplateController::class, 'index'])->name('message-templates.index');
+    Route::get('/chatbots/{chatbot}/message_templates', [MessageTemplateController::class, 'index'])->name('message-templates.index');
     Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->name('message-templates.create');
     Route::post('/message_templates', [MessageTemplateController::class, 'store'])->name('message-templates.store');
     Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');
@@ -64,7 +69,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/organizations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::get('/organizations/settings', [OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::put('/organizations/{organization}', [OrganizationController::class, 'update'])->name('organizations.update');
-//    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    //    Route::delete('/organizations/{organization}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::get('/organizations/members', [OrganizationMemberController::class, 'index'])->name('organizations.members.index');
     Route::post('/invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::delete('/invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
@@ -72,8 +77,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/invitations/accept/{token}', [InvitationController::class, 'accept'])->name('invitations.accept');
     Route::post('/chatbots/{chatbot}/integrations/facebook/callback', [FacebookController::class, 'handleCallback'])->name('facebook.callback');
 
-    Route::get('/chatbot_switcher', [ ChatbotSwitcherController::class, 'list'])->name('chatbot_switcher.list');
-    Route::post('/chatbot_switcher', [ ChatbotSwitcherController::class, 'switch'])->name('chatbot_switcher.switch');
+    Route::get('/chatbot_switcher', [ChatbotSwitcherController::class, 'list'])->name('chatbot_switcher.list');
+    Route::post('/chatbot_switcher', [ChatbotSwitcherController::class, 'switch'])->name('chatbot_switcher.switch');
 });
 
 require __DIR__.'/settings.php';

@@ -27,7 +27,7 @@ class ChatController extends Controller
         private readonly ConversationServiceInterface $conversationService
     ) {}
 
-    public function index(Request $request, Chatbot $chatbot): RedirectResponse|Response
+    public function index(Request $request, Chatbot $chatbot, ?Conversation $conversation = null): RedirectResponse|Response
     {
         $chatbotId = $chatbot->id;
 
@@ -41,7 +41,7 @@ class ChatController extends Controller
         $user = $request->user();
 
         $conversations = $this->conversationService->getConversationsForChatbot($chatbot, $user)
-            ->map(fn (Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
+            ->map(fn (Conversation $c) => ConversationData::fromConversation($c)->toArray());
 
         $role = $user->getRoleInOrganization($this->organization);
         $canAssign = $role && $role->level > 40;
@@ -65,11 +65,17 @@ class ChatController extends Controller
             ];
         });
 
+        $selectedConversation = null;
+        if ($conversation && $conversation->chatbotChannel->chatbot_id === $chatbot->id) {
+            $selectedConversation = ConversationData::fromConversation($conversation)->toArray();
+        }
+
         return Inertia::render('chat/chat', [
             'chats' => $conversations,
             'chatbotChannels' => $transformedChannels,
             'agents' => $agents,
             'canAssign' => $canAssign,
+            'selectedConversation' => $selectedConversation,
         ]);
     }
 

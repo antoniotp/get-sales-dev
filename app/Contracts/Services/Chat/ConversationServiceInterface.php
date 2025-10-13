@@ -5,6 +5,8 @@ namespace App\Contracts\Services\Chat;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 
 interface ConversationServiceInterface
 {
@@ -13,10 +15,10 @@ interface ConversationServiceInterface
      * This service handles the business logic of ensuring a contact,
      * a contact channel, and a conversation exist for an incoming interaction.
      *
-     * @param ChatbotChannel $chatbotChannel The chatbot channel receiving the interaction.
-     * @param string $channelIdentifier The contact's unique identifier on the channel (e.g., phone number).
-     * @param string $contactName The display name of the contact.
-     * @param int $channelId The ID of the communication channel (e.g., WhatsApp, WhatsApp Web).
+     * @param  ChatbotChannel  $chatbotChannel  The chatbot channel receiving the interaction.
+     * @param  string  $channelIdentifier  The contact's unique identifier on the channel (e.g., phone number).
+     * @param  string  $contactName  The display name of the contact.
+     * @param  int  $channelId  The ID of the communication channel (e.g., WhatsApp, WhatsApp Web).
      * @return Conversation The found or newly created conversation instance.
      */
     public function findOrCreate(
@@ -31,4 +33,9 @@ interface ConversationServiceInterface
         array $contactData,
         int $chatbotChannelId
     ): Conversation;
+
+    public function getConversationsForChatbot(
+        Chatbot $chatbot,
+        User $user
+    ): Collection;
 }

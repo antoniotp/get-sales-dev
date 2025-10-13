@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Chat;
 
+use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\DataTransferObjects\Chat\ConversationData;
 use App\DataTransferObjects\Chat\MessageData;
-use App\Enums\Chatbot\AgentVisibility;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Chat\StoreChatRequest;
 use App\Models\Chatbot;
@@ -14,7 +14,6 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
-use App\Services\Chat\ConversationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +22,10 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
-    public function __construct(private Organization $organization) {}
+    public function __construct(
+        private readonly Organization $organization,
+        private readonly ConversationServiceInterface $conversationService
+    ) {}
 
     public function index(Request $request, Chatbot $chatbot): RedirectResponse|Response
     {
@@ -38,26 +40,10 @@ class ChatController extends Controller
 
         $user = $request->user();
 
-        $conversationsQuery = Conversation::query()
-            ->select([
-                'conversations.*',
-            ])
-            ->with(['latestMessage', 'chatbotChannel.chatbot', 'assignedUser'])
-            ->whereHas('chatbotChannel.chatbot', function ($query) use ($chatbotId) {
-                $query->where('chatbots.organization_id', $this->organization->id)
-                    ->where('chatbots.id', $chatbotId);
-            });
-
-        // Apply agent visibility filter
-        $role = $user->getRoleInOrganization($this->organization);
-        if ($role && $role->slug === 'agent' && $chatbot->agent_visibility === AgentVisibility::ASSIGNED_ONLY) {
-            $conversationsQuery->where('conversations.assigned_user_id', $user->id);
-        }
-
-        $conversations = $conversationsQuery->orderBy('last_message_at', 'desc')
-            ->get()
+        $conversations = $this->conversationService->getConversationsForChatbot($chatbot, $user)
             ->map(fn (Conversation $conversation) => ConversationData::fromConversation($conversation)->toArray());
 
+        $role = $user->getRoleInOrganization($this->organization);
         $canAssign = $role && $role->level > 40;
 
         $agents = [];
@@ -87,7 +73,7 @@ class ChatController extends Controller
         ]);
     }
 
-    public function store(StoreChatRequest $request, Chatbot $chatbot, ConversationService $conversationService): JsonResponse
+    public function store(StoreChatRequest $request, Chatbot $chatbot, ConversationServiceInterface $conversationService): JsonResponse
     {
         if ($chatbot->organization_id !== $this->organization->id) {
             return response()->json(['error' => 'Unauthorized'], 403);

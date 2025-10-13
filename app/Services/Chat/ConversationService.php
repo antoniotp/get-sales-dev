@@ -4,30 +4,30 @@ namespace App\Services\Chat;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
+use App\Enums\Chatbot\AgentVisibility;
 use App\Events\NewWhatsAppConversation;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Contact;
 use App\Models\ContactChannel;
 use App\Models\Conversation;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ConversationService implements ConversationServiceInterface
 {
-    public function __construct(private readonly PhoneNumberNormalizerInterface $normalizer)
-    {
-    }
+    public function __construct(private readonly PhoneNumberNormalizerInterface $normalizer) {}
 
     public function startHumanConversation(
         Chatbot $chatbot,
         array $contactData,
         int $chatbotChannelId
-    ): Conversation
-    {
+    ): Conversation {
         $organizationId = $chatbot->organization_id;
 
         // Find or Create Contact and get normalized phone number
-        if (!empty($contactData['contact_id'])) {
+        if (! empty($contactData['contact_id'])) {
             $contact = Contact::where('organization_id', $organizationId)
                 ->where('id', $contactData['contact_id'])
                 ->firstOrFail();
@@ -56,7 +56,7 @@ class ConversationService implements ConversationServiceInterface
         );
 
         // Find or Create Conversation
-        $contactName = trim(($contact->first_name ?? '') . ' ' . ($contact->last_name ?? ''));
+        $contactName = trim(($contact->first_name ?? '').' '.($contact->last_name ?? ''));
         $conversation = Conversation::firstOrCreate(
             [
                 'chatbot_channel_id' => $chatbotChannelId,
@@ -81,8 +81,7 @@ class ConversationService implements ConversationServiceInterface
         string $channelIdentifier,
         string $contactName,
         int $channelId
-    ): Conversation
-    {
+    ): Conversation {
         $organizationId = $chatbotChannel->chatbot->organization_id;
         $normalizedIdentifier = $this->normalizer->normalize($channelIdentifier);
 
@@ -121,7 +120,7 @@ class ConversationService implements ConversationServiceInterface
         );
 
         // If an old conversation existed without a contact link, update it.
-        if (!$conversation->wasRecentlyCreated && is_null($conversation->contact_channel_id)) {
+        if (! $conversation->wasRecentlyCreated && is_null($conversation->contact_channel_id)) {
             $conversation->update(['contact_channel_id' => $contactChannel->id]);
         }
 
@@ -132,10 +131,31 @@ class ConversationService implements ConversationServiceInterface
         }
 
         // Always update the last message timestamp for existing conversations to keep them active.
-        if (!$conversation->wasRecentlyCreated) {
+        if (! $conversation->wasRecentlyCreated) {
             $conversation->update(['last_message_at' => now()]);
         }
 
         return $conversation;
+    }
+
+    public function getConversationsForChatbot(Chatbot $chatbot, User $user): Collection
+    {
+        $conversationsQuery = Conversation::query()
+            ->select([
+                'conversations.*',
+            ])
+            ->with(['latestMessage', 'chatbotChannel.chatbot', 'assignedUser'])
+            ->whereHas('chatbotChannel', function ($query) use ($chatbot) {
+                $query->where('chatbot_id', $chatbot->id);
+            });
+
+        // Apply agent visibility filter
+        $organization = $chatbot->organization;
+        $role = $user->getRoleInOrganization($organization);
+        if ($role && $role->slug === 'agent' && $chatbot->agent_visibility === AgentVisibility::ASSIGNED_ONLY) {
+            $conversationsQuery->where('conversations.assigned_user_id', $user->id);
+        }
+
+        return $conversationsQuery->orderBy('last_message_at', 'desc')->get();
     }
 }

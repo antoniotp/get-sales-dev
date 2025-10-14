@@ -2,6 +2,7 @@
 
 namespace App\Services\Chat;
 
+use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Enums\Chatbot\AgentVisibility;
@@ -12,12 +13,16 @@ use App\Models\Contact;
 use App\Models\ContactChannel;
 use App\Models\Conversation;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
 
 class ConversationService implements ConversationServiceInterface
 {
-    public function __construct(private readonly PhoneNumberNormalizerInterface $normalizer) {}
+    public function __construct(
+        private readonly PhoneNumberNormalizerInterface $normalizer,
+        private readonly ConversationAuthorizationServiceInterface $conversationAuthorizationService
+    ) {}
 
     public function startHumanConversation(
         Chatbot $chatbot,
@@ -173,7 +178,18 @@ class ConversationService implements ConversationServiceInterface
             $user->id
         );
 
-        // TODO: Implement authorization check for existing conversations
+        $organization = $chatbot->organization;
+
+        if (
+            ! $conversation->wasRecentlyCreated &&
+            $chatbot->agent_visibility === AgentVisibility::ASSIGNED_ONLY &&
+            $this->conversationAuthorizationService->isAgentSubjectToVisibilityRules($user, $organization) &&
+            $conversation->assigned_user_id !== null &&
+            $conversation->assigned_user_id !== $user->id
+        ) {
+            throw new AuthorizationException('As an agent, you can only access conversations assigned to you.');
+        }
+
         // TODO: Implement initial message sending if $text is provided
 
         return $conversation;

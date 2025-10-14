@@ -10,6 +10,8 @@ use App\Models\ContactChannel;
 use App\Models\Conversation;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Tests\TestCase;
@@ -85,5 +87,54 @@ class StartFromLinkTest extends TestCase
 
         // Assert
         $response->assertRedirect($expectedRoute);
+    }
+
+    public function test_it_redirects_with_error_on_authorization_exception(): void
+    {
+        // Arrange
+        $phoneNumber = '15551234567';
+        $chatbotChannel = $this->chatbot->chatbotChannels->first();
+
+        $mockService = $this->mock(ConversationServiceInterface::class);
+        $mockService->shouldReceive('startConversationFromLink')
+            ->once()
+            ->andThrow(new AuthorizationException('You are not authorized.'));
+
+        $expectedRoute = route('chats', ['chatbot' => $this->chatbot]);
+
+        // Act
+        $response = $this->actingAs($this->user)->get(route('chats.start', [
+            'chatbot' => $this->chatbot,
+            'phone_number' => $phoneNumber,
+            'channel_id' => $chatbotChannel->id,
+        ]));
+
+        // Assert
+        $response->assertRedirect($expectedRoute);
+        $response->assertSessionHas('error', 'You are not authorized to access this conversation.');
+    }
+
+    public function test_it_redirects_with_error_on_model_not_found_exception(): void
+    {
+        // Arrange
+        $phoneNumber = '15551234567';
+
+        $mockService = $this->mock(ConversationServiceInterface::class);
+        $mockService->shouldReceive('startConversationFromLink')
+            ->once()
+            ->andThrow(new ModelNotFoundException('Channel not found.'));
+
+        $expectedRoute = route('chats', ['chatbot' => $this->chatbot]);
+
+        // Act
+        $response = $this->actingAs($this->user)->get(route('chats.start', [
+            'chatbot' => $this->chatbot,
+            'phone_number' => $phoneNumber,
+            'channel_id' => 999, // Non-existent channel
+        ]));
+
+        // Assert
+        $response->assertRedirect($expectedRoute);
+        $response->assertSessionHas('error', 'The specified channel was not found.');
     }
 }

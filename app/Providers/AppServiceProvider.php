@@ -26,6 +26,8 @@ use App\Services\Invitation\InvitationService;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Services\WhatsApp\WhatsAppWebService;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
+use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
+use App\Services\Chat\ConversationAuthorizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ChatbotServiceInterface::class, ChatbotService::class);
         $this->app->bind(ConversationServiceInterface::class, ConversationService::class);
         $this->app->bind(MessageServiceInterface::class, MessageService::class);
+        $this->app->bind(ConversationAuthorizationServiceInterface::class, ConversationAuthorizationService::class);
 
         $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookService::class);
         $this->app->bind(WhatsAppWebServiceInterface::class, WhatsappWebService::class);

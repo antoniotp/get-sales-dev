@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services\WhatsApp;
 
+use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
@@ -17,6 +18,7 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -30,13 +32,19 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
     private Chatbot $chatbot;
 
+    private MockInterface $authServiceMock;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
         $phoneNormalizer = new PhoneNumberNormalizer;
-        $conversationService = new ConversationService($phoneNormalizer);
+        $this->authServiceMock = $this->mock(ConversationAuthorizationServiceInterface::class);
+
+        // Default behavior: most tests don't deal with this, so we assume the user is not a restricted agent.
+        $this->authServiceMock->shouldReceive('isAgentSubjectToVisibilityRules')->andReturn(false)->byDefault();
+        $conversationService = new ConversationService($phoneNormalizer, $this->authServiceMock);
         $messageService = new MessageService;
         $this->service = new WhatsappWebWebhookService($conversationService, $messageService);
         $this->whatsappWebChannel = Channel::where('slug', 'whatsapp-web')->first();
@@ -259,7 +267,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
             );
 
         // Re-instantiate the service with the mock
-        $conversationService = new ConversationService(new PhoneNumberNormalizer);
+        $conversationService = new ConversationService(new PhoneNumberNormalizer, $this->authServiceMock);
         $this->service = new WhatsappWebWebhookService($conversationService, $messageServiceMock);
 
         // Act

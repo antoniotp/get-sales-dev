@@ -14,6 +14,8 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -170,17 +172,28 @@ class ChatController extends Controller
 
     public function startFromLink(Request $request, Chatbot $chatbot, $phone_number): RedirectResponse
     {
-        $conversation = $this->conversationService->startConversationFromLink(
-            $request->user(),
-            $chatbot,
-            $phone_number,
-            $request->query('text'),
-            $request->query('channel_id')
-        );
+        try {
+            $conversation = $this->conversationService->startConversationFromLink(
+                $request->user(),
+                $chatbot,
+                $phone_number,
+                $request->query('text'),
+                $request->query('channel_id')
+            );
 
-        return redirect()->route('chats', [
-            'chatbot' => $chatbot,
-            'conversation' => $conversation,
-        ])->with('success', 'Chat iniciado desde el enlace.');
+            return redirect()->route('chats', [
+                'chatbot' => $chatbot,
+                'conversation' => $conversation,
+            ])->with('success', 'Chat started from link.');
+
+        } catch (AuthorizationException $e) {
+            return redirect()->route('chats', [
+                'chatbot' => $chatbot,
+            ])->with('error', 'You are not authorized to access this conversation.');
+        } catch (ModelNotFoundException $e) {
+            return redirect()->route('chats', [
+                'chatbot' => $chatbot,
+            ])->with('error', 'The specified channel was not found.');
+        }
     }
 }

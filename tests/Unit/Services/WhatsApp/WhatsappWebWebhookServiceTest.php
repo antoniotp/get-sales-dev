@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
+use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
@@ -41,10 +42,14 @@ class WhatsappWebWebhookServiceTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $phoneNormalizer = new PhoneNumberNormalizer;
         $this->authServiceMock = $this->mock(ConversationAuthorizationServiceInterface::class);
+        $messageServiceMock = $this->mock(MessageServiceInterface::class);
 
         // Default behavior: most tests don't deal with this, so we assume the user is not a restricted agent.
         $this->authServiceMock->shouldReceive('isAgentSubjectToVisibilityRules')->andReturn(false)->byDefault();
-        $conversationService = new ConversationService($phoneNormalizer, $this->authServiceMock);
+
+        $messageServiceMock->shouldReceive('createAndSendOutgoingMessage')->byDefault();
+
+        $conversationService = new ConversationService($phoneNormalizer, $this->authServiceMock, $messageServiceMock);
         $messageService = new MessageService;
         $this->service = new WhatsappWebWebhookService($conversationService, $messageService);
         $this->whatsappWebChannel = Channel::where('slug', 'whatsapp-web')->first();
@@ -267,7 +272,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
             );
 
         // Re-instantiate the service with the mock
-        $conversationService = new ConversationService(new PhoneNumberNormalizer, $this->authServiceMock);
+        $conversationService = new ConversationService(new PhoneNumberNormalizer, $this->authServiceMock, $messageServiceMock);
         $this->service = new WhatsappWebWebhookService($conversationService, $messageServiceMock);
 
         // Act

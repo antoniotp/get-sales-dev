@@ -3,6 +3,7 @@
 namespace Tests\Unit\Services\Chat\ConversationService;
 
 use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
+use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Enums\Chatbot\AgentVisibility;
 use App\Models\Chatbot;
@@ -34,6 +35,8 @@ class StartFromLinkTest extends TestCase
 
     private MockInterface $authServiceMock;
 
+    private MockInterface $messageServiceMock;
+
     private ConversationService $conversationService;
 
     protected function setUp(): void
@@ -46,11 +49,19 @@ class StartFromLinkTest extends TestCase
 
         $this->normalizerMock = $this->mock(PhoneNumberNormalizerInterface::class);
         $this->authServiceMock = $this->mock(ConversationAuthorizationServiceInterface::class);
+        $this->messageServiceMock = $this->mock(MessageServiceInterface::class);
 
         // Default behavior: most tests don't deal with this, so we assume the user is not a restricted agent.
         $this->authServiceMock->shouldReceive('isAgentSubjectToVisibilityRules')->andReturn(false)->byDefault();
 
-        $this->conversationService = new ConversationService($this->normalizerMock, $this->authServiceMock);
+        // By default, we don't care if a message is sent or not. Specific tests can override this.
+        $this->messageServiceMock->shouldReceive('createAndSendOutgoingMessage')->byDefault();
+
+        $this->conversationService = new ConversationService(
+            $this->normalizerMock,
+            $this->authServiceMock,
+            $this->messageServiceMock
+        );
     }
 
     public function test_it_creates_new_contact_and_conversation(): void
@@ -232,5 +243,37 @@ class StartFromLinkTest extends TestCase
         // Assert
         $this->assertInstanceOf(Conversation::class, $result);
         $this->assertEquals($conversation->id, $result->id);
+    }
+
+    public function test_it_sends_initial_message_when_text_is_provided(): void
+    {
+        // Arrange
+        $phoneNumber = '15559876543';
+        $normalizedNumber = '15559876543';
+        $text = 'This is the initial message';
+        $chatbotChannel = $this->chatbot->chatbotChannels->first();
+
+        $this->normalizerMock->shouldReceive('normalize')
+            ->once()
+            ->with($phoneNumber)
+            ->andReturn($normalizedNumber);
+
+        // Expect the message service to be called
+        $this->messageServiceMock->shouldReceive('createAndSendOutgoingMessage')
+            ->once()
+            ->withArgs(function (Conversation $conversation, array $messageData) use ($text) {
+                return $messageData['content'] === $text &&
+                       $messageData['content_type'] === 'text' &&
+                       $messageData['sender_type'] === 'human';
+            });
+
+        // Act
+        $this->conversationService->startConversationFromLink(
+            $this->user,
+            $this->chatbot,
+            $phoneNumber,
+            $text,
+            $chatbotChannel->id
+        );
     }
 }

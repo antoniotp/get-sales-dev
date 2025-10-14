@@ -4,6 +4,7 @@ namespace App\Services\Chat;
 
 use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
+use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Enums\Chatbot\AgentVisibility;
 use App\Events\NewWhatsAppConversation;
@@ -21,7 +22,8 @@ class ConversationService implements ConversationServiceInterface
 {
     public function __construct(
         private readonly PhoneNumberNormalizerInterface $normalizer,
-        private readonly ConversationAuthorizationServiceInterface $conversationAuthorizationService
+        private readonly ConversationAuthorizationServiceInterface $conversationAuthorizationService,
+        private readonly MessageServiceInterface $messageService
     ) {}
 
     public function startHumanConversation(
@@ -190,7 +192,15 @@ class ConversationService implements ConversationServiceInterface
             throw new AuthorizationException('As an agent, you can only access conversations assigned to you.');
         }
 
-        // TODO: Implement initial message sending if $text is provided
+        if (! empty($text)) {
+            $messageData = [
+                'content' => $text,
+                'content_type' => 'text',
+                'sender_type' => 'human',
+                'sender_user_id' => $user->id,
+            ];
+            $this->messageService->createAndSendOutgoingMessage($conversation, $messageData);
+        }
 
         return $conversation;
     }

@@ -64,17 +64,18 @@ const sortChatsByLastMessageTime = (chats: Chat[]): Chat[] => {
 };
 
 export default function Chat(
-    { chats: initialChats, organization, agents, canAssign, chatbotChannels }:
+    { chats: initialChats, organization, agents, canAssign, chatbotChannels, selectedConversation }:
     {
         chats: Chat[];
         chatbotChannels: ChatbotChannel[];
         organization: Organizations;
         agents: Agent[];
         canAssign: boolean;
+        selectedConversation: Chat | null;
     }
 ) {
     const [chats, setChats] = useState<Chat[]>(initialChats);
-    const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+    const [selectedChat, setSelectedChat] = useState<Chat | null>(selectedConversation);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -268,6 +269,20 @@ export default function Chat(
             setIsLoadingMessages(false);
         }
     }, [route, scrollToBottom, setChats]);
+
+    // Handle pre-selected conversation on the initial load
+    useEffect(() => {
+        if (selectedConversation) {
+            // Set the initial chat list, ensuring the selected one is at the top and not duplicated.
+            setChats(prevChats => {
+                const otherChats = prevChats.filter(chat => chat.id !== selectedConversation.id);
+                return [selectedConversation, ...otherChats];
+            });
+
+            loadChatMessages(selectedConversation.id);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Run only once on mount
 
     // Handle chat selection
     const handleChatSelect = useCallback((chat: Chat) => {

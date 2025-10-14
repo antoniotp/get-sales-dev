@@ -22,7 +22,8 @@ class ConversationService implements ConversationServiceInterface
     public function startHumanConversation(
         Chatbot $chatbot,
         array $contactData,
-        int $chatbotChannelId
+        int $chatbotChannelId,
+        int $userId
     ): Conversation {
         $organizationId = $chatbot->organization_id;
 
@@ -69,7 +70,7 @@ class ConversationService implements ConversationServiceInterface
                 'status' => 1,
                 'mode' => 'human', // Initiated by human
                 'last_message_at' => now(),
-                'assigned_user_id' => auth()->id(), // Assign to the user who starts it
+                'assigned_user_id' => $userId,
             ]
         );
 
@@ -168,7 +169,8 @@ class ConversationService implements ConversationServiceInterface
         $conversation = $this->startHumanConversation(
             $chatbot,
             $contactData,
-            $channelId
+            $channelId,
+            $user->id
         );
 
         // TODO: Implement authorization check for existing conversations

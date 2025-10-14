@@ -31,7 +31,8 @@ interface ConversationServiceInterface
     public function startHumanConversation(
         Chatbot $chatbot,
         array $contactData,
-        int $chatbotChannelId
+        int $chatbotChannelId,
+        int $userId
     ): Conversation;
 
     public function getConversationsForChatbot(

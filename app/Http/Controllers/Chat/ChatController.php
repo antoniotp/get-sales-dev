@@ -90,7 +90,8 @@ class ChatController extends Controller
         $conversation = $conversationService->startHumanConversation(
             $chatbot,
             $validatedData, // contains contact_id or phone_number (for new contact)
-            $validatedData['chatbot_channel_id']
+            $validatedData['chatbot_channel_id'],
+            auth()->id()
         );
 
         return response()->json(

@@ -158,4 +158,22 @@ class ConversationService implements ConversationServiceInterface
 
         return $conversationsQuery->orderBy('last_message_at', 'desc')->get();
     }
+
+    public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $channelId): Conversation
+    {
+        $contactData = [
+            'phone_number' => $phoneNumber,
+        ];
+
+        $conversation = $this->startHumanConversation(
+            $chatbot,
+            $contactData,
+            $channelId
+        );
+
+        // TODO: Implement authorization check for existing conversations
+        // TODO: Implement initial message sending if $text is provided
+
+        return $conversation;
+    }
 }

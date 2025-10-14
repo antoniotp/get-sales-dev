@@ -169,7 +169,17 @@ class ChatController extends Controller
 
     public function startFromLink(Request $request, Chatbot $chatbot, $phone_number): RedirectResponse
     {
-        // For now, just return a simple redirect to make the test pass.
-        return redirect()->route('home');
+        $conversation = $this->conversationService->startConversationFromLink(
+            $request->user(),
+            $chatbot,
+            $phone_number,
+            $request->query('text'),
+            $request->query('channel_id')
+        );
+
+        return redirect()->route('chats', [
+            'chatbot' => $chatbot,
+            'conversation' => $conversation,
+        ])->with('success', 'Chat iniciado desde el enlace.');
     }
 }

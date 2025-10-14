@@ -38,4 +38,15 @@ interface ConversationServiceInterface
         Chatbot $chatbot,
         User $user
     ): Collection;
+
+    /**
+     * Starts a new conversation from an external link, initiated by a logged-in user.
+     *
+     * @param  User  $user  The user initiating the action.
+     * @param  Chatbot  $chatbot  The chatbot context for the conversation.
+     * @param  string  $phoneNumber  The contact's phone number.
+     * @param  string|null  $text  The initial message text, if any.
+     * @return Conversation The found or newly created conversation.
+     */
+    public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $channelId): Conversation;
 }

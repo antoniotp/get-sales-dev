@@ -178,7 +178,7 @@ class ChatController extends Controller
                 $chatbot,
                 $phone_number,
                 $request->query('text'),
-                $request->query('channel_id')
+                $request->query('cc_id') //chatbot channel id
             );
 
             return redirect()->route('chats', [

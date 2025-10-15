@@ -47,7 +47,8 @@ interface ConversationServiceInterface
      * @param  Chatbot  $chatbot  The chatbot context for the conversation.
      * @param  string  $phoneNumber  The contact's phone number.
      * @param  string|null  $text  The initial message text, if any.
+     * @param  int|null  $chatbotChannelId  The chatbot channel ID, if any.
      * @return Conversation The found or newly created conversation.
      */
-    public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $channelId): Conversation;
+    public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $chatbotChannelId): Conversation;
 }

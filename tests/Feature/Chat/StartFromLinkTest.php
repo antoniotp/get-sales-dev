@@ -82,7 +82,7 @@ class StartFromLinkTest extends TestCase
             'chatbot' => $this->chatbot,
             'phone_number' => $phoneNumber,
             'text' => $text,
-            'channel_id' => $chatbotChannel->id,
+            'cc_id' => $chatbotChannel->id,
         ]));
 
         // Assert

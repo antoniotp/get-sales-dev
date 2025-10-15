@@ -167,7 +167,7 @@ class ConversationService implements ConversationServiceInterface
         return $conversationsQuery->orderBy('last_message_at', 'desc')->get();
     }
 
-    public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $channelId): Conversation
+    public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $chatbotChannelId): Conversation
     {
         $contactData = [
             'phone_number' => $phoneNumber,
@@ -176,7 +176,7 @@ class ConversationService implements ConversationServiceInterface
         $conversation = $this->startHumanConversation(
             $chatbot,
             $contactData,
-            $channelId,
+            $chatbotChannelId,
             $user->id
         );
 

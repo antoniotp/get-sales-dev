@@ -2,12 +2,12 @@
 
 namespace Tests\Unit\Services\WhatsApp;
 
-use App\Services\WhatsApp\WhatsAppWebService;
+use App\Services\WhatsApp\LegacyWhatsAppWebService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
-class WhatsAppWebServiceTest extends TestCase
+class LegacyWhatsAppWebServiceTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -22,7 +22,7 @@ class WhatsAppWebServiceTest extends TestCase
         ]);
         $sessionId = 'test-session-123';
 
-        $wwebjsService = new WhatsAppWebService();
+        $wwebjsService = new LegacyWhatsAppWebService();
         $result = $wwebjsService->startSession($sessionId);
 
         $this->assertTrue($result);
@@ -37,7 +37,7 @@ class WhatsAppWebServiceTest extends TestCase
         config(['services.wwebjs_service.url' => null]);
         Http::fake();
         Log::shouldReceive('error')->once()->with('WhatsApp Web Service URL is not configured. Please check config/services.php and your .env file.');
-        $wwebjsService = new WhatsAppWebService();
+        $wwebjsService = new LegacyWhatsAppWebService();
         $result = $wwebjsService->startSession('test-session-123');
         $this->assertFalse($result);
         Http::assertNothingSent();
@@ -52,7 +52,7 @@ class WhatsAppWebServiceTest extends TestCase
         Log::shouldReceive('error')->once();
 
         $sessionId = 'test-session-failure';
-        $service = new WhatsAppWebService();
+        $service = new LegacyWhatsAppWebService();
 
         $result = $service->startSession($sessionId);
         $this->assertFalse($result);

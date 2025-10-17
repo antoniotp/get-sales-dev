@@ -11,7 +11,7 @@ use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WhatsAppWebService implements WhatsAppWebServiceInterface
+class LegacyWhatsAppWebService implements WhatsAppWebServiceInterface
 {
     private string $wwebjs_url;
     public function __construct()

@@ -15,6 +15,7 @@ use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Factories\WhatsApp\WhatsAppWebServiceFactory;
 use App\Services\AI\ChatGPTService;
 use App\Services\Auth\RegistrationService;
 use App\Services\Chat\ConversationAuthorizationService;
@@ -26,7 +27,7 @@ use App\Services\Organization\OrganizationService;
 use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\WhatsApp\FacebookService;
 use App\Services\WhatsApp\WhatsAppService;
-use App\Services\WhatsApp\LegacyWhatsAppWebService;
+use App\Services\WhatsApp\WhatsappWebServiceDetector;
 use App\Services\WhatsApp\WhatsappWebWebhookRouterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +60,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ConversationAuthorizationServiceInterface::class, ConversationAuthorizationService::class);
 
         $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookRouterService::class);
-        $this->app->bind(WhatsAppWebServiceInterface::class, LegacyWhatsAppWebService::class);
+        $this->app->singleton(WhatsappWebServiceDetector::class);
+        $this->app->bind(WhatsAppWebServiceInterface::class, function ($app) {
+            return $app->make(WhatsAppWebServiceFactory::class)->create();
+        });
         $this->app->bind(PhoneNumberNormalizerInterface::class, PhoneNumberNormalizer::class);
     }
 

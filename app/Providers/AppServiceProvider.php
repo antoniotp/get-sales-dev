@@ -25,9 +25,9 @@ use App\Services\Invitation\InvitationService;
 use App\Services\Organization\OrganizationService;
 use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\WhatsApp\FacebookService;
-use App\Services\WhatsApp\LegacyWhatsappWebWebhookService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\WhatsApp\WhatsAppWebService;
+use App\Services\WhatsApp\WhatsappWebWebhookRouterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -58,7 +58,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MessageServiceInterface::class, MessageService::class);
         $this->app->bind(ConversationAuthorizationServiceInterface::class, ConversationAuthorizationService::class);
 
-        $this->app->bind(WhatsappWebWebhookServiceInterface::class, LegacyWhatsappWebWebhookService::class);
+        $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookRouterService::class);
         $this->app->bind(WhatsAppWebServiceInterface::class, WhatsappWebService::class);
         $this->app->bind(PhoneNumberNormalizerInterface::class, PhoneNumberNormalizer::class);
     }

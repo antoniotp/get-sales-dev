@@ -14,7 +14,7 @@ use App\Models\Conversation;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
+class LegacyWhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 {
     private ?Channel $whatsAppWebChannel;
 

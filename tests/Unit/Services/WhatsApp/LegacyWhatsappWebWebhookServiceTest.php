@@ -14,7 +14,7 @@ use App\Models\Conversation;
 use App\Services\Chat\ConversationService;
 use App\Services\Chat\MessageService;
 use App\Services\Util\PhoneNumberNormalizer;
-use App\Services\WhatsApp\WhatsappWebWebhookService;
+use App\Services\WhatsApp\LegacyWhatsappWebWebhookService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -23,7 +23,7 @@ use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-class WhatsappWebWebhookServiceTest extends TestCase
+class LegacyWhatsappWebWebhookServiceTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -51,7 +51,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         $conversationService = new ConversationService($phoneNormalizer, $this->authServiceMock, $messageServiceMock);
         $messageService = new MessageService;
-        $this->service = new WhatsappWebWebhookService($conversationService, $messageService);
+        $this->service = new LegacyWhatsappWebWebhookService($conversationService, $messageService);
         $this->whatsappWebChannel = Channel::where('slug', 'whatsapp-web')->first();
         $this->chatbot = Chatbot::find(1);
 
@@ -273,7 +273,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         // Re-instantiate the service with the mock
         $conversationService = new ConversationService(new PhoneNumberNormalizer, $this->authServiceMock, $messageServiceMock);
-        $this->service = new WhatsappWebWebhookService($conversationService, $messageServiceMock);
+        $this->service = new LegacyWhatsappWebWebhookService($conversationService, $messageServiceMock);
 
         // Act
         $this->service->handle($payload);

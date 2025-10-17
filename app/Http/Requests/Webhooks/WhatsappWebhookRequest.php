@@ -25,13 +25,23 @@ class WhatsappWebhookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'event_type' => ['required_without:dataType', 'string', 'in:qr_code_received,client_ready,message_received,authenticated,message_sent,disconnected'],
+            'event_type' => [
+                'prohibits:dataType', // Cannot exist if dataType exists
+                'required_without:dataType',
+                'string',
+                'in:qr_code_received,client_ready,message_received,authenticated,message_sent,disconnected',
+            ],
             'session_id' => ['required_with:event_type', 'string'],
             'qr_code' => ['nullable', 'string'],
             'message' => ['nullable', 'array'],
             'from' => ['nullable', 'string'],
             'phone_number_id' => ['nullable', 'string'],
-            'dataType' => ['required_without:event_type', 'string'],
+
+            'dataType' => [
+                'prohibits:event_type', // Cannot exist if event_type exists
+                'required_without:event_type',
+                'string',
+            ],
             'sessionId' => ['required_with:dataType', 'string'],
         ];
     }

@@ -5,6 +5,7 @@ namespace Tests\Unit\Services\WhatsApp;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
@@ -68,5 +69,26 @@ class WhatsappWebWebhookServiceTest extends TestCase
         Log::shouldHaveReceived('warning')
             ->with('No handler for WhatsApp Web webhook event: some_new_data_type', $payload)
             ->once();
+    }
+
+    #[Test]
+    public function it_handles_qr_data_type_and_dispatches_event(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $qrCode = 'test-qr-code-string';
+        $payload = [
+            'dataType' => 'qr',
+            'sessionId' => $sessionId,
+            'data' => ['qr' => $qrCode],
+        ];
+
+        // Act
+        $this->service->handle($payload);
+
+        // Assert
+        Event::assertDispatched(WhatsappQrCodeReceived::class, function ($event) use ($sessionId, $qrCode) {
+            return $event->sessionId === $sessionId && $event->qrCode === $qrCode;
+        });
     }
 }

@@ -6,6 +6,7 @@ use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
+use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
@@ -39,6 +40,20 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             $this->$methodName($data);
         } else {
             Log::warning("No handler for WhatsApp Web webhook event: {$dataType}", $data);
+        }
+    }
+
+    private function handleQr(array $payload): void
+    {
+        $sessionId = $payload['sessionId'];
+        $qrCode = $payload['data']['qr'] ?? null;
+
+        Log::info('Handling QR code event', ['session_id' => $sessionId]);
+
+        if (! empty($qrCode)) {
+            WhatsappQrCodeReceived::dispatch($sessionId, $qrCode);
+        } else {
+            Log::warning('QR code event received without QR code data.', ['session_id' => $sessionId]);
         }
     }
 

@@ -7,9 +7,11 @@ use App\Services\WhatsApp\WhatsAppWebService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
+#[CoversClass(WhatsAppWebService::class)]
 class SessionManagementTest extends TestCase
 {
     use RefreshDatabase;
@@ -137,5 +139,87 @@ class SessionManagementTest extends TestCase
         // Assert
         $this->assertEquals('error', $result['status']);
         $this->assertEquals('Connection failed', $result['message']);
+    }
+
+    #[Test]
+    public function start_session_returns_true_on_successful_start()
+    {
+        // Arrange
+        $sessionId = 'test-session-123';
+        $url = config('services.wwebjs_service.url').'/session/start/'.$sessionId;
+
+        Http::fake([
+            $url => Http::response(['success' => true], 200),
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->startSession($sessionId);
+
+        // Assert
+        $this->assertTrue($result);
+    }
+
+    #[Test]
+    public function start_session_returns_false_on_server_error()
+    {
+        // Arrange
+        $sessionId = 'test-session-123';
+        $url = config('services.wwebjs_service.url').'/session/start/'.$sessionId;
+
+        Http::fake([
+            $url => Http::response(null, 500),
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->startSession($sessionId);
+
+        // Assert
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function start_session_returns_false_on_client_error()
+    {
+        // Arrange
+        $sessionId = 'test-session-123';
+        $url = config('services.wwebjs_service.url').'/session/start/'.$sessionId;
+
+        Http::fake([
+            $url => Http::response(null, 422),
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->startSession($sessionId);
+
+        // Assert
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function start_session_returns_false_on_http_exception()
+    {
+        // Arrange
+        $sessionId = 'test-session-123';
+        $url = config('services.wwebjs_service.url').'/session/start/'.$sessionId;
+
+        Http::fake([
+            $url => function () {
+                throw new \Exception('Connection failed');
+            },
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->startSession($sessionId);
+
+        // Assert
+        $this->assertFalse($result);
     }
 }

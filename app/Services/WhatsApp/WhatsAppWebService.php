@@ -28,7 +28,36 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
 
     public function startSession(string $sessionId): bool
     {
-        throw new Exception('Not implemented');
+        $url = $this->wwebjs_url.'/session/start/'.$sessionId;
+        Log::info('Starting session via WhatsApp Web Service', ['session_id' => $sessionId, 'url' => $url]);
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->wwebjs_key,
+            ])->get($url);
+
+            if ($response->successful()) {
+                Log::info('Session start request was successful.', ['session_id' => $sessionId, 'response' => $response->json()]);
+
+                return true;
+            }
+
+            Log::error('Failed to start session.', [
+                'session_id' => $sessionId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return false;
+
+        } catch (Exception $e) {
+            Log::error('Error starting session', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     public function getSessionStatus(Chatbot $chatbot): array

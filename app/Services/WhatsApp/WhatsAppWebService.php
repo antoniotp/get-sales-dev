@@ -109,9 +109,39 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
 
     }
 
-    public function reconnectSession(Chatbot $chatbot)
+    public function reconnectSession(Chatbot $chatbot): bool
     {
-        throw new Exception('Not implemented');
+        $sessionId = 'chatbot-'.$chatbot->id;
+        $url = $this->wwebjs_url.'/session/restart/'.$sessionId;
+        Log::info('Reconnecting session via WhatsApp Web Service', ['session_id' => $sessionId, 'url' => $url]);
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->wwebjs_key,
+            ])->get($url);
+
+            if ($response->successful()) {
+                Log::info('Session reconnect request was successful.', ['session_id' => $sessionId, 'response' => $response->json()]);
+
+                return true;
+            }
+
+            Log::error('Failed to reconnect session.', [
+                'session_id' => $sessionId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return false;
+
+        } catch (Exception $e) {
+            Log::error('Error reconnecting session', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     public function sendMessage(Message $message): void

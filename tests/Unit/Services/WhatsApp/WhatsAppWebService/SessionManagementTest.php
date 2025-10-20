@@ -222,4 +222,90 @@ class SessionManagementTest extends TestCase
         // Assert
         $this->assertFalse($result);
     }
+
+    #[Test]
+    public function reconnect_session_returns_true_on_successful_restart()
+    {
+        // Arrange
+        $chatbot = Chatbot::find(1);
+        $sessionId = 'chatbot-'.$chatbot->id;
+        $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
+
+        Http::fake([
+            $url => Http::response(['success' => true], 200),
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->reconnectSession($chatbot);
+
+        // Assert
+        $this->assertTrue($result);
+    }
+
+    #[Test]
+    public function reconnect_session_returns_false_on_server_error()
+    {
+        // Arrange
+        $chatbot = Chatbot::find(1);
+        $sessionId = 'chatbot-'.$chatbot->id;
+        $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
+
+        Http::fake([
+            $url => Http::response(null, 500),
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->reconnectSession($chatbot);
+
+        // Assert
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function reconnect_session_returns_false_on_client_error()
+    {
+        // Arrange
+        $chatbot = Chatbot::find(1);
+        $sessionId = 'chatbot-'.$chatbot->id;
+        $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
+
+        Http::fake([
+            $url => Http::response(null, 422),
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->reconnectSession($chatbot);
+
+        // Assert
+        $this->assertFalse($result);
+    }
+
+    #[Test]
+    public function reconnect_session_returns_false_on_http_exception()
+    {
+        // Arrange
+        $chatbot = Chatbot::find(1);
+        $sessionId = 'chatbot-'.$chatbot->id;
+        $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
+
+        Http::fake([
+            $url => function () {
+                throw new \Exception('Connection failed');
+            },
+        ]);
+
+        $service = new WhatsAppWebService;
+
+        // Act
+        $result = $service->reconnectSession($chatbot);
+
+        // Assert
+        $this->assertFalse($result);
+    }
 }

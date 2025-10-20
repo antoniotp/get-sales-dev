@@ -42,7 +42,7 @@ return [
     ],
 
     'whatsapp' => [
-        'verify_token' => env('WHATSAPP_VERIFY_TOKEN')
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
     ],
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
@@ -50,5 +50,6 @@ return [
     ],
     'wwebjs_service' => [
         'url' => env('WWEBJS_SERVICE_URL'),
+        'key' => env('WWEBJS_SERVICE_KEY'),
     ],
 ];

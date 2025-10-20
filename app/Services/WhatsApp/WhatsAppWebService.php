@@ -146,6 +146,49 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
 
     public function sendMessage(Message $message): void
     {
-        throw new Exception('Not implemented');
+        $chatbot = $message->conversation->chatbotChannel->chatbot;
+        $contactChannel = $message->conversation->contactChannel;
+
+        $sessionId = 'chatbot-'.$chatbot->id;
+        $chatId = $contactChannel->channel_identifier;
+
+        $url = $this->wwebjs_url.'/client/sendMessage/'.$sessionId;
+
+        Log::info('Sending message via WhatsApp Web Service', [
+            'session_id' => $sessionId,
+            'message_id' => $message->id,
+            'chat_id' => $chatId,
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->wwebjs_key,
+            ])->post($url, [
+                'chatId' => $chatId,
+                'contentType' => 'string', // For now, only support simple text
+                'content' => $message->content,
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('Failed to send message via WhatsApp Web Service.', [
+                    'session_id' => $sessionId,
+                    'message_id' => $message->id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            } else {
+                Log::info('Message sent successfully via WhatsApp Web Service.', [
+                    'session_id' => $sessionId,
+                    'message_id' => $message->id,
+                ]);
+            }
+
+        } catch (Exception $e) {
+            Log::error('Error sending message via WhatsApp Web Service', [
+                'session_id' => $sessionId,
+                'message_id' => $message->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

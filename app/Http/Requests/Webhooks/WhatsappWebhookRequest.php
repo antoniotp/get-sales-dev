@@ -43,6 +43,7 @@ class WhatsappWebhookRequest extends FormRequest
                 'string',
             ],
             'sessionId' => ['required_with:dataType', 'string'],
+            'data' => ['nullable', 'array'],
         ];
     }
 }

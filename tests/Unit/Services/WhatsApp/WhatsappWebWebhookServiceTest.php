@@ -4,12 +4,16 @@ namespace Tests\Unit\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\Contact;
+use App\Models\ContactChannel;
+use App\Models\Conversation;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -143,5 +147,84 @@ class WhatsappWebWebhookServiceTest extends TestCase
         Event::assertDispatched(WhatsappConnectionStatusUpdated::class, function ($event) use ($sessionId) {
             return $event->sessionId === $sessionId && $event->status === ChatbotChannel::STATUS_CONNECTED;
         });
+    }
+
+    #[Test]
+    public function it_handles_message_data_type_and_processes_message(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $senderId = '5212221112233@c.us';
+        $messageBody = 'This is a test message';
+        $externalMessageId = 'some_external_message_id';
+        $timestamp = 1678886400;
+
+        // Create a chatbot channel for the service to find
+        ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId, 'phone_number_id' => '1234567890'],
+            'status' => ChatbotChannel::STATUS_CONNECTED,
+        ]);
+
+        $webhookPayload = [
+            'dataType' => 'message',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    'body' => $messageBody,
+                    'type' => 'chat',
+                    'timestamp' => $timestamp,
+                    'from' => $senderId,
+                    'to' => '5212213835257@c.us',
+                    'fromMe' => false,
+                    'notifyName' => 'Test User Name',
+                ],
+            ],
+        ];
+
+        // Create a Contact and ContactChannel for the mock conversation
+        $contact = Contact::factory()->create();
+        $contactChannel = ContactChannel::factory()->create([
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'channel_identifier' => $senderId,
+        ]);
+
+        $mockConversation = Conversation::factory()->create([
+            'contact_channel_id' => $contactChannel->id,
+        ]);
+
+        $this->conversationServiceMock->shouldReceive('findOrCreate')
+            ->once()
+            ->withArgs(function ($chatbotChannelArg, $channelIdentifier, $contactName, $channelId) use ($senderId) {
+                // Ensure the chatbotChannel passed to findOrCreate is the one identified by the service
+                return $chatbotChannelArg->chatbot_id === $this->chatbot->id &&
+                       $chatbotChannelArg->channel_id === $this->whatsappWebChannel->id &&
+                       $channelIdentifier === $senderId &&
+                       $contactName === 'Test User Name' &&
+                       $channelId === $this->whatsappWebChannel->id;
+            })
+            ->andReturn($mockConversation);
+
+        $this->messageServiceMock->shouldReceive('handleIncomingMessage')
+            ->once()
+            ->withArgs(function ($conversation, $extMsgId, $content, $metadata) use ($mockConversation, $externalMessageId, $messageBody, $timestamp, $senderId) {
+                $normalizedSenderId = $this->app->make(PhoneNumberNormalizerInterface::class)->normalize($senderId);
+
+                return $conversation->id === $mockConversation->id &&
+                       $extMsgId === $externalMessageId &&
+                       $content === $messageBody &&
+                       $metadata['timestamp'] === $timestamp &&
+                       $metadata['from'] === $normalizedSenderId;
+            });
+
+        // Act
+        $this->service->handle($webhookPayload);
+
+        // Assertions are handled by mock expectations
     }
 }

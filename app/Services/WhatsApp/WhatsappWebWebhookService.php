@@ -12,6 +12,7 @@ use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -153,6 +154,66 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
         // Reuse existing handleTextMessage
         $this->handleTextMessage($messageData);
+    }
+
+    private function handleMessageCreate(array $payload): void
+    {
+        $sessionId = $payload['sessionId'];
+        $messageData = $payload['data']['message'];
+
+        // Only process messages sent by the bot's own account (outgoing from the user's device)
+        if (($messageData['fromMe'] ?? false) !== true) {
+            Log::info('Skipping message_create event as it is not from the bot\'s own account.', [
+                'session_id' => $sessionId,
+                'message_id' => $messageData['id']['_serialized'] ?? 'N/A',
+            ]);
+
+            return;
+        }
+
+        Log::info('Handling message_create event (outgoing message from user device)', [
+            'session_id' => $sessionId,
+            'message_id' => $messageData['id']['_serialized'],
+        ]);
+
+        if (! $this->identifyChatbotChannel($sessionId)) {
+            Log::error('WhatsApp channel not found for session ID: '.$sessionId);
+
+            return;
+        }
+
+        // For outgoing messages, the 'to' field is the contact's identifier
+        if (! $this->getOrCreateContactAndConversation(
+            $messageData['to'], // Use 'to' as the contact identifier
+            $messageData['notifyName'] ?? 'You'
+        )) {
+            Log::error('Could not create or update conversation for message_create', ['data' => $payload]);
+
+            return;
+        }
+
+        $preparedMessageData = [
+            'external_id' => $messageData['id']['_serialized'],
+            'content' => $messageData['body'],
+            'content_type' => 'text',
+            'sender_type' => 'human',
+            'sender_user_id' => $this->conversation->assigned_user_id,
+            'metadata' => [
+                'fromMe' => true,
+                'timestamp' => $messageData['timestamp'],
+                'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
+            ],
+        ];
+
+        try {
+            $this->messageService->storeExternalOutgoingMessage($this->conversation, $preparedMessageData);
+        } catch (Exception $e) {
+            Log::error('Error storing outgoing message from message_create webhook', [
+                'session_id' => $sessionId,
+                'message_id' => $messageData['id']['_serialized'],
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function findChatbotBySessionId(string $sessionId): ?Chatbot

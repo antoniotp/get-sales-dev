@@ -227,4 +227,88 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         // Assertions are handled by mock expectations
     }
+
+    #[Test]
+    public function it_handles_message_create_data_type_and_stores_outgoing_message(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $botNumber = '5212213835257@c.us'; // The 'from' in message_create is the bot
+        $contactNumber = '5212221931663@c.us'; // The 'to' in message_create is the contact
+        $messageBody = 'This is an outgoing message';
+        $externalMessageId = 'some_external_message_id_outgoing';
+        $timestamp = 1761010425;
+        $notifyName = 'Test Contact Name';
+        $assignedUserId = 1;
+
+        // Create a chatbot channel for the service to find
+        $existingChatbotChannel = ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId, 'phone_number_id' => '1234567890'],
+            'status' => ChatbotChannel::STATUS_CONNECTED,
+        ]);
+
+        $webhookPayload = [
+            'dataType' => 'message_create',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    'body' => $messageBody,
+                    'type' => 'chat',
+                    'timestamp' => $timestamp,
+                    'from' => $botNumber,
+                    'to' => $contactNumber,
+                    'fromMe' => true,
+                    'notifyName' => $notifyName,
+                ],
+            ],
+        ];
+
+        // Create a Contact and ContactChannel for the mock conversation
+        $contact = Contact::factory()->create();
+        $contactChannel = ContactChannel::factory()->create([
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'channel_identifier' => $contactNumber,
+        ]);
+
+        $mockConversation = Conversation::factory()->create([
+            'contact_channel_id' => $contactChannel->id,
+            'assigned_user_id' => $assignedUserId,
+        ]);
+
+        $this->conversationServiceMock->shouldReceive('findOrCreate')
+            ->once()
+            ->withArgs(function ($chatbotChannelArg, $channelIdentifier, $contactName, $channelId) use ($contactNumber, $notifyName, $existingChatbotChannel) {
+                // For message_create, the contactIdentifier is the 'to' field
+                return $chatbotChannelArg->id === $existingChatbotChannel->id &&
+                       $channelIdentifier === $contactNumber &&
+                       $contactName === $notifyName &&
+                       $channelId === $this->whatsappWebChannel->id;
+            })
+            ->andReturn($mockConversation);
+
+        $this->messageServiceMock->shouldReceive('storeExternalOutgoingMessage')
+            ->once()
+            ->withArgs(function ($conversation, $messageData) use ($mockConversation, $externalMessageId, $messageBody, $timestamp, $botNumber, $assignedUserId) {
+                $normalizedBotNumber = $this->app->make(PhoneNumberNormalizerInterface::class)->normalize($botNumber);
+
+                return $conversation->id === $mockConversation->id &&
+                       $messageData['external_id'] === $externalMessageId &&
+                       $messageData['content'] === $messageBody &&
+                       $messageData['content_type'] === 'text' &&
+                       $messageData['sender_type'] === 'human' &&
+                       $messageData['sender_user_id'] === $assignedUserId &&
+                       $messageData['metadata']['fromMe'] === true &&
+                       $messageData['metadata']['timestamp'] === $timestamp &&
+                       $messageData['metadata']['from'] === $normalizedBotNumber;
+            });
+
+        // Act
+        $this->service->handle($webhookPayload);
+    }
 }

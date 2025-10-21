@@ -58,7 +58,7 @@ class MessageService implements MessageServiceInterface
     private function createMessage(Conversation $conversation, array $messageData): Message
     {
         $message = $conversation->messages()->create([
-            'external_message_id' => $messageData['external_id'] ?? '',
+            'external_message_id' => $messageData['external_id'] ?? null,
             'type' => $messageData['type'] ?? 'outgoing',
             'content' => $messageData['content'],
             'content_type' => $messageData['content_type'] ?? 'text',

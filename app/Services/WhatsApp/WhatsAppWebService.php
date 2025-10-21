@@ -151,6 +151,9 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
 
         $sessionId = 'chatbot-'.$chatbot->id;
         $chatId = $contactChannel->channel_identifier;
+        if (! str_ends_with($chatId, '@c.us')) {
+            $chatId .= '@c.us';
+        }
 
         $url = $this->wwebjs_url.'/client/sendMessage/'.$sessionId;
 
@@ -181,6 +184,34 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
                     'session_id' => $sessionId,
                     'message_id' => $message->id,
                 ]);
+
+                $responseBody = $response->json();
+                $externalId = $responseBody['message']['_data']['id']['_serialized'] ?? null;
+                $timestamp = $responseBody['message']['_data']['t'] ?? time();
+
+                if ($externalId) {
+                    // Update the message with the external ID from the API response.
+                    // Use updateQuietly to avoid firing model events unnecessarily.
+                    try {
+                        $message->updateQuietly(['external_message_id' => $externalId, 'delivered_at' => $timestamp]);
+                        Log::info('Updated message with external ID from API response.', [
+                            'message_id' => $message->id,
+                            'external_id' => $externalId,
+                        ]);
+                    } catch (Exception $e) {
+                        Log::error('Failed to update message with external ID from API response.', [
+                            'session_id' => $sessionId,
+                            'message_id' => $message->id,
+                            'external_id' => $externalId,
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                } else {
+                    Log::warning('No external message ID found in API response.', [
+                        'message_id' => $message->id,
+                        'response_body' => $responseBody,
+                    ]);
+                }
             }
 
         } catch (Exception $e) {

@@ -58,6 +58,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
         Log::shouldReceive('info');
         Log::shouldReceive('error');
         Log::shouldReceive('warning');
+        Log::shouldReceive('debug');
         Event::fake();
     }
 
@@ -119,7 +120,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
             'success' => true,
             'sessionInfo' => [
                 'pushname' => $pushName,
-                'wid' => ['_serialized' => $phoneNumber],
+                'wid' => ['_serialized' => $phoneNumber, 'user' => $phoneNumber],
             ],
         ];
 

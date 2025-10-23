@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers\Chatbot;
 
+use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\Organization;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use Inertia\Response;
 
 class WhatsAppIntegrationController extends Controller
 {
-    public function __construct(private Organization $organization)
-    {
-    }
+    public function __construct(private Organization $organization) {}
 
     public function index(Chatbot $chatbot, Request $request): Response
     {
@@ -47,13 +45,13 @@ class WhatsAppIntegrationController extends Controller
                     'phone_number_id' => $whatsAppWebChatbotChannel->credentials['phone_number_id'] ?? '',
                 ],
                 'status' => $whatsAppWebChatbotChannel->status,
-            ]:null,
+            ] : null,
         ]);
     }
 
     public function startWhatsappWebServer(Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService)
     {
-        $sessionId = 'chatbot-' . $chatbot->id;
+        $sessionId = 'chatbot-'.$chatbot->id;
 
         $success = $whatsAppWebService->startSession($sessionId);
 
@@ -64,17 +62,18 @@ class WhatsAppIntegrationController extends Controller
         return response()->json(['error' => 'Failed to start WhatsApp Web session.'], 500);
     }
 
-    public function getWhatsAppWebStatus( Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService )
+    public function getWhatsAppWebStatus(Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService)
     {
-        $status = $whatsAppWebService->getSessionStatus( $chatbot );
+        $status = $whatsAppWebService->getSessionStatus($chatbot);
+
         return response()->json($status);
     }
 
-    public function reconnectWhatsappWebSession( Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService )
+    public function reconnectWhatsappWebSession(Chatbot $chatbot, WhatsAppWebServiceInterface $whatsAppWebService)
     {
         $response = $whatsAppWebService->reconnectSession($chatbot);
 
-        if ($response['success']) {
+        if ($response['success'] !== 'error') {
             return response()->json($response);
         }
 

@@ -44,14 +44,14 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
 
     // Initial status check or set up for a new connection
     useEffect(() => {
-        if (chatbotChannel) {
+        if (chatbotChannel && chatbotChannel?.data?.phone_number) {
             // Existing channel, fetch its status
             setStatus('VERIFYING');
             axios
                 .get(route('chatbots.integrations.whatsapp-web.status', { chatbot: chatbot.id }))
                 .then((response) => {
                     setStatus(response.data.status as ConnectionStatus);
-                    if (chatbotChannel.data?.session_id) {
+                    if (chatbotChannel.data?.phone_number) {
                         setSessionId(chatbotChannel.data.session_id);
                     }
                 })
@@ -84,8 +84,13 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
         try {
             const response = await axios.post(route('chatbots.integrations.whatsapp-web.reconnect', { chatbot: chatbot.id }));
             if (response.status === 200) {
-                // If the reconnect command was successfully sent, wait for events
-                setStatus('RECONNECTING_WAITING_FOR_EVENTS');
+                if (! response.data.success) {
+                    if (response.data.message === 'session_not_found') {
+                        handleStartNewSession();
+                    }
+                } else {
+                    setStatus('RECONNECTING_WAITING_FOR_EVENTS');
+                }
             }
         } catch (error) {
             console.error('Failed to send reconnect command', error);
@@ -178,7 +183,7 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {chatbotChannel ? (
+                                        {(chatbotChannel && chatbotChannel.data?.phone_number) ? (
                                             <TableRow>
                                                 <TableCell>{chatbotChannel.data?.display_phone_number || 'N/A'}</TableCell>
                                                 <TableCell>{chatbotChannel.data?.phone_number_verified_name || 'N/A'}</TableCell>
@@ -241,12 +246,12 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                                 <QRCodeSVG value={qrCode} size={256} />
                             </div>
                         )}
-                        {!qrCode && !chatbotChannel && ( // Show "Generate QR Code" only if no chatbotChannel exists
+                        {!qrCode && !chatbotChannel?.data?.phone_number && ( // Show "Generate QR Code" only if no chatbotChannel exists
                             <Button className="mt-4" onClick={handleStartNewSession} disabled={reconnecting}>
                                 Generate QR Code
                             </Button>
                         )}
-                        {!qrCode && chatbotChannel && ( // Show "Reconnect" only if chatbotChannel exists and no QR
+                        {!qrCode && chatbotChannel?.data?.phone_number && ( // Show "Reconnect" only if chatbotChannel exists and no QR
                             <Button className="mt-4" onClick={handleReconnect} disabled={reconnecting}>
                                 {reconnecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Reconnect

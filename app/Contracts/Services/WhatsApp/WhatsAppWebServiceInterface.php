@@ -17,6 +17,6 @@ interface WhatsAppWebServiceInterface extends ChannelMessageSenderInterface
      * @return bool True on success, false on failure.
      */
     public function startSession(string $sessionId): bool;
-    public function getSessionStatus( Chatbot $chatbot );
-    public function reconnectSession( Chatbot $chatbot );
+    public function getSessionStatus( Chatbot $chatbot ): array;
+    public function reconnectSession( Chatbot $chatbot ): array;
 }

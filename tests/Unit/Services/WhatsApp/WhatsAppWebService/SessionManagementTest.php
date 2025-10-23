@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Services\WhatsApp\WhatsAppWebService;
 
+use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Services\WhatsApp\WhatsAppWebService;
 use Database\Seeders\DatabaseSeeder;
@@ -20,6 +21,14 @@ class SessionManagementTest extends TestCase
     {
         parent::setUp();
         $this->seed(DatabaseSeeder::class);
+        $chatbot = Chatbot::find(1);
+        $channel = Channel::where('slug', 'whatsapp-web')->first();
+        $chatbot->chatbotChannels()->create([
+            'channel_id' => $channel->id,
+            'name' => 'WhatsApp Web Channel 1',
+            'credentials' => ['phone_number' => '+3333333333'],
+            'status' => 1,
+        ]);
         config()->set('services.wwebjs_service.url', 'http://test.wwebjs.service');
         config()->set('services.wwebjs_service.key', 'test-api-key');
     }
@@ -224,10 +233,11 @@ class SessionManagementTest extends TestCase
     }
 
     #[Test]
-    public function reconnect_session_returns_true_on_successful_restart()
+    public function reconnect_session_not_returns_error_on_successful_restart()
     {
         // Arrange
         $chatbot = Chatbot::find(1);
+
         $sessionId = 'chatbot-'.$chatbot->id;
         $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
 
@@ -241,11 +251,11 @@ class SessionManagementTest extends TestCase
         $result = $service->reconnectSession($chatbot);
 
         // Assert
-        $this->assertTrue($result);
+        $this->assertNotSame('error', $result['success']);
     }
 
     #[Test]
-    public function reconnect_session_returns_false_on_server_error()
+    public function reconnect_session_returns_error_on_server_error()
     {
         // Arrange
         $chatbot = Chatbot::find(1);
@@ -253,7 +263,7 @@ class SessionManagementTest extends TestCase
         $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
 
         Http::fake([
-            $url => Http::response(null, 500),
+            $url => Http::response([], 500),
         ]);
 
         $service = new WhatsAppWebService;
@@ -262,11 +272,11 @@ class SessionManagementTest extends TestCase
         $result = $service->reconnectSession($chatbot);
 
         // Assert
-        $this->assertFalse($result);
+        $this->assertSame('error', $result['success']);
     }
 
     #[Test]
-    public function reconnect_session_returns_false_on_client_error()
+    public function reconnect_session_returns_error_on_client_error()
     {
         // Arrange
         $chatbot = Chatbot::find(1);
@@ -274,7 +284,7 @@ class SessionManagementTest extends TestCase
         $url = config('services.wwebjs_service.url').'/session/restart/'.$sessionId;
 
         Http::fake([
-            $url => Http::response(null, 422),
+            $url => Http::response([], 422),
         ]);
 
         $service = new WhatsAppWebService;
@@ -283,11 +293,11 @@ class SessionManagementTest extends TestCase
         $result = $service->reconnectSession($chatbot);
 
         // Assert
-        $this->assertFalse($result);
+        $this->assertSame('error', $result['success']);
     }
 
     #[Test]
-    public function reconnect_session_returns_false_on_http_exception()
+    public function reconnect_session_returns_error_on_http_exception()
     {
         // Arrange
         $chatbot = Chatbot::find(1);
@@ -306,6 +316,6 @@ class SessionManagementTest extends TestCase
         $result = $service->reconnectSession($chatbot);
 
         // Assert
-        $this->assertFalse($result);
+        $this->assertSame('error', $result['success']);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
+use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\Message;
 use Exception;
@@ -109,8 +110,28 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
 
     }
 
-    public function reconnectSession(Chatbot $chatbot): bool
+    public function reconnectSession(Chatbot $chatbot): array
     {
+        $whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
+        if (! $whatsAppWebChannel) {
+            Log::error('WhatsApp Web channel not found in database for reconnection.');
+
+            return ['success' => 'error', 'message' => 'WhatsApp Web channel not configured.'];
+        }
+
+        $chatbotChannel = $chatbot->chatbotChannels()
+            ->where('channel_id', $whatsAppWebChannel->id)
+            ->first();
+
+        if (! $chatbotChannel || ! isset($chatbotChannel->credentials['phone_number'])) {
+            Log::warning(
+                'No active WhatsApp Web session found for chatbot to reconnect.',
+                ['chatbot_id' => $chatbot->id]
+            );
+
+            return ['success' => 'error', 'message' => 'No active session found.'];
+        }
+
         $sessionId = 'chatbot-'.$chatbot->id;
         $url = $this->wwebjs_url.'/session/restart/'.$sessionId;
         Log::info('Reconnecting session via WhatsApp Web Service', ['session_id' => $sessionId, 'url' => $url]);
@@ -120,27 +141,24 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
                 'x-api-key' => $this->wwebjs_key,
             ])->get($url);
 
+            Log::info('reconnect session response', $response->json());
             if ($response->successful()) {
-                Log::info('Session reconnect request was successful.', ['session_id' => $sessionId, 'response' => $response->json()]);
-
-                return true;
+                return $response->json();
             }
-
-            Log::error('Failed to reconnect session.', [
+            Log::error('Node.js service failed to reconnect session.', [
                 'session_id' => $sessionId,
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'response' => $response->body(),
             ]);
 
-            return false;
-
+            return ['success' => 'error', 'message' => 'Failed to reconnect session.'];
         } catch (Exception $e) {
-            Log::error('Error reconnecting session', [
+            Log::error('Error communicating with Node.js service for reconnection.', [
                 'session_id' => $sessionId,
                 'error' => $e->getMessage(),
             ]);
 
-            return false;
+            return ['success' => 'error', 'message' => 'Error communicating with service.'];
         }
     }
 

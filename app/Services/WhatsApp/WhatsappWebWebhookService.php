@@ -41,15 +41,25 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
     public function handle(array $data): void
     {
-        Log::debug('Handling WhatsApp Web webhook event', $data);
         $dataType = $data['dataType'];
-
-        $methodName = 'handle'.Str::studly($dataType);
-
-        if (method_exists($this, $methodName)) {
-            $this->$methodName($data);
-        } else {
-            Log::warning("No handler for WhatsApp Web webhook event: {$dataType}", $data);
+        switch ($dataType) {
+            case 'qr':
+                $this->handleQr($data);
+                break;
+            case 'ready':
+                $this->handleReady($data);
+                break;
+            case 'message':
+                $this->handleMessage($data);
+                break;
+            case 'media':
+                $this->handleMedia($data);
+                break;
+            case 'message_create':
+                $this->handleMessageCreate($data);
+                break;
+            default:
+                Log::warning("No handler for WhatsApp Web webhook event: {$dataType}", $data);
         }
     }
 

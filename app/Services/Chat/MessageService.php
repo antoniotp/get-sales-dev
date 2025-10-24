@@ -9,6 +9,9 @@ use App\Jobs\ProcessAIResponse;
 use App\Models\Conversation;
 use App\Models\Message;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
 
 class MessageService implements MessageServiceInterface
 {
@@ -91,5 +94,33 @@ class MessageService implements MessageServiceInterface
             'sender_type' => $senderType,
             'metadata' => $metadata,
         ]);
+    }
+
+    public function attachMediaToPendingMessage(
+        string $externalMessageId,
+        string $fileData,
+        string $mimeType,
+        string $contentType,
+        int $chatbotId
+    ): Message {
+        $message = Message::where('external_message_id', $externalMessageId)->firstOrFail();
+
+        $extension = MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? 'bin';
+
+        $fileName = $message->id.'-'.Str::random(8).'.'.$extension;
+        $filePath = 'media/'.$chatbotId.'/'.$fileName;
+
+        Storage::disk('public')->put($filePath, $fileData);
+
+        $message->updateQuietly([
+            'media_url' => $filePath,
+            'content_type' => $contentType,
+        ]);
+
+        event(new NewWhatsAppMessage($message));
+
+        Log::info('Successfully processed and stored media for message.', ['message_id' => $message->id, 'path' => $filePath]);
+
+        return $message;
     }
 }

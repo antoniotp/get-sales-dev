@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
@@ -175,5 +176,54 @@ class IncomingTest extends TestCase
 
         Event::assertNotDispatched(NewWhatsAppMessage::class);
         Queue::assertNothingPushed();
+    }
+
+    #[Test]
+    public function it_attaches_media_to_a_pending_message(): void
+    {
+        Event::fake();
+        Storage::fake('public');
+
+        $conversation = Conversation::factory()->create([
+            'contact_channel_id' => $this->contactChannel->id,
+        ]);
+        $externalMessageId = 'incomplete-message-789';
+        $content = 'This is a caption for a media message.';
+        $metadata = ['hasMedia' => true];
+
+        // 1. Create the pending message first
+        $pendingMessage = $this->messageService->createPendingMediaMessage(
+            $conversation,
+            $externalMessageId,
+            $content,
+            'incoming',
+            'contact',
+            $metadata
+        );
+
+        $fileData = 'fake-base64-decoded-image-data';
+        $mimeType = 'image/jpeg';
+        $contentType = 'image';
+        $chatbotId = $conversation->chatbotChannel->chatbot_id;
+
+        // 2. Call the new method to attach the media
+        $updatedMessage = $this->messageService->attachMediaToPendingMessage(
+            $pendingMessage->external_message_id,
+            $fileData,
+            $mimeType,
+            $contentType,
+            $chatbotId
+        );
+
+        // 3. Assertions
+        $this->assertNotNull($updatedMessage);
+        $this->assertEquals($pendingMessage->id, $updatedMessage->id);
+        $this->assertEquals('image', $updatedMessage->content_type);
+        $this->assertNotNull($updatedMessage->media_url);
+
+        Storage::disk('public')->assertExists($updatedMessage->media_url);
+        Event::assertDispatched(NewWhatsAppMessage::class, function ($event) use ($updatedMessage) {
+            return $event->message['id'] === $updatedMessage->id;
+        });
     }
 }

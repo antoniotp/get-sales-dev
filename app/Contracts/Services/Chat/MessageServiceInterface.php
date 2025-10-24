@@ -41,4 +41,12 @@ interface MessageServiceInterface
         string $senderType,
         array $metadata
     ): Message;
+
+    public function attachMediaToPendingMessage(
+        string $externalMessageId,
+        string $fileData,
+        string $mimeType,
+        string $contentType,
+        int $chatbotId,
+    ): Message;
 }

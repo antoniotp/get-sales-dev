@@ -73,4 +73,23 @@ class MessageService implements MessageServiceInterface
 
         return $message;
     }
+
+    public function createPendingMediaMessage(
+        Conversation $conversation,
+        string $externalMessageId,
+        string $content,
+        string $type,
+        string $senderType,
+        array $metadata
+    ): Message {
+        return Message::create([
+            'conversation_id' => $conversation->id,
+            'external_message_id' => $externalMessageId,
+            'type' => $type,
+            'content' => $content,
+            'content_type' => 'pending',
+            'sender_type' => $senderType,
+            'metadata' => $metadata,
+        ]);
+    }
 }

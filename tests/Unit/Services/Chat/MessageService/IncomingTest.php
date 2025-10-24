@@ -18,7 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 use ReflectionClass;
 use Tests\TestCase;
 
-#[CoversClass( MessageService::class )]
+#[CoversClass(MessageService::class)]
 class IncomingTest extends TestCase
 {
     use RefreshDatabase;
@@ -139,5 +139,41 @@ class IncomingTest extends TestCase
         Event::assertDispatched(NewWhatsAppMessage::class, function ($event) use ($message) {
             return $event->message['id'] === $message->id;
         });
+    }
+
+    #[Test]
+    public function it_creates_an_pending_message_without_side_effects(): void
+    {
+        Event::fake();
+        Queue::fake();
+
+        $conversation = Conversation::factory()->create([
+            'contact_channel_id' => $this->contactChannel->id,
+        ]);
+        $externalMessageId = 'incomplete-message-789';
+        $content = 'This is a caption for a media message.';
+        $metadata = ['hasMedia' => true];
+
+        $message = $this->messageService->createPendingMediaMessage(
+            $conversation,
+            $externalMessageId,
+            $content,
+            'incoming',
+            'contact',
+            $metadata
+        );
+
+        $this->assertDatabaseHas('messages', [
+            'id' => $message->id,
+            'conversation_id' => $conversation->id,
+            'external_message_id' => $externalMessageId,
+            'content' => $content,
+            'content_type' => 'pending',
+            'metadata' => json_encode($metadata),
+            'sender_type' => 'contact',
+        ]);
+
+        Event::assertNotDispatched(NewWhatsAppMessage::class);
+        Queue::assertNothingPushed();
     }
 }

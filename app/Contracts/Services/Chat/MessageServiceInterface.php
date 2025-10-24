@@ -32,4 +32,13 @@ interface MessageServiceInterface
         Conversation $conversation,
         array $messageData,
     ): Message;
+
+    public function createPendingMediaMessage(
+        Conversation $conversation,
+        string $externalMessageId,
+        string $content,
+        string $type,
+        string $senderType,
+        array $metadata
+    ): Message;
 }

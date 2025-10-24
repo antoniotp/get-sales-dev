@@ -24,9 +24,9 @@ Route::get('/', function () {
 Route::get('/policies', function () {
     return Inertia::render('policies');
 })->name('policies');
-Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify']);
-Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle']);
-Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle']);
+Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify'])->name('webhook.whatsapp_business.verify');
+Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle'])->name('webhook.whatsapp_business');
+Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle'])->name('webhook.whatsapp_web');
 
 // Public invitation acceptance page
 Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');

@@ -145,15 +145,96 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
         if (! $this->getOrCreateContactAndConversation(
             $messageData['from'],
-            $messageData['notifyName'] ?? 'WhatsApp User' // Use notifyName if available
+            $messageData['notifyName'] ?? 'WhatsApp User'
         )) {
             Log::error('Could not create or update conversation for message', ['data' => $payload]);
 
             return;
         }
 
-        // Reuse existing handleTextMessage
-        $this->handleTextMessage($messageData);
+        // Determine the message type for routing
+        $messageType = ($messageData['hasMedia'] ?? false) ? 'pending_media' : ($messageData['type'] ?? 'unsupported');
+
+        // Route to the appropriate handler based on the determined type
+        match ($messageType) {
+            'chat' => $this->handleTextMessage($messageData),
+            'pending_media' => $this->handlePendingMediaMessage($messageData),
+            default => Log::warning('Unsupported message type in handleMessage', ['type' => $messageType]),
+        };
+    }
+
+    private function handleTextMessage(array $messageData): void
+    {
+        try {
+            $this->messageService->handleIncomingMessage(
+                conversation: $this->conversation,
+                externalMessageId: $messageData['id']['_serialized'],
+                content: $messageData['body'],
+                metadata: [
+                    'timestamp' => $messageData['timestamp'],
+                    'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::error('Error in MessageService from WhatsappWebWebhookService', [
+                'error' => $e->getMessage(),
+                'message' => $messageData,
+            ]);
+        }
+    }
+
+    private function handlePendingMediaMessage(array $messageData): void
+    {
+        try {
+            $this->messageService->createPendingMediaMessage(
+                conversation: $this->conversation,
+                externalMessageId: $messageData['id']['_serialized'],
+                content: $messageData['body'] ?? '',
+                type: 'incoming',
+                senderType: 'contact',
+                metadata: [
+                    'timestamp' => $messageData['timestamp'],
+                    'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
+                ]
+            );
+        } catch (\Exception $e) {
+            Log::error('Error in MessageService from handlePendingMediaMessage', [
+                'error' => $e->getMessage(),
+                'message' => $messageData,
+            ]);
+        }
+    }
+
+    private function handleMedia(array $payload): void
+    {
+        $mediaData = $payload['data']['messageMedia'];
+        $messageData = $payload['data']['message'];
+        $externalId = $messageData['id']['_serialized'];
+
+        Log::info('Handling media received event', ['session_id' => $payload['sessionId'], 'message_id' => $externalId]);
+
+        try {
+            // The webhook service must identify the chatbot to pass its ID to the service layer.
+            if (! $this->identifyChatbotChannel($payload['sessionId'])) {
+                Log::error('WhatsApp channel not found for session ID: '.$payload['sessionId']);
+
+                return;
+            }
+
+            $this->messageService->attachMediaToPendingMessage(
+                externalMessageId: $externalId,
+                fileData: base64_decode($mediaData['data']),
+                mimeType: $mediaData['mimetype'],
+                contentType: $messageData['type'],
+                chatbotId: $this->chatbotChannel->chatbot_id
+            );
+        } catch (\Exception $e) {
+            Log::error('Error processing media webhook', [
+                'session_id' => $payload['sessionId'],
+                'message_id' => $externalId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function handleMessageCreate(array $payload): void
@@ -320,26 +401,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             ]);
 
             return false;
-        }
-    }
-
-    private function handleTextMessage(array $message): void
-    {
-        try {
-            $this->messageService->handleIncomingMessage(
-                conversation: $this->conversation,
-                externalMessageId: $message['id']['_serialized'],
-                content: $message['body'],
-                metadata: [
-                    'timestamp' => $message['timestamp'],
-                    'from' => $this->phoneNumberNormalizer->normalize($message['from']),
-                ]
-            );
-        } catch (\Exception $e) {
-            Log::error('Error in MessageService from WhatsappWebWebhookService', [
-                'error' => $e->getMessage(),
-                'message' => $message,
-            ]);
         }
     }
 }

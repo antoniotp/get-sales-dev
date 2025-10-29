@@ -470,7 +470,7 @@ export default function Chat(
                 className={`mb-4 flex ${message.type === 'outgoing' ? 'justify-end' : 'justify-start'}`}
             >
                 <div
-                    className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                    className={`${message.contentType === 'ptt' ? 'w-[70%]' : 'max-w-[70%]'} rounded-lg px-4 py-2 ${
                         message.type === 'outgoing'
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -483,7 +483,7 @@ export default function Chat(
                             <img
                                 src={message.mediaUrl}
                                 alt="Message media"
-                                className="max-w-full rounded"
+                                className="max-w-sm max-h-96 rounded"
                                 loading="lazy"
                             />
                             {message.content &&

@@ -105,6 +105,7 @@ class MessageService implements MessageServiceInterface
     ): Message {
         $message = Message::where('external_message_id', $externalMessageId)->firstOrFail();
 
+        $mimeType = $this->normalizeMimeType($mimeType);
         $extension = MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? 'bin';
 
         $fileName = $message->id.'-'.Str::random(8).'.'.$extension;
@@ -122,5 +123,17 @@ class MessageService implements MessageServiceInterface
         Log::info('Successfully processed and stored media for message.', ['message_id' => $message->id, 'path' => $filePath]);
 
         return $message;
+    }
+
+    private function normalizeMimeType(?string $mimeType): ?string
+    {
+        if (!$mimeType) {
+            return null;
+        }
+
+        // Split by ";" to delete params (codecs, bitrate, charset, etc.)
+        $base = explode(';', $mimeType)[0];
+
+        return strtolower(trim($base));
     }
 }

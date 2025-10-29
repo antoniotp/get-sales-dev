@@ -490,6 +490,10 @@ export default function Chat(
                             (<LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />)
                             }
                         </>
+                    ) : message.contentType === 'ptt' && message.mediaUrl ? (
+                        <audio controls src={message.mediaUrl} className="w-full">
+                            Tu navegador no soporta el elemento de audio.
+                        </audio>
                     ) : (
                         <LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />
                     )}

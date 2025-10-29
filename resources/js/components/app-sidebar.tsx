@@ -32,7 +32,7 @@ export function AppSidebar() {
             href: route('contacts.index'),
             icon: Users,
         },{
-            title: 'Settings',
+            title: 'Organization Settings',
             icon: Settings,
             href: '#',
             items: [
@@ -74,7 +74,7 @@ export function AppSidebar() {
             icon: Unplug,
         },
         {
-            title: 'Settings',
+            title: 'Agent Configuration',
             href: isChatbotContext && userLevel > 40 ? route('chatbots.edit', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Settings,
         },

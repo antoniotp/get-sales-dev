@@ -113,7 +113,7 @@ class MessageService implements MessageServiceInterface
         Storage::disk('public')->put($filePath, $fileData);
 
         $message->updateQuietly([
-            'media_url' => $filePath,
+            'media_url' => Storage::url($filePath),
             'content_type' => $contentType,
         ]);
 

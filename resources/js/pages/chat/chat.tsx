@@ -478,12 +478,17 @@ export default function Chat(
                     {message.contentType === 'text' ? (
                         <p className="break-words whitespace-pre-wrap">{message.content}</p>
                     ) : message.contentType === 'image' && message.mediaUrl ? (
-                        <img
-                            src={message.mediaUrl}
-                            alt="Message media"
-                            className="max-w-full rounded"
-                            loading="lazy"
-                        />
+                        <>
+                            <img
+                                src={message.mediaUrl}
+                                alt="Message media"
+                                className="max-w-full rounded"
+                                loading="lazy"
+                            />
+                            {message.content &&
+                            (<p className="break-words whitespace-pre-wrap">{message.content}</p>)
+                            }
+                        </>
                     ) : (
                         <p className="break-words whitespace-pre-wrap">{message.content}</p>
                     )}

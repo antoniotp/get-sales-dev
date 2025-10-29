@@ -110,6 +110,7 @@ class ChatController extends Controller
 
         $messages = $conversation->messages()
             ->with(['senderUser'])
+            ->whereNotLike('content_type', 'pending')
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn (Message $message) => MessageData::fromMessage($message)->toArray());

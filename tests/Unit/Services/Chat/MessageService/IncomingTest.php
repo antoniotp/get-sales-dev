@@ -221,7 +221,12 @@ class IncomingTest extends TestCase
         $this->assertEquals('image', $updatedMessage->content_type);
         $this->assertNotNull($updatedMessage->media_url);
 
-        Storage::disk('public')->assertExists($updatedMessage->media_url);
+        $files = Storage::disk('public')->files('media/'.$chatbotId);
+        $this->assertCount(1, $files);
+        $filePath = $files[0];
+
+        Storage::disk('public')->assertExists($filePath);
+        $this->assertEquals(Storage::disk('public')->url($filePath), $updatedMessage->media_url);
         Event::assertDispatched(NewWhatsAppMessage::class, function ($event) use ($updatedMessage) {
             return $event->message['id'] === $updatedMessage->id;
         });

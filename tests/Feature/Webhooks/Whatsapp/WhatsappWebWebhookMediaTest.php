@@ -95,7 +95,14 @@ class WhatsappWebWebhookMediaTest extends TestCase
 
         $this->assertNotNull($message->media_url, 'media_url should now be populated');
         $this->assertEquals('image', $message->content_type);
-        Storage::disk('public')->assertExists($message->media_url);
+
+        $files = Storage::disk('public')->files('media/'.$this->chatbot->id);
+        $this->assertCount(1, $files, 'Expected exactly one file to be created in the media directory.');
+        $filePath = $files[0];
+
+        Storage::disk('public')->assertExists($filePath);
+
+        $this->assertEquals(Storage::disk('public')->url($filePath), $message->media_url);
     }
 
     private function getMinimalMessagePayload(): array

@@ -433,7 +433,7 @@ export default function Chat(
                         <div className="flex justify-between items-center mt-1 italic">
                             <Badge
                                 variant="secondary"
-                                className="bg-blue-500 text-white dark:bg-blue-600 px-1 py-0 max-w-1/2 overflow-hidden whitespace-nowrap justify-start"
+                                className={`px-1 py-0 max-w-1/2 overflow-hidden whitespace-nowrap justify-start ${chat.assigned_user_name ? 'bg-blue-500 text-white dark:bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}
                             >
                                 @{chat.assigned_user_name?? "Unassigned"}
                             </Badge>

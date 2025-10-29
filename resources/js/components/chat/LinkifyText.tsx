@@ -7,7 +7,7 @@ interface LinkifyTextProps {
 
 const LinkifyText: React.FC<LinkifyTextProps> = ({ text, className }) => {
     // Regex to find URLs. It looks for http/https starting sequences.
-    const urlRegex = /(\b(?:https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+    const urlRegex = /(\b(?:https?):\/\/[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|])/ig;
 
     // Split the text by the URL regex to get an array of text and URLs
     const parts = text.split(urlRegex);

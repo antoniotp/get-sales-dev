@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { NewConversationView } from '@/pages/chat/partials/NewConversationView';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import LinkifyText from '@/components/chat/LinkifyText';
 
 interface Message {
     id: number;
@@ -476,7 +477,7 @@ export default function Chat(
                     }`}
                 >
                     {message.contentType === 'text' ? (
-                        <p className="break-words whitespace-pre-wrap">{message.content}</p>
+                        <LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />
                     ) : message.contentType === 'image' && message.mediaUrl ? (
                         <>
                             <img
@@ -486,11 +487,11 @@ export default function Chat(
                                 loading="lazy"
                             />
                             {message.content &&
-                            (<p className="break-words whitespace-pre-wrap">{message.content}</p>)
+                            (<LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />)
                             }
                         </>
                     ) : (
-                        <p className="break-words whitespace-pre-wrap">{message.content}</p>
+                        <LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />
                     )}
                     <span className="mt-1 text-xs opacity-70 block text-right">
                         {format(new Date(message.timestamp), 'dd/MM/yyyy HH:mm')}

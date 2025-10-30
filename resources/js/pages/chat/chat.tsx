@@ -470,7 +470,7 @@ export default function Chat(
                 className={`mb-4 flex ${message.type === 'outgoing' ? 'justify-end' : 'justify-start'}`}
             >
                 <div
-                    className={`${message.contentType === 'ptt' ? 'w-[70%]' : 'max-w-[70%]'} rounded-lg px-4 py-2 ${
+                    className={`${(message.contentType === 'ptt' || message.contentType === 'audio') ? 'w-[70%]' : 'max-w-[70%]'} rounded-lg px-4 py-2 ${
                         message.type === 'outgoing'
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
@@ -490,7 +490,7 @@ export default function Chat(
                             (<LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />)
                             }
                         </>
-                    ) : message.contentType === 'ptt' && message.mediaUrl ? (
+                    ) : (message.contentType === 'ptt' || message.contentType === 'audio') && message.mediaUrl ? (
                         <audio controls src={message.mediaUrl} className="w-full">
                             Tu navegador no soporta el elemento de audio.
                         </audio>

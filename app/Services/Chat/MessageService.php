@@ -105,29 +105,39 @@ class MessageService implements MessageServiceInterface
     ): Message {
         $message = Message::where('external_message_id', $externalMessageId)->firstOrFail();
 
-        $mimeType = $this->normalizeMimeType($mimeType);
-        $extension = MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? 'bin';
-
-        $fileName = $message->id.'-'.Str::random(8).'.'.$extension;
-        $filePath = 'media/'.$chatbotId.'/'.$fileName;
-
-        Storage::disk('public')->put($filePath, $fileData);
+        $media = $this->storeMediaFile($fileData, $mimeType, $chatbotId);
 
         $message->updateQuietly([
-            'media_url' => Storage::url($filePath),
+            'media_url' => $media['fileUrl'],
             'content_type' => $contentType,
         ]);
 
         event(new NewWhatsAppMessage($message));
 
-        Log::info('Successfully processed and stored media for message.', ['message_id' => $message->id, 'path' => $filePath]);
+        Log::info('Successfully processed and stored media for message.', ['message_id' => $message->id, 'path' => $media['filePath']]);
 
         return $message;
     }
 
+    private function storeMediaFile(string $fileData, string $mimeType, int $chatbotId): array
+    {
+        $mimeType = $this->normalizeMimeType($mimeType);
+        $extension = MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? 'bin';
+
+        $fileName = Str::uuid().'.'.$extension;
+        $filePath = 'media/'.$chatbotId.'/'.$fileName;
+
+        Storage::disk('public')->put($filePath, $fileData);
+
+        return [
+            'filePath' => $filePath,
+            'fileUrl' => Storage::url($filePath),
+        ];
+    }
+
     private function normalizeMimeType(?string $mimeType): ?string
     {
-        if (!$mimeType) {
+        if (! $mimeType) {
             return null;
         }
 

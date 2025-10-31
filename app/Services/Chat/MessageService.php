@@ -65,6 +65,7 @@ class MessageService implements MessageServiceInterface
             'type' => $messageData['type'] ?? 'outgoing',
             'content' => $messageData['content'],
             'content_type' => $messageData['content_type'] ?? 'text',
+            'media_url' => $messageData['media_url'] ?? null,
             'sender_type' => $messageData['sender_type'] ?? 'human',
             'sender_user_id' => $messageData['sender_user_id'] ?? null,
             'metadata' => $messageData['metadata'] ?? [],

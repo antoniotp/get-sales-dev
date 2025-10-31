@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class WhatsappWebWebhookMediaTest extends TestCase
@@ -42,8 +43,8 @@ class WhatsappWebWebhookMediaTest extends TestCase
         Event::fake();
 
         // Initialize payloads from internal helper methods
-        $this->messagePayload = $this->getMinimalMessagePayload();
-        $this->mediaPayload = $this->getMinimalMediaPayload();
+        $this->messagePayload = $this->getMinimalIncomingMessagePayload();
+        $this->mediaPayload = $this->getMinimalIncomingMediaPayload();
 
         // Set the session ID in the payloads to match our test chatbot
         $sessionId = 'chatbot-'.$this->chatbot->id;
@@ -64,7 +65,8 @@ class WhatsappWebWebhookMediaTest extends TestCase
         return $this->postJson(route('webhook.whatsapp_web'), $payload);
     }
 
-    public function test_it_creates_message_on_first_payload_and_updates_with_media_on_second(): void
+    #[Test]
+    public function it_creates_incoming_message_on_first_payload_and_updates_with_media_on_second(): void
     {
         // Arrange: Prepare fakes
         Storage::fake('public');
@@ -105,7 +107,7 @@ class WhatsappWebWebhookMediaTest extends TestCase
         $this->assertEquals(Storage::disk('public')->url($filePath), $message->media_url);
     }
 
-    private function getMinimalMessagePayload(): array
+    private function getMinimalIncomingMessagePayload(): array
     {
         return [
             'dataType' => 'message',
@@ -124,7 +126,7 @@ class WhatsappWebWebhookMediaTest extends TestCase
         ];
     }
 
-    private function getMinimalMediaPayload(): array
+    private function getMinimalIncomingMediaPayload(): array
     {
         return [
             'dataType' => 'media',
@@ -138,6 +140,75 @@ class WhatsappWebWebhookMediaTest extends TestCase
                     'mimetype' => 'image/jpeg',
                     // Fake base64 data for an image
                     'data' => 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/epv2AAAAABJRU5ErkJggg==',
+                ],
+            ],
+        ];
+    }
+
+    #[Test]
+    public function it_handles_outgoing_message_create_and_media_payloads_sequentially(): void
+    {
+        // Arrange
+        Storage::fake('public');
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $externalId = 'true_5212221931663@c.us_TEST_OUTGOING_ID';
+
+        $messageCreatePayload = $this->getMinimalOutgoingMediaMessageCreatePayload();
+        $messageCreatePayload['sessionId'] = $sessionId;
+        $messageCreatePayload['data']['message']['id']['_serialized'] = $externalId;
+
+        // Act 1: Send the message_create payload
+        $response1 = $this->postWebhook($messageCreatePayload);
+
+        // Assert 1: Check that a pending message was created
+        $response1->assertOk();
+        $this->assertDatabaseCount('messages', 1);
+        $message = Message::first();
+
+        $this->assertEquals($externalId, $message->external_message_id);
+        $this->assertEquals('pending', $message->content_type);
+        $this->assertNull($message->media_url);
+
+        // Arrange 2: Prepare the subsequent 'media' payload
+        $mediaPayload = $this->getMinimalIncomingMediaPayload();
+        $mediaPayload['sessionId'] = $sessionId;
+        $mediaPayload['data']['message']['id']['_serialized'] = $externalId;
+
+        // Act 2: Send the media payload
+        $response2 = $this->postWebhook($mediaPayload);
+
+        // Assert 2: Check that the message was updated with the media
+        $response2->assertOk();
+        $this->assertDatabaseCount('messages', 1);
+        $message->refresh();
+
+        $this->assertNotNull($message->media_url);
+        $this->assertEquals('image', $message->content_type);
+
+        $files = Storage::disk('public')->files('media/'.$this->chatbot->id);
+        $this->assertCount(1, $files);
+        Storage::disk('public')->assertExists($files[0]);
+        $this->assertEquals(Storage::disk('public')->url($files[0]), $message->media_url);
+    }
+
+    private function getMinimalOutgoingMediaMessageCreatePayload(): array
+    {
+        return [
+            'dataType' => 'message_create',
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => ''], // Will be overwritten in test
+                    'fromMe' => true,
+                    'from' => '5212213835257@c.us',
+                    'to' => '5212221931663@c.us',
+                    'timestamp' => 1761868440,
+                    'type' => 'image',
+                    'hasMedia' => true,
+                    'body' => 'This is an outgoing image caption',
+                    '_data' => [
+                        'body' => 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/wcAAwAB/epv2AAAAABJRU5ErkJggg==', // Base64 thumbnail
+                        'mimetype' => 'image/jpeg',
+                    ],
                 ],
             ],
         ];

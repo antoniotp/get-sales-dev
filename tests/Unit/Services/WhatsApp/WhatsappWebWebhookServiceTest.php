@@ -312,4 +312,170 @@ class WhatsappWebWebhookServiceTest extends TestCase
         // Act
         $this->service->handle($webhookPayload);
     }
+
+    #[Test]
+    public function it_handles_message_create_with_media_and_stores_outgoing_message(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $botNumber = '5212213835257@c.us';
+        $contactNumber = '5212221933661@c.us';
+        $externalMessageId = 'some_external_media_message_id';
+        $timestamp = 1761868440;
+        $caption = 'This is a media caption';
+        $assignedUserId = 1;
+
+        $existingChatbotChannel = ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId, 'phone_number_id' => '1234567890'],
+            'status' => ChatbotChannel::STATUS_CONNECTED,
+        ]);
+
+        $webhookPayload = [
+            'dataType' => 'message_create',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    'fromMe' => true,
+                    'from' => $botNumber,
+                    'to' => $contactNumber,
+                    'timestamp' => $timestamp,
+                    'type' => 'image',
+                    'hasMedia' => true,
+                    'body' => $caption, // Caption for media
+                    '_data' => [
+                        'body' => 'base64-goes-here',
+                        'mimetype' => 'image/jpeg',
+                    ],
+                ],
+            ],
+        ];
+
+        $contact = Contact::factory()->create();
+        $contactChannel = ContactChannel::factory()->create([
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'channel_identifier' => $contactNumber,
+        ]);
+
+        $mockConversation = Conversation::factory()->create([
+            'contact_channel_id' => $contactChannel->id,
+            'assigned_user_id' => $assignedUserId,
+        ]);
+
+        $this->conversationServiceMock->shouldReceive('findOrCreate')->andReturn($mockConversation);
+
+        // Expect the pending message creation method to be called directly
+        $this->messageServiceMock->shouldReceive('createPendingMediaMessage')
+            ->once()
+            ->withArgs(function (
+                $conversation,
+                $extId,
+                $msgCaption,
+                $type,
+                $senderType,
+                $metadata
+            ) use (
+                $mockConversation,
+                $externalMessageId,
+                $caption,
+                $timestamp
+            ) {
+                return $conversation->id === $mockConversation->id &&
+                       $extId === $externalMessageId &&
+                       $msgCaption === $caption &&
+                       $type === 'outgoing' &&
+                       $senderType === 'human' &&
+                       $metadata['fromMe'] === true &&
+                       $metadata['timestamp'] === $timestamp &&
+                       $metadata['type'] === 'image';
+            });
+
+        // Act
+        $this->service->handle($webhookPayload);
+    }
+
+    #[Test]
+    public function it_handles_message_create_with_media_and_updates_existing_message(): void
+    {
+        // Arrange: Setup common variables
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $contactNumber = '5212221931663@c.us';
+        $externalMessageId = 'some_external_media_message_id_to_update';
+        $caption = 'An existing media message caption';
+
+        // Arrange: Create the existing chatbot channel and conversation
+        $chatbotChannel = ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId],
+        ]);
+
+        $contact = Contact::factory()->create();
+        $contactChannel = ContactChannel::factory()->create([
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'channel_identifier' => $contactNumber,
+        ]);
+
+        $conversation = Conversation::factory()->create([
+            'contact_channel_id' => $contactChannel->id,
+            'chatbot_channel_id' => $chatbotChannel->id,
+            'external_conversation_id' => $contactNumber,
+        ]);
+        $conversation->wasRecentlyCreated = false;
+
+        // Arrange: Create the message that simulates being sent from our app
+        $existingMessage = $conversation->messages()->create([
+            'type' => 'outgoing',
+            'sender_type' => 'human',
+            'content' => $caption,
+            'content_type' => 'image',
+            'external_message_id' => null, // This is what the webhook will fill
+            'created_at' => now(),
+        ]);
+
+        // Arrange: Mock the conversation service to return our conversation
+        $this->conversationServiceMock->shouldReceive('findOrCreate')->andReturn($conversation);
+
+        // Arrange: Prepare the webhook payload that matches the existing message
+        $webhookPayload = [
+            'dataType' => 'message_create',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    'fromMe' => true,
+                    'from' => '5212213835257@c.us',
+                    'to' => $contactNumber,
+                    'timestamp' => now()->unix(),
+                    'type' => 'image',
+                    'hasMedia' => true,
+                    'body' => $caption, // Matching caption
+                    '_data' => [
+                        'body' => 'base64-data-should-not-be-used-in-this-test',
+                        'mimetype' => 'image/jpeg',
+                    ],
+                ],
+            ],
+        ];
+
+        // Assert: Ensure the create method is NOT called
+        $this->messageServiceMock->shouldNotReceive('storeExternalOutgoingMediaMessage');
+
+        // Act
+        $this->service->handle($webhookPayload);
+
+        // Assert: Check that the original message was updated
+        $this->assertDatabaseHas('messages', [
+            'id' => $existingMessage->id,
+            'external_message_id' => $externalMessageId,
+        ]);
+    }
 }

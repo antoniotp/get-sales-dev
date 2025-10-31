@@ -12,6 +12,7 @@ use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
+use App\Models\Message;
 use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -252,20 +253,13 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         $sessionId = $payload['sessionId'];
         $messageData = $payload['data']['message'];
 
-        // Only process messages sent by the bot's own account (outgoing from the user's device)
         if (($messageData['fromMe'] ?? false) !== true) {
-            Log::info('Skipping message_create event as it is not from the bot\'s own account.', [
-                'session_id' => $sessionId,
-                'message_id' => $messageData['id']['_serialized'] ?? 'N/A',
-            ]);
+            Log::info('Skipping message_create event as it is not an outgoing message.', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized']]);
 
             return;
         }
 
-        Log::info('Handling message_create event (outgoing message from user device)', [
-            'session_id' => $sessionId,
-            'message_id' => $messageData['id']['_serialized'],
-        ]);
+        Log::info('Handling message_create event.', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized']]);
 
         if (! $this->identifyChatbotChannel($sessionId)) {
             Log::error('WhatsApp channel not found for session ID: '.$sessionId);
@@ -284,46 +278,54 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         }
 
         $externalId = $messageData['id']['_serialized'];
-        $messageContent = $messageData['body'];
-        $messageData = [
-            'external_id' => $externalId,
-            'content' => $messageContent,
-            'content_type' => 'text',
-            'sender_type' => 'human', // It's the human user sending from their phone
-            'sender_user_id' => $this->conversation->assigned_user_id, // Assign to the user managing the conversation
-            'metadata' => [
-                'fromMe' => true,
-                'timestamp' => $messageData['timestamp'],
-                'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
-            ],
-        ];
+        $content = $messageData['body'] ?? '';
 
         try {
-            if ($this->conversation->wasRecentlyCreated) {
-                Log::info('New conversation from webhook, creating message directly.', ['external_id' => $externalId]);
-                $this->messageService->storeExternalOutgoingMessage($this->conversation, $messageData);
+            $existingMessage = false;
+            if (! $this->conversation->wasRecentlyCreated) {
+                Log::info('Conversation was not recently created. Checking for existing outgoing message.', ['message_id' => $externalId]);
+                $existingMessage = $this->findExistingOutgoingMessage($content);
             } else {
-                // Could be an echo from our app (a message exists) or from a linked phone (no message).
-                $existingMessage = $this->conversation->messages()
-                    ->where('type', '=', 'outgoing')
-                    ->where('sender_type', '!=', 'contact')
-                    ->whereNull('external_message_id')
-                    ->where('content', $messageContent)
-                    ->where('created_at', '>=', now()->subSeconds(30))
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+                Log::info('Conversation was recently created. Creating new outgoing message.', ['message_id' => $externalId, 'id' => $this->conversation->id]);
+            }
 
-                if ($existingMessage) {
-                    // Found the app-sent message. Update it.
-                    $existingMessage->update(['external_message_id' => $externalId]);
-                    Log::info('Updated previous message with external ID from webhook.', [
-                        'message_id' => $existingMessage->id,
-                        'external_id' => $externalId,
-                    ]);
+            if ($existingMessage) {
+                $existingMessage->update(['external_message_id' => $externalId]);
+                Log::info('Updated previous outgoing message with external ID from webhook.', [
+                    'message_id' => $existingMessage->id,
+                    'external_id' => $externalId,
+                ]);
+            } else {
+                Log::info('No existing message found for webhook. Creating new message.', ['external_id' => $externalId]);
+                $isMedia = ($messageData['hasMedia'] ?? false) === true;
+
+                if ($isMedia) {
+                    $this->messageService->createPendingMediaMessage(
+                        conversation: $this->conversation,
+                        externalMessageId: $externalId,
+                        content: $content,
+                        type: 'outgoing',
+                        senderType: 'human',
+                        metadata: [
+                            'fromMe' => true,
+                            'timestamp' => $messageData['timestamp'],
+                            'type' => $messageData['type'],
+                        ]
+                    );
                 } else {
-                    Log::info('No existing message found for webhook message. Creating new message.', ['external_id' => $externalId]);
-                    // No message found. Assume a message from a linked phone and create it.
-                    $this->messageService->storeExternalOutgoingMessage($this->conversation, $messageData);
+                    $messagePayload = [
+                        'external_id' => $externalId,
+                        'content' => $content,
+                        'content_type' => 'text',
+                        'sender_type' => 'human',
+                        'sender_user_id' => $this->conversation->assigned_user_id,
+                        'metadata' => [
+                            'fromMe' => true,
+                            'timestamp' => $messageData['timestamp'],
+                            'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
+                        ],
+                    ];
+                    $this->messageService->storeExternalOutgoingMessage($this->conversation, $messagePayload);
                 }
             }
         } catch (Exception $e) {
@@ -412,5 +414,17 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
             return false;
         }
+    }
+
+    private function findExistingOutgoingMessage(string $content): ?Message
+    {
+        return $this->conversation?->messages()
+            ->where('type', '=', 'outgoing')
+            ->where('sender_type', '!=', 'contact')
+            ->whereNull('external_message_id')
+            ->where('content', $content)
+            ->where('created_at', '>=', now()->subSeconds(30))
+            ->orderBy('created_at', 'desc')
+            ->first();
     }
 }

@@ -400,6 +400,68 @@ class WhatsappWebWebhookServiceTest extends TestCase
     }
 
     #[Test]
+    public function it_ignores_e2e_notification_in_handle_message(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $externalMessageId = 'some_e2e_notification_id';
+        $webhookPayload = [
+            'dataType' => 'message',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    'type' => 'e2e_notification',
+                    'from' => '5212221112233@c.us',
+                ],
+            ],
+        ];
+
+        $this->conversationServiceMock->shouldNotReceive('findOrCreate');
+        $this->messageServiceMock->shouldNotReceive('handleIncomingMessage');
+
+        // Act
+        $this->service->handle($webhookPayload);
+
+        // Assert
+        Log::shouldHaveReceived('info')
+            ->with('Ignoring e2e_notification message', ['session_id' => $sessionId, 'message_id' => $externalMessageId])
+            ->once();
+    }
+
+    #[Test]
+    public function it_ignores_e2e_notification_in_handle_message_create(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $externalMessageId = 'some_e2e_notification_id_create';
+        $webhookPayload = [
+            'dataType' => 'message_create',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    'type' => 'e2e_notification',
+                    'fromMe' => false, // This is important for the guard in handleMessageCreate
+                    'from' => '5212221112233@c.us',
+                ],
+            ],
+        ];
+
+        $this->conversationServiceMock->shouldNotReceive('findOrCreate');
+        $this->messageServiceMock->shouldNotReceive('storeExternalOutgoingMessage');
+        $this->messageServiceMock->shouldNotReceive('createPendingMediaMessage');
+
+        // Act
+        $this->service->handle($webhookPayload);
+
+        // Assert
+        Log::shouldHaveReceived('info')
+            ->with('Ignoring e2e_notification message', ['session_id' => $sessionId, 'message_id' => $externalMessageId])
+            ->once();
+    }
+
+    #[Test]
     public function it_handles_message_create_with_media_and_updates_existing_message(): void
     {
         // Arrange: Setup common variables

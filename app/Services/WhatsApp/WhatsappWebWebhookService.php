@@ -146,6 +146,13 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         $sessionId = $payload['sessionId'];
         $messageData = $payload['data']['message'];
 
+        // Ignore e2e_notification messages as they are not user-generated content
+        if (($messageData['type'] ?? null) === 'e2e_notification') {
+            Log::info('Ignoring e2e_notification message', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized'] ?? 'N/A']);
+
+            return;
+        }
+
         Log::info('Handling message received event', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized']]);
 
         if (! $this->identifyChatbotChannel($sessionId)) {
@@ -252,6 +259,13 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     {
         $sessionId = $payload['sessionId'];
         $messageData = $payload['data']['message'];
+
+        // Ignore e2e_notification messages as they are not user-generated content
+        if (($messageData['type'] ?? null) === 'e2e_notification') {
+            Log::info('Ignoring e2e_notification message', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized'] ?? 'N/A']);
+
+            return;
+        }
 
         if (($messageData['fromMe'] ?? false) !== true) {
             Log::info('Skipping message_create event as it is not an outgoing message.', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized']]);

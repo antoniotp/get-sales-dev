@@ -7,6 +7,8 @@ use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Enums\Chatbot\AgentVisibility;
+use App\Enums\Conversation\Status;
+use App\Enums\Conversation\Type;
 use App\Events\NewWhatsAppConversation;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
@@ -17,6 +19,7 @@ use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ConversationService implements ConversationServiceInterface
 {
@@ -74,7 +77,7 @@ class ConversationService implements ConversationServiceInterface
                 'contact_channel_id' => $contactChannel->id,
                 'contact_name' => $contactName ?: $normalizedPhoneNumber,
                 'contact_phone' => $normalizedPhoneNumber,
-                'status' => 1,
+                'status' => Status::ACTIVE,
                 'mode' => 'human', // Initiated by human
                 'last_message_at' => now(),
                 'assigned_user_id' => $userId,
@@ -90,10 +93,22 @@ class ConversationService implements ConversationServiceInterface
         string $contactName,
         int $channelId
     ): Conversation {
+        if (Str::endsWith($channelIdentifier, '@g.us')) {
+            return $this->findOrCreateGroupConversation($chatbotChannel, $channelIdentifier);
+        }
+
+        return $this->findOrCreateDirectConversation($chatbotChannel, $channelIdentifier, $contactName, $channelId);
+    }
+
+    private function findOrCreateDirectConversation(
+        ChatbotChannel $chatbotChannel,
+        string $channelIdentifier,
+        string $contactName,
+        int $channelId
+    ): Conversation {
         $organizationId = $chatbotChannel->chatbot->organization_id;
         $normalizedIdentifier = $this->normalizer->normalize($channelIdentifier);
 
-        // Find or create the contact channel, which in turn finds or creates the contact.
         $contactChannel = ContactChannel::firstOrCreate(
             [
                 'chatbot_id' => $chatbotChannel->chatbot_id,
@@ -108,10 +123,8 @@ class ConversationService implements ConversationServiceInterface
             ]
         );
 
-        // Determine the initial mode based on the chatbot's settings.
         $initialMode = $chatbotChannel->chatbot->ai_enabled ? 'ai' : 'human';
 
-        // Now, find or create the conversation.
         $conversation = Conversation::firstOrCreate(
             [
                 'chatbot_channel_id' => $chatbotChannel->id,
@@ -121,29 +134,73 @@ class ConversationService implements ConversationServiceInterface
                 'contact_channel_id' => $contactChannel->id,
                 'contact_name' => $contactChannel->contact->first_name,
                 'contact_phone' => $normalizedIdentifier,
-                'status' => 1, // 1 is an 'active' status
+                'status' => Status::ACTIVE,
                 'mode' => $initialMode,
                 'last_message_at' => now(),
+                'type' => Type::DIRECT,
             ]
         );
 
-        // If an old conversation existed without a contact link, update it.
         if (! $conversation->wasRecentlyCreated && is_null($conversation->contact_channel_id)) {
             $conversation->update(['contact_channel_id' => $contactChannel->id]);
         }
 
-        // Dispatch an event for new conversations.
         if ($conversation->wasRecentlyCreated) {
-            Log::info('New conversation created by ConversationService', ['conversation' => $conversation]);
+            Log::info('New direct conversation created', ['conversation_id' => $conversation->id]);
             event(new NewWhatsAppConversation($conversation));
         }
 
-        // Always update the last message timestamp for existing conversations to keep them active.
         if (! $conversation->wasRecentlyCreated) {
             $conversation->update(['last_message_at' => now()]);
         }
 
         return $conversation;
+    }
+
+    private function findOrCreateGroupConversation(ChatbotChannel $chatbotChannel, string $groupId): Conversation
+    {
+        $initialMode = $chatbotChannel->chatbot->ai_enabled ? 'ai' : 'human';
+
+        $conversation = Conversation::firstOrCreate(
+            [
+                'chatbot_channel_id' => $chatbotChannel->id,
+                'external_conversation_id' => $groupId,
+            ],
+            [
+                'name' => $groupId, // Placeholder name
+                'status' => Status::PENDING_NOTIFICATION,
+                'mode' => $initialMode,
+                'last_message_at' => now(),
+                'type' => Type::GROUP,
+            ]
+        );
+
+        if ($conversation->status === Status::PENDING_NOTIFICATION) {
+            Log::info('New group conversation is being notified', ['conversation_id' => $conversation->id]);
+            event(new NewWhatsAppConversation($conversation));
+            $conversation->update(['status' => Status::ACTIVE]);
+        }
+
+        if (! $conversation->wasRecentlyCreated) {
+            $conversation->update(['last_message_at' => now()]);
+        }
+
+        return $conversation;
+    }
+
+    public function updateGroupName(ChatbotChannel $chatbotChannel, string $groupId, string $name): void
+    {
+        Conversation::updateOrCreate(
+            [
+                'chatbot_channel_id' => $chatbotChannel->id,
+                'external_conversation_id' => $groupId,
+            ],
+            [
+                'name' => $name,
+                'type' => Type::GROUP,
+                'status' => Status::PENDING_NOTIFICATION,
+            ]
+        );
     }
 
     public function getConversationsForChatbot(Chatbot $chatbot, User $user): Collection

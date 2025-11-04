@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\Conversation\Status;
+use App\Enums\Conversation\Type;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,12 +15,14 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int|null $contact_channel_id
  * @property int $chatbot_channel_id
+ * @property Type $type
+ * @property string|null $name
  * @property string $external_conversation_id
  * @property string|null $contact_name
  * @property string|null $contact_phone
  * @property string|null $contact_email
  * @property string|null $contact_avatar
- * @property int $status
+ * @property Status $status
  * @property string $mode
  * @property int|null $assigned_user_id
  * @property Carbon|null $last_message_at
@@ -33,6 +37,8 @@ class Conversation extends Model
     protected $fillable = [
         'contact_channel_id',
         'chatbot_channel_id',
+        'type',
+        'name',
         'external_conversation_id',
         'contact_name',
         'contact_phone',
@@ -45,8 +51,9 @@ class Conversation extends Model
     ];
 
     protected $casts = [
-        'status' => 'integer',
+        'status' => Status::class,
         'last_message_at' => 'datetime',
+        'type' => Type::class,
     ];
 
     /**

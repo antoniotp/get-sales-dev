@@ -59,8 +59,32 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             case 'message_create':
                 $this->handleMessageCreate($data);
                 break;
+            case 'group_update':
+                $this->handleGroupUpdate($data);
+                break;
             default:
                 Log::warning("No handler for WhatsApp Web webhook event: {$dataType}", $data);
+        }
+    }
+
+    private function handleGroupUpdate(array $payload): void
+    {
+        Log::info('Handling group_update event', ['session_id' => $payload['sessionId'], 'data' => $payload['data']]);
+
+        if (! $this->identifyChatbotChannel($payload['sessionId'])) {
+            Log::error('WhatsApp channel not found for session ID: '.$payload['sessionId']);
+
+            return;
+        }
+
+        $notification = $payload['data']['notification'];
+        $groupId = $notification['chatId'];
+        $groupName = $notification['body'];
+
+        // We only care about the event that creates the group or updates its subject
+        if ($notification['type'] === 'create' || $notification['type'] === 'subject') {
+            $this->conversationService->updateGroupName($this->chatbotChannel, $groupId, $groupName);
+            Log::info('Group conversation details updated.', ['group_id' => $groupId, 'name' => $groupName]);
         }
     }
 

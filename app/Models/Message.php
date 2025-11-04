@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $media_url
  * @property string $sender_type
  * @property int|null $sender_user_id
+ * @property int|null $sender_contact_id
  * @property array|null $metadata
  * @property Carbon|null $delivered_at
  * @property Carbon|null $read_at
@@ -38,6 +39,7 @@ class Message extends Model
         'media_url',
         'sender_type',
         'sender_user_id',
+        'sender_contact_id',
         'metadata',
         'delivered_at',
         'read_at',
@@ -66,6 +68,14 @@ class Message extends Model
     public function senderUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_user_id');
+    }
+
+    /**
+     * Get the contact who sent this message (if sent by a contact in a group).
+     */
+    public function senderContact(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'sender_contact_id');
     }
 
     /**

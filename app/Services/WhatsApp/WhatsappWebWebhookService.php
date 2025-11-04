@@ -368,7 +368,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleGroupMessageCreate(array $messageData, array $payload): void
     {
         $groupId = $messageData['to'];
-        $participantId = $messageData['from'];
         $participantName = $messageData['notifyName'] ?? 'You';
 
         $this->conversation = $this->conversationService->findOrCreate(
@@ -378,20 +377,10 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             $this->whatsAppWebChannel->id
         );
 
-        $senderContact = Contact::firstOrCreate(
-            [
-                'organization_id' => $this->chatbotChannel->chatbot->organization_id,
-                'phone_number' => $participantId,
-            ],
-            [
-                'first_name' => $participantName,
-            ]
-        );
-
-        $this->processOutgoingMessage($messageData, $payload, $senderContact->id);
+        $this->processOutgoingMessage($messageData, $payload, null, $participantName);
     }
 
-    private function processOutgoingMessage(array $messageData, array $payload, ?int $senderContactId = null): void
+    private function processOutgoingMessage(array $messageData, array $payload, ?int $senderContactId = null, ?string $participantName = null): void
     {
         $externalId = $messageData['id']['_serialized'];
         $content = $messageData['body'] ?? '';
@@ -429,6 +418,16 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                         ]
                     );
                 } else {
+                    $metadata = [
+                        'fromMe' => true,
+                        'timestamp' => $messageData['timestamp'],
+                        'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
+                    ];
+
+                    if ($participantName) {
+                        $metadata['participant_name'] = $participantName;
+                    }
+
                     $messagePayload = [
                         'external_id' => $externalId,
                         'content' => $content,
@@ -436,11 +435,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                         'sender_type' => 'human',
                         'sender_user_id' => $this->conversation->assigned_user_id,
                         'sender_contact_id' => $senderContactId,
-                        'metadata' => [
-                            'fromMe' => true,
-                            'timestamp' => $messageData['timestamp'],
-                            'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
-                        ],
+                        'metadata' => $metadata,
                     ];
                     $this->messageService->storeExternalOutgoingMessage($this->conversation, $messagePayload);
                 }

@@ -233,13 +233,11 @@ class WhatsappWebGroupEventsTest extends TestCase
         // Assert
         $response->assertOk();
 
-        // Assert that the participant contact was created
-        $this->assertDatabaseHas('contacts', [
-            'phone_number' => $participantId, // Assuming participant ID is used as phone number for uniqueness
-            'first_name' => $participantName,
+        // Assert that the participant contact was NOT created (as it's our own number)
+        $this->assertDatabaseMissing('contacts', [
+            'phone_number' => $participantId,
         ]);
 
-        $contact = Contact::where('phone_number', $participantId)->first();
         $conversation = Conversation::where('external_conversation_id', $groupId)->first();
 
         // Assert that the message was created and linked correctly
@@ -247,8 +245,9 @@ class WhatsappWebGroupEventsTest extends TestCase
             'external_message_id' => $externalMessageId,
             'content' => $messageContent,
             'sender_type' => 'human', // Outgoing messages are from 'human' (our agent)
-            'sender_contact_id' => $contact->id,
+            'sender_contact_id' => null, // Should be null for outgoing messages from our app
             'conversation_id' => $conversation->id,
+            'metadata->participant_name' => $participantName, // Participant name stored in metadata
         ]);
     }
 }

@@ -26,15 +26,13 @@ class MessageData implements Arrayable
         $senderId = 'ai';
 
         if ($message->sender_type === 'contact') {
+            $senderName = $message->senderContact?->first_name ?? 'Unknown Contact';
+        } elseif ($message->sender_type === 'human') {
             if ($message->conversation->type === Type::GROUP) {
-                $senderName = $message->senderContact?->first_name ?? 'Unknown Participant';
+                $senderName = $message->metadata['participant_name'] ?? ($message->senderUser?->name ?? 'Unknown Participant');
             } else {
-                $senderName = $message->conversation->contact_name ?? $message->conversation->contact_phone;
+                $senderName = $message->senderUser?->name ?? 'Unknown User';
             }
-            $senderId = 'contact';
-        } elseif ($message->sender_type === 'human' && $message->senderUser) {
-            $senderName = $message->senderUser->name;
-            $senderId = $message->sender_user_id;
         }
 
         return new self(

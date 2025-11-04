@@ -2,6 +2,7 @@
 
 namespace App\DataTransferObjects\Chat;
 
+use App\Enums\Conversation\Type;
 use App\Models\Message;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -17,20 +18,30 @@ class MessageData implements Arrayable
         public string $contentType,
         public ?string $mediaUrl,
         public ?int $conversationId = null
-    ) {
-    }
+    ) {}
 
     public static function fromMessage(Message $message): self
     {
+        $senderName = 'AI';
+        $senderId = 'ai';
+
+        if ($message->sender_type === 'contact') {
+            if ($message->conversation->type === Type::GROUP) {
+                $senderName = $message->senderContact?->first_name ?? 'Unknown Participant';
+            } else {
+                $senderName = $message->conversation->contact_name ?? $message->conversation->contact_phone;
+            }
+            $senderId = 'contact';
+        } elseif ($message->sender_type === 'human' && $message->senderUser) {
+            $senderName = $message->senderUser->name;
+            $senderId = $message->sender_user_id;
+        }
+
         return new self(
             id: $message->id,
             content: $message->content,
-            sender: $message->sender_type === 'contact'
-                ? ($message->conversation->contact_name ?? $message->conversation->contact_phone)
-                : ($message->senderUser?->name ?? 'AI'),
-            senderId: $message->sender_type === 'contact'
-                ? 'contact'
-                : ($message->sender_user_id ?? 'ai'),
+            sender: $senderName,
+            senderId: $senderId,
             timestamp: $message->created_at->toIso8601String(),
             type: $message->type,
             contentType: $message->content_type,

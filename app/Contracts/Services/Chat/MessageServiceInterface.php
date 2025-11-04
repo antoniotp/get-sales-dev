@@ -20,7 +20,8 @@ interface MessageServiceInterface
         Conversation $conversation,
         string $externalMessageId,
         string $content,
-        array $metadata
+        array $metadata,
+        ?int $senderContactId = null
     ): Message;
 
     public function storeExternalOutgoingMessage(

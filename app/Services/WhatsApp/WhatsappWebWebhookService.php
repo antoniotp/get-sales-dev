@@ -11,6 +11,7 @@ use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Message;
 use Exception;
@@ -185,27 +186,65 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             return;
         }
 
-        if (! $this->getOrCreateContactAndConversation(
-            $messageData['from'],
-            $messageData['notifyName'] ?? 'WhatsApp User'
-        )) {
-            Log::error('Could not create or update conversation for message', ['data' => $payload]);
+        $isGroupMessage = Str::endsWith($messageData['from'], '@g.us');
 
-            return;
+        if ($isGroupMessage) {
+            $this->handleGroupMessage($messageData);
+        } else {
+            $this->handleDirectMessage($messageData);
         }
+    }
 
-        // Determine the message type for routing
+    private function handleDirectMessage(array $messageData): void
+    {
+        $this->conversation = $this->conversationService->findOrCreate(
+            $this->chatbotChannel,
+            $messageData['from'],
+            $messageData['notifyName'] ?? 'WhatsApp User',
+            $this->whatsAppWebChannel->id
+        );
+
+        $this->routeMessageByType($messageData);
+    }
+
+    private function handleGroupMessage(array $messageData): void
+    {
+        $groupId = $messageData['from'];
+        $participantId = $messageData['author'];
+        $participantName = $messageData['notifyName'] ?? 'Unknown Participant';
+
+        $this->conversation = $this->conversationService->findOrCreate(
+            $this->chatbotChannel,
+            $groupId,
+            $participantName, // Note: contactName is not used for group creation but passed for consistency
+            $this->whatsAppWebChannel->id
+        );
+
+        $senderContact = Contact::firstOrCreate(
+            [
+                'organization_id' => $this->chatbotChannel->chatbot->organization_id,
+                'phone_number' => $participantId, // Use participant ID as the unique phone number
+            ],
+            [
+                'first_name' => $participantName,
+            ]
+        );
+
+        $this->routeMessageByType($messageData, $senderContact->id);
+    }
+
+    private function routeMessageByType(array $messageData, ?int $senderContactId = null): void
+    {
         $messageType = ($messageData['hasMedia'] ?? false) ? 'pending_media' : ($messageData['type'] ?? 'unsupported');
 
-        // Route to the appropriate handler based on the determined type
         match ($messageType) {
-            'chat' => $this->handleTextMessage($messageData),
-            'pending_media' => $this->handlePendingMediaMessage($messageData),
+            'chat' => $this->handleTextMessage($messageData, $senderContactId),
+            'pending_media' => $this->handlePendingMediaMessage($messageData), // Group media not handled yet
             default => Log::warning('Unsupported message type in handleMessage', ['type' => $messageType]),
         };
     }
 
-    private function handleTextMessage(array $messageData): void
+    private function handleTextMessage(array $messageData, ?int $senderContactId = null): void
     {
         try {
             $this->messageService->handleIncomingMessage(
@@ -215,7 +254,8 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                 metadata: [
                     'timestamp' => $messageData['timestamp'],
                     'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
-                ]
+                ],
+                senderContactId: $senderContactId
             );
         } catch (\Exception $e) {
             Log::error('Error in MessageService from WhatsappWebWebhookService', [
@@ -306,14 +346,12 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         }
 
         // For outgoing messages, the 'to' field is the contact's identifier
-        if (! $this->getOrCreateContactAndConversation(
+        $this->conversation = $this->conversationService->findOrCreate(
+            $this->chatbotChannel,
             $messageData['to'], // Use 'to' as the contact identifier
-            $messageData['notifyName'] ?? 'You'
-        )) {
-            Log::error('Could not create or update conversation for message_create', ['data' => $payload]);
-
-            return;
-        }
+            $messageData['notifyName'] ?? 'You',
+            $this->whatsAppWebChannel->id
+        );
 
         $externalId = $messageData['id']['_serialized'];
         $content = $messageData['body'] ?? '';

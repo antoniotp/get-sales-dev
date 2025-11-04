@@ -19,7 +19,8 @@ class MessageService implements MessageServiceInterface
         Conversation $conversation,
         string $externalMessageId,
         string $content,
-        array $metadata
+        array $metadata,
+        ?int $senderContactId = null
     ): Message {
         $messageData = [
             'conversation_id' => $conversation->id,
@@ -28,6 +29,7 @@ class MessageService implements MessageServiceInterface
             'content' => $content,
             'content_type' => 'text',
             'sender_type' => 'contact',
+            'sender_contact_id' => $senderContactId,
             'metadata' => $metadata,
         ];
 

@@ -324,7 +324,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         $sessionId = $payload['sessionId'];
         $messageData = $payload['data']['message'];
 
-        // Ignore e2e_notification messages as they are not user-generated content
         if (($messageData['type'] ?? null) === 'e2e_notification') {
             Log::info('Ignoring e2e_notification message', ['session_id' => $sessionId, 'message_id' => $messageData['id']['_serialized'] ?? 'N/A']);
 
@@ -345,7 +344,17 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             return;
         }
 
-        // For outgoing messages, the 'to' field is the contact's identifier
+        $isGroupMessage = Str::endsWith($messageData['to'], '@g.us');
+
+        if ($isGroupMessage) {
+            $this->handleGroupMessageCreate($messageData, $payload);
+        } else {
+            $this->handleDirectMessageCreate($messageData, $payload);
+        }
+    }
+
+    private function handleDirectMessageCreate(array $messageData, array $payload): void
+    {
         $this->conversation = $this->conversationService->findOrCreate(
             $this->chatbotChannel,
             $messageData['to'], // Use 'to' as the contact identifier
@@ -353,6 +362,37 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             $this->whatsAppWebChannel->id
         );
 
+        $this->processOutgoingMessage($messageData, $payload);
+    }
+
+    private function handleGroupMessageCreate(array $messageData, array $payload): void
+    {
+        $groupId = $messageData['to'];
+        $participantId = $messageData['from'];
+        $participantName = $messageData['notifyName'] ?? 'You';
+
+        $this->conversation = $this->conversationService->findOrCreate(
+            $this->chatbotChannel,
+            $groupId,
+            $participantName,
+            $this->whatsAppWebChannel->id
+        );
+
+        $senderContact = Contact::firstOrCreate(
+            [
+                'organization_id' => $this->chatbotChannel->chatbot->organization_id,
+                'phone_number' => $participantId,
+            ],
+            [
+                'first_name' => $participantName,
+            ]
+        );
+
+        $this->processOutgoingMessage($messageData, $payload, $senderContact->id);
+    }
+
+    private function processOutgoingMessage(array $messageData, array $payload, ?int $senderContactId = null): void
+    {
         $externalId = $messageData['id']['_serialized'];
         $content = $messageData['body'] ?? '';
 
@@ -395,6 +435,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                         'content_type' => 'text',
                         'sender_type' => 'human',
                         'sender_user_id' => $this->conversation->assigned_user_id,
+                        'sender_contact_id' => $senderContactId,
                         'metadata' => [
                             'fromMe' => true,
                             'timestamp' => $messageData['timestamp'],
@@ -406,7 +447,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             }
         } catch (Exception $e) {
             Log::error('Error processing message_create webhook', [
-                'session_id' => $sessionId,
+                'session_id' => $payload['sessionId'],
                 'message_id' => $externalId,
                 'error' => $e->getMessage(),
             ]);

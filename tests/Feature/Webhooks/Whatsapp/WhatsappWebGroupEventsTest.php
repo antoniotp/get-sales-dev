@@ -168,4 +168,87 @@ class WhatsappWebGroupEventsTest extends TestCase
             'conversation_id' => $conversation->id,
         ]);
     }
+
+    private function getOutgoingGroupMessageCreatePayload(): array
+    {
+        return [
+            'dataType' => 'message_create',
+            'sessionId' => 'chatbot-2', // Will be overwritten in test
+            'data' => [
+                'message' => [
+                    'id' => [
+                        'fromMe' => true,
+                        'remote' => '120363422499819089@g.us',
+                        'id' => 'ACEF2E8E08CF379CECCDBEEB9B9BA72D',
+                        'participant' => '48937494913149@lid',
+                        '_serialized' => 'true_120363422499819089@g.us_ACEF2E8E08CF379CECCDBEEB9B9BA72D_48937494913149@lid',
+                    ],
+                    'hasMedia' => false,
+                    'body' => 'Mensaje en grupo desde CGM 2',
+                    'type' => 'chat',
+                    'timestamp' => 1762207803,
+                    'from' => '48937494913149@lid',
+                    'to' => '120363422499819089@g.us',
+                    'author' => '48937494913149@lid',
+                    'notifyName' => 'CGM 2',
+                    'fromMe' => true,
+                ],
+            ],
+        ];
+    }
+
+    #[Test]
+    public function it_handles_outgoing_group_message_create_and_creates_contact_and_message(): void
+    {
+        // Arrange
+        $payload = $this->getOutgoingGroupMessageCreatePayload();
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $payload['sessionId'] = $sessionId;
+
+        $groupId = $payload['data']['message']['to']; // For outgoing, 'to' is the group ID
+        $participantId = $payload['data']['message']['from']; // For outgoing, 'from' is the participant ID
+        $participantName = $payload['data']['message']['notifyName'];
+        $messageContent = $payload['data']['message']['body'];
+        $externalMessageId = $payload['data']['message']['id']['_serialized'];
+
+        $whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
+        $chatbotChannel = $this->chatbot->chatbotChannels()->where('channel_id', $whatsAppWebChannel->id)->first();
+
+        // Ensure the group conversation exists (from a previous group_update event or created implicitly)
+        Conversation::firstOrCreate(
+            [
+                'chatbot_channel_id' => $chatbotChannel->id,
+                'external_conversation_id' => $groupId,
+            ],
+            [
+                'type' => 'group',
+                'name' => 'Test Group Name', // Placeholder name
+                'status' => Status::ACTIVE, // Assume it's active for outgoing messages
+            ]
+        );
+
+        // Act
+        $response = $this->postWebhook($payload);
+
+        // Assert
+        $response->assertOk();
+
+        // Assert that the participant contact was created
+        $this->assertDatabaseHas('contacts', [
+            'phone_number' => $participantId, // Assuming participant ID is used as phone number for uniqueness
+            'first_name' => $participantName,
+        ]);
+
+        $contact = Contact::where('phone_number', $participantId)->first();
+        $conversation = Conversation::where('external_conversation_id', $groupId)->first();
+
+        // Assert that the message was created and linked correctly
+        $this->assertDatabaseHas('messages', [
+            'external_message_id' => $externalMessageId,
+            'content' => $messageContent,
+            'sender_type' => 'human', // Outgoing messages are from 'human' (our agent)
+            'sender_contact_id' => $contact->id,
+            'conversation_id' => $conversation->id,
+        ]);
+    }
 }

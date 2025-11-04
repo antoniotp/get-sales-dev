@@ -19,16 +19,24 @@ class ConversationData implements Arrayable
         public ?int $assigned_user_id,
         public ?string $assigned_user_name,
         public ?string $recipient,
+        public string $type,
     ) {
     }
 
     public static function fromConversation(Conversation $conversation): self
     {
+        $conversationName = '';
+        if ($conversation->type === \App\Enums\Conversation\Type::GROUP) {
+            $conversationName = $conversation->name ?? 'Unknown Group';
+        } else {
+            $conversationName = $conversation->contact_name ?? $conversation->contact_phone ?? 'Unknown';
+        }
+
         return new self(
             id: $conversation->id,
-            name: $conversation->contact_name ?? $conversation->contact_phone ?? 'Unknown',
+            name: $conversationName,
             phone: $conversation->contact_phone ?? '',
-            avatar: $conversation->contact_avatar ?? mb_substr($conversation->contact_name ?? 'U', 0, 1),
+            avatar: $conversation->contact_avatar ?? mb_substr($conversationName, 0, 1),
             lastMessage: $conversation->latestMessage?->first()?->content ?? '',
             lastMessageTime: $conversation->last_message_at?->toIso8601String(),
             mode: $conversation->mode ?? 'ai',
@@ -39,6 +47,7 @@ class ConversationData implements Arrayable
             assigned_user_id: $conversation->assigned_user_id,
             assigned_user_name: $conversation->assignedUser?->name,
             recipient: $conversation->chatbotChannel->credentials['phone_number'] ?? '',
+            type: $conversation->type->value,
         );
     }
 
@@ -56,6 +65,7 @@ class ConversationData implements Arrayable
             'assigned_user_id' => $this->assigned_user_id,
             'assigned_user_name' => $this->assigned_user_name,
             'recipient' => $this->recipient,
+            'type' => $this->type,
         ];
     }
 }

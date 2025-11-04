@@ -395,7 +395,17 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             }
 
             if ($existingMessage) {
-                $existingMessage->update(['external_message_id' => $externalId]);
+                $updateData = ['external_message_id' => $externalId];
+                $newMetadata = $existingMessage->metadata ?? [];
+
+                if ($participantName) {
+                    $newMetadata['participant_name'] = $participantName;
+                }
+
+                $updateData['metadata'] = $newMetadata;
+
+                $existingMessage->update($updateData);
+
                 Log::info('Updated previous outgoing message with external ID from webhook.', [
                     'message_id' => $existingMessage->id,
                     'external_id' => $externalId,

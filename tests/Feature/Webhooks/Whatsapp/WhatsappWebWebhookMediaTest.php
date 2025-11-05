@@ -8,6 +8,7 @@ use App\Models\Message;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
@@ -41,6 +42,9 @@ class WhatsappWebWebhookMediaTest extends TestCase
         ]);
 
         Event::fake();
+        Http::fake([
+            '*/ping' => Http::response(['success' => true], 200),
+        ]);
 
         // Initialize payloads from internal helper methods
         $this->messagePayload = $this->getMinimalIncomingMessagePayload();

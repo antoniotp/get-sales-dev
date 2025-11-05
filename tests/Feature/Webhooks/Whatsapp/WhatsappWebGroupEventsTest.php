@@ -25,6 +25,9 @@ class WhatsappWebGroupEventsTest extends TestCase
         parent::setUp();
         $this->seed(DatabaseSeeder::class);
         $this->chatbot = Chatbot::find(1);
+        Http::fake([
+            '*/ping' => Http::response(['success' => true], 200),
+        ]);
 
         $channel = Channel::where('slug', 'whatsapp-web')->first();
         $this->chatbot->chatbotChannels()->create([

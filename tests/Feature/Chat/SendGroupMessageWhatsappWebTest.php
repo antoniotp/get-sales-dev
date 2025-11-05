@@ -12,6 +12,7 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -32,6 +33,9 @@ class SendGroupMessageWhatsappWebTest extends TestCase
         $this->seed(DatabaseSeeder::class);
         $this->chatbot = Chatbot::find(1);
         $this->user = User::find(1);
+        Http::fake([
+            '*/ping' => Http::response(['success' => true], 200),
+        ]);
 
         $channel = Channel::where('slug', 'whatsapp-web')->first();
         $chatbotChannel = $this->chatbot->chatbotChannels()->create([

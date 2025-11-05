@@ -159,7 +159,8 @@ class ConversationService implements ConversationServiceInterface
 
     private function findOrCreateGroupConversation(ChatbotChannel $chatbotChannel, string $groupId): Conversation
     {
-        $initialMode = $chatbotChannel->chatbot->ai_enabled ? 'ai' : 'human';
+        // group conversation must be created in human mode
+        $initialMode = 'human';
 
         $conversation = Conversation::firstOrCreate(
             [
@@ -199,6 +200,7 @@ class ConversationService implements ConversationServiceInterface
                 'name' => $name,
                 'type' => Type::GROUP,
                 'status' => Status::PENDING_NOTIFICATION,
+                'mode' => 'human',
             ]
         );
     }

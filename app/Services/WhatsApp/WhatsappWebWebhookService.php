@@ -5,7 +5,9 @@ namespace App\Services\WhatsApp;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Events\NewWhatsAppConversation;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
 use App\Models\Channel;
@@ -34,7 +36,8 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     public function __construct(
         private readonly ConversationServiceInterface $conversationService,
         private readonly MessageServiceInterface $messageService,
-        private readonly PhoneNumberNormalizerInterface $phoneNumberNormalizer
+        private readonly PhoneNumberNormalizerInterface $phoneNumberNormalizer,
+        private readonly WhatsappWebServiceInterface $whatsappWebService,
     ) {
         $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
         $this->wwebjs_url = rtrim(config('services.wwebjs_service.url'), '/');
@@ -43,6 +46,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
     public function handle(array $data): void
     {
+        Log::debug('Handling WhatsApp Web webhook event', $data);
         $dataType = $data['dataType'];
         switch ($dataType) {
             case 'qr':
@@ -189,7 +193,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         $isGroupMessage = Str::endsWith($messageData['from'], '@g.us');
 
         if ($isGroupMessage) {
-            $this->handleGroupMessage($messageData);
+            $this->handleGroupMessage($messageData, $payload);
         } else {
             $this->handleDirectMessage($messageData);
         }
@@ -207,11 +211,11 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         $this->routeMessageByType($messageData);
     }
 
-    private function handleGroupMessage(array $messageData): void
+    private function handleGroupMessage(array $messageData, array $payload): void
     {
         $groupId = $messageData['from'];
         $participantId = $messageData['author'];
-        $participantName = $messageData['notifyName'] ?? 'Unknown Participant';
+        $participantName = $messageData['_data']['notifyName'] ?? 'Unknown Participant';
 
         $this->conversation = $this->conversationService->findOrCreate(
             $this->chatbotChannel,
@@ -219,6 +223,16 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             $participantName, // Note: contactName is not used for group creation but passed for consistency
             $this->whatsAppWebChannel->id
         );
+
+        if (Str::endsWith($this->conversation->name, '@g.us')) {
+            // This group was just created from a message, and we don't have its real name.
+            // Let's fetch it.
+            $groupInfo = $this->whatsappWebService->getGroupChatInfo($payload['sessionId'], $groupId);
+            if ($groupInfo && isset($groupInfo['name'])) {
+                $this->conversation->update(['name' => $groupInfo['name']]);
+                event(new NewWhatsAppConversation($this->conversation));
+            }
+        }
 
         $senderContact = Contact::firstOrCreate(
             [
@@ -229,6 +243,9 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                 'first_name' => $participantName,
             ]
         );
+        if (! $senderContact->wasRecentlyCreated && $senderContact->first_name !== $participantName) {
+            $senderContact->update(['first_name' => $participantName]);
+        }
 
         $this->routeMessageByType($messageData, $senderContact->id);
     }
@@ -239,7 +256,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
         match ($messageType) {
             'chat' => $this->handleTextMessage($messageData, $senderContactId),
-            'pending_media' => $this->handlePendingMediaMessage($messageData), // Group media not handled yet
+            'pending_media' => $this->handlePendingMediaMessage($messageData, $senderContactId),
             default => Log::warning('Unsupported message type in handleMessage', ['type' => $messageType]),
         };
     }
@@ -265,7 +282,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         }
     }
 
-    private function handlePendingMediaMessage(array $messageData): void
+    private function handlePendingMediaMessage(array $messageData, ?int $senderContactId = null): void
     {
         try {
             $this->messageService->createPendingMediaMessage(
@@ -277,7 +294,8 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                 metadata: [
                     'timestamp' => $messageData['timestamp'],
                     'from' => $this->phoneNumberNormalizer->normalize($messageData['from']),
-                ]
+                ],
+                senderContactId: $senderContactId
             );
         } catch (\Exception $e) {
             Log::error('Error in MessageService from handlePendingMediaMessage', [
@@ -368,7 +386,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleGroupMessageCreate(array $messageData, array $payload): void
     {
         $groupId = $messageData['to'];
-        $participantName = $messageData['notifyName'] ?? 'You';
+        $participantName = $messageData['_data']['notifyName'] ?? 'You';
 
         $this->conversation = $this->conversationService->findOrCreate(
             $this->chatbotChannel,

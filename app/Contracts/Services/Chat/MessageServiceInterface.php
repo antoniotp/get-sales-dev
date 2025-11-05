@@ -40,7 +40,8 @@ interface MessageServiceInterface
         string $content,
         string $type,
         string $senderType,
-        array $metadata
+        array $metadata,
+        ?int $senderContactId = null
     ): Message;
 
     public function attachMediaToPendingMessage(

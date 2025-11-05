@@ -5,6 +5,7 @@ namespace Tests\Unit\Services\WhatsApp;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
@@ -34,6 +35,8 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
     private MockInterface $messageServiceMock;
 
+    private MockInterface $whatsAppWebServiceMock;
+
     private Channel $whatsappWebChannel;
 
     private Chatbot $chatbot;
@@ -42,6 +45,11 @@ class WhatsappWebWebhookServiceTest extends TestCase
     {
         parent::setUp();
 
+        // Fake the HTTP client to prevent real API calls from the service detector
+        Http::fake([
+            '*/ping' => Http::response(['success' => true], 200),
+        ]);
+
         $this->seed(DatabaseSeeder::class);
 
         config()->set('services.wwebjs_service.url', 'http://test.wwebjs.service');
@@ -49,6 +57,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
         $this->conversationServiceMock = $this->mock(ConversationServiceInterface::class);
         $this->messageServiceMock = $this->mock(MessageServiceInterface::class);
+        $this->whatsAppWebServiceMock = $this->mock(WhatsAppWebServiceInterface::class);
 
         $this->service = $this->app->make(WhatsappWebWebhookService::class);
 

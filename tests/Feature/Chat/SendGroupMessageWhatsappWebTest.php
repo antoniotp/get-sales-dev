@@ -94,6 +94,9 @@ class SendGroupMessageWhatsappWebTest extends TestCase
             'sessionId' => 'chatbot-'.$this->chatbot->id,
             'data' => [
                 'message' => [
+                    '_data' => [
+                        'notifyName' => $participantName,
+                    ],
                     'id' => [
                         'fromMe' => true,
                         'remote' => $this->groupConversation->external_conversation_id,

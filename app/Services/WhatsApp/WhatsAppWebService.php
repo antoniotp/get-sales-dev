@@ -240,4 +240,41 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
             ]);
         }
     }
+
+    public function getGroupChatInfo(string $sessionId, string $groupId): ?array
+    {
+        $url = $this->wwebjs_url.'/groupChat/getClassInfo/'.$sessionId;
+        Log::info('Getting group chat info from WhatsApp Web Service', ['session_id' => $sessionId, 'group_id' => $groupId]);
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->wwebjs_key,
+            ])->post($url, [
+                'chatId' => $groupId,
+            ]);
+
+            if ($response->successful() && $response->json('success')) {
+                Log::info('Group chat info retrieved successfully', ['session_id' => $sessionId, 'group_id' => $groupId]);
+
+                return $response->json('chat');
+            }
+
+            Log::error('Failed to get group chat info.', [
+                'session_id' => $sessionId,
+                'group_id' => $groupId,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return null;
+        } catch (Exception $e) {
+            Log::error('Error getting group chat info', [
+                'session_id' => $sessionId,
+                'group_id' => $groupId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
 }

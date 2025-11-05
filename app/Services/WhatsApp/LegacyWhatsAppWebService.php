@@ -206,4 +206,9 @@ class LegacyWhatsAppWebService implements WhatsAppWebServiceInterface
             ]);
         }
     }
+
+    public function getGroupChatInfo(string $sessionId, string $groupId): ?array
+    {
+        return [];
+    }
 }

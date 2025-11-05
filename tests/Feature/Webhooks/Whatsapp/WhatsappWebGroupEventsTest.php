@@ -10,6 +10,7 @@ use App\Models\Conversation;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -71,6 +72,9 @@ class WhatsappWebGroupEventsTest extends TestCase
             'sessionId' => 'chatbot-2', // Will be overwritten in test
             'data' => [
                 'message' => [
+                    '_data' => [
+                        'notifyName' => 'Cris Gonzalez',
+                    ],
                     'id' => [
                         'fromMe' => false,
                         'remote' => '120363422499819089@g.us',
@@ -176,6 +180,9 @@ class WhatsappWebGroupEventsTest extends TestCase
             'sessionId' => 'chatbot-2', // Will be overwritten in test
             'data' => [
                 'message' => [
+                    '_data' => [
+                        'notifyName' => 'CGM 2',
+                    ],
                     'id' => [
                         'fromMe' => true,
                         'remote' => '120363422499819089@g.us',
@@ -248,6 +255,53 @@ class WhatsappWebGroupEventsTest extends TestCase
             'sender_contact_id' => null, // Should be null for outgoing messages from our app
             'conversation_id' => $conversation->id,
             'metadata->participant_name' => $participantName, // Participant name stored in metadata
+        ]);
+    }
+
+    #[Test]
+    public function it_fetches_group_name_when_receiving_first_message_from_unknown_group(): void
+    {
+        // Arrange
+        $payload = $this->getIncomingGroupMessagePayload();
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $payload['sessionId'] = $sessionId;
+
+        $groupId = $payload['data']['message']['from'];
+        $expectedGroupName = 'Fetched Group Name';
+
+        // Mock the HTTP call to the wwebjs service
+        Http::fake([
+            '*/groupChat/getClassInfo/*' => Http::response([
+                'success' => true,
+                'chat' => [
+                    'name' => $expectedGroupName,
+                    // ... other group properties
+                ],
+            ]),
+        ]);
+
+        // Ensure the conversation does not exist beforehand
+        $this->assertDatabaseMissing('conversations', [
+            'external_conversation_id' => $groupId,
+        ]);
+
+        // Act
+        $response = $this->postWebhook($payload);
+
+        // Assert
+        $response->assertOk();
+
+        // Assert that the API was called
+        Http::assertSent(function ($request) use ($groupId) {
+            return $request->hasHeader('x-api-key') &&
+                   str_contains($request->url(), 'groupChat/getClassInfo') &&
+                   $request['chatId'] == $groupId;
+        });
+
+        // Assert that the conversation was created and its name was updated
+        $this->assertDatabaseHas('conversations', [
+            'external_conversation_id' => $groupId,
+            'name' => $expectedGroupName,
         ]);
     }
 }

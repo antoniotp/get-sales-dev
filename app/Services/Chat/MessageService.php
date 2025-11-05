@@ -87,7 +87,8 @@ class MessageService implements MessageServiceInterface
         string $content,
         string $type,
         string $senderType,
-        array $metadata
+        array $metadata,
+        ?int $senderContactId = null
     ): Message {
         return Message::create([
             'conversation_id' => $conversation->id,
@@ -96,6 +97,7 @@ class MessageService implements MessageServiceInterface
             'content' => $content,
             'content_type' => 'pending',
             'sender_type' => $senderType,
+            'sender_contact_id' => $senderContactId,
             'metadata' => $metadata,
         ]);
     }

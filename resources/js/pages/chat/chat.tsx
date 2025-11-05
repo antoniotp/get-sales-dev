@@ -162,12 +162,15 @@ export default function Chat(
 
         orgChannel.listen('.conversation.created', (e: NewConversationEvent) => {
             setChats(prevChats => {
-                const exists = prevChats.some(chat => chat.id === e.conversation.id);
-                if (!exists) {
-                    const updatedChats = [e.conversation, ...prevChats];
+                const existingIndex = prevChats.findIndex(chat => chat.id === e.conversation.id);
+                // update if exists, otherwise add to the beginning
+                if (existingIndex !== -1) {
+                    const updatedChats = [...prevChats];
+                    updatedChats[existingIndex] = e.conversation;
                     return sortChatsByLastMessageTime(updatedChats);
                 }
-                return prevChats;
+                const updatedChats = [e.conversation, ...prevChats];
+                return sortChatsByLastMessageTime(updatedChats);
             });
         });
 

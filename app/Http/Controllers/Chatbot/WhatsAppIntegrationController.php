@@ -43,6 +43,7 @@ class WhatsAppIntegrationController extends Controller
                     'phone_number_verified_name' => $whatsAppWebChatbotChannel->credentials['phone_number_verified_name'] ?? '',
                     'display_phone_number' => $whatsAppWebChatbotChannel->credentials['display_phone_number'] ?? '',
                     'phone_number_id' => $whatsAppWebChatbotChannel->credentials['phone_number_id'] ?? '',
+                    'phone_number' => $whatsAppWebChatbotChannel->credentials['phone_number'] ?? ''
                 ],
                 'status' => $whatsAppWebChatbotChannel->status,
             ] : null,

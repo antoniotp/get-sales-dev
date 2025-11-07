@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Contracts\Services\AI\AIServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Models\Message;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -37,8 +38,22 @@ class ProcessAIResponse implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(AIServiceInterface $aiService, MessageServiceInterface $messageService): void
-    {
+    public function handle(
+        AIServiceInterface $aiService,
+        MessageServiceInterface $messageService,
+        PhoneServiceInterface $phoneService
+    ): void {
+        if ($this->message->content_type !== 'text') {
+            return;
+        }
+        $phoneNumber = $this->message->conversation->contact_phone
+            ?? $this->message->conversation->contactChannel->contact->phone_number
+            ?? '';
+
+        $countryCode = '';
+        if ($phoneNumber) {
+            $countryCode = $phoneService->getCountryFromPhoneNumber($phoneNumber);
+        }
         try {
             // Get conversation history
             $history = $this->getConversationHistory();
@@ -46,6 +61,10 @@ class ProcessAIResponse implements ShouldQueue
             // Get prompt from ChatbotChannel
             $prompt = $this->message->conversation->chatbotChannel->chatbot->system_prompt ??
                 'You are a helpful assistant. Respond professionally and concisely.';
+
+            if ($countryCode) {
+                $prompt .= "\n".'If you cannot determine the language from the conversation history, use the principal language of the country. The country code is'.strtoupper($countryCode)."\n";
+            }
 
             // Generate AI response
             $aiResponse = $aiService->generateResponse($prompt, $history);

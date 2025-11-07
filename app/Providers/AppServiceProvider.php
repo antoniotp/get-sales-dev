@@ -11,6 +11,7 @@ use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Invitation\InvitationServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
+use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
@@ -25,6 +26,7 @@ use App\Services\Chatbot\ChatbotService;
 use App\Services\Invitation\InvitationService;
 use App\Services\Organization\OrganizationService;
 use App\Services\Util\PhoneNumberNormalizer;
+use App\Services\Util\PhoneService;
 use App\Services\WhatsApp\FacebookService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\WhatsApp\WhatsappWebServiceDetector;
@@ -65,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
             return $app->make(WhatsAppWebServiceFactory::class)->create();
         });
         $this->app->bind(PhoneNumberNormalizerInterface::class, PhoneNumberNormalizer::class);
+        $this->app->bind(PhoneServiceInterface::class, PhoneService::class);
     }
 
     /**

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Public\StorePublicContactRequest;
 use App\Models\PublicFormLink;
-use Illuminate\Http\Request;
 
 class PublicFormController extends Controller
 {
@@ -28,10 +28,8 @@ class PublicFormController extends Controller
     /**
      * Store a new contact from the public form submission.
      */
-    public function store(Request $request, PublicFormLink $formLink)
+    public function store(StorePublicContactRequest $request, PublicFormLink $formLink)
     {
-        // TODO: Use a FormRequest for validation
-        // TODO: Call the ContactRegistrationService
-        // TODO: Return a JSON response
+        return response()->json(['message' => 'Validation passed!']);
     }
 }

@@ -1,0 +1,82 @@
+[
+    {
+        "name": "tutor_birthdate",
+        "label": "Fecha de Nacimiento del Tutor",
+        "type": "date",
+        "validation": ["required", "date"]
+    },
+    {
+        "name": "tutor_dni",
+        "label": "DNI del Tutor",
+        "type": "text",
+        "placeholder": "Ej: 12345678A",
+        "validation": ["required", "string", "max:20"]
+    },
+    {
+        "name": "tutor_address",
+        "label": "Dirección del Tutor",
+        "type": "textarea",
+        "placeholder": "Ej: Calle Falsa 123",
+        "validation": ["required", "string", "max:500"]
+    },
+    {
+        "name": "vet_full_name",
+        "label": "Nombre y Apellido de su Veterinario/a de Cabecera",
+        "type": "text",
+        "placeholder": "Ej: Dra. Ana García",
+        "validation": ["nullable", "string", "max:255"]
+    },
+    {
+        "name": "patient_species",
+        "label": "Especie del Paciente",
+        "type": "text",
+        "placeholder": "Ej: Canino",
+        "validation": ["required", "string", "max:100"]
+    },
+    {
+        "name": "patient_breed",
+        "label": "Raza del Paciente",
+        "type": "text",
+        "placeholder": "Ej: Labrador",
+        "validation": ["required", "string", "max:100"]
+    },
+    {
+        "name": "patient_age",
+        "label": "Edad del Paciente",
+        "type": "number",
+        "placeholder": "Ej: 3",
+        "validation": ["required", "integer", "min:0", "max:30"]
+    },
+    {
+        "name": "patient_sex",
+        "label": "Sexo del Paciente",
+        "type": "select",
+        "options": [
+            { "value": "male", "label": "Macho" },
+            { "value": "female", "label": "Hembra" },
+            { "value": "unknown", "label": "Desconocido" }
+        ],
+        "validation": ["required", "in:male,female,unknown"]
+    },
+    {
+        "name": "patient_castrated",
+        "label": "¿Castrado/a?",
+        "type": "checkbox",
+        "validation": ["boolean"]
+    },
+    {
+        "name": "patient_castration_age",
+        "label": "Edad de Castración (en meses)",
+        "type": "number",
+        "placeholder": "Ej: 6",
+        "validation": ["nullable", "integer", "min:0", "max:360"]
+    },
+    {
+        "name": "patient_weight",
+        "label": "Peso del Paciente (en kg)",
+        "type": "number",
+        "step": "0.1",
+        "placeholder": "Ej: 15.5",
+        "validation": ["required", "numeric", "min:0.1", "max:200"]
+    }
+]

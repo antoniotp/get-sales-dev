@@ -13,6 +13,7 @@ use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
+use App\Http\Controllers\Public\PublicFormController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\WhatsAppWebController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,10 @@ Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle'])->
 
 // Public invitation acceptance page
 Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');
+
+// Routes for public-facing dynamic forms to register contacts.
+Route::get('/forms/{formLink:uuid}', [PublicFormController::class, 'show'])->name('public-forms.show');
+Route::post('/forms/{formLink:uuid}', [PublicFormController::class, 'store'])->name('public-forms.store');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

@@ -33,8 +33,10 @@ use App\Services\WhatsApp\FacebookService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\WhatsApp\WhatsappWebServiceDetector;
 use App\Services\WhatsApp\WhatsappWebWebhookRouterService;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -102,6 +104,10 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return $chatbot;
+        });
+
+        RateLimiter::for('public-form', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

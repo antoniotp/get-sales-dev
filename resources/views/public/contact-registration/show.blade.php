@@ -18,6 +18,12 @@
             <form method="POST" action="{{ route('public-forms.store', $formLink->uuid) }}">
                 @csrf
 
+                {{-- Honeypot field for bot protection --}}
+                <div class="hidden" aria-hidden="true">
+                    <label for="honeypot_field">Do not fill this field</label>
+                    <input type="text" name="honeypot_field" id="honeypot_field" tabindex="-1" autocomplete="off">
+                </div>
+
                 <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Datos del Tutor</h2>
 
                 {{-- Base Fields for Contact --}}

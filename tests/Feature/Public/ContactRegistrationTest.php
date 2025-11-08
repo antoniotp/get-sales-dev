@@ -9,6 +9,7 @@ use App\Models\PublicFormLink;
 use App\Models\PublicFormTemplate;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\RateLimiter;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -40,6 +41,32 @@ class ContactRegistrationTest extends TestCase
             'chatbot_id' => $chatbot->id,
             'channel_id' => $channel->id,
         ]);
+    }
+
+    #[Test]
+    public function it_throttles_requests_after_too_many_attempts(): void
+    {
+        // We defined a 'forms' throttle limit of 10 attempts per minute.
+        $limit = 5;
+
+        $validData = [
+            'first_name' => 'Throttled',
+            'last_name' => 'User',
+            'email' => 'throttle@example.com',
+            'phone_number' => '+1111111111',
+            'country_code' => 'ES',
+        ];
+
+        // The first 5 should be okay
+        for ($i = 0; $i < $limit; $i++) {
+            $response = $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
+            $this->assertNotEquals(429, $response->getStatusCode());
+        }
+
+        // The 6th attempt should be throttled
+        $response = $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
+        $response->assertStatus(429); // Assert "Too Many Requests"
+        RateLimiter::clear('public-form');
     }
 
     #[Test]
@@ -164,26 +191,23 @@ class ContactRegistrationTest extends TestCase
     }
 
     #[Test]
-    public function it_throttles_requests_after_too_many_attempts(): void
+    public function it_fails_validation_if_honeypot_field_is_filled(): void
     {
-        $validData = [
-            'first_name' => 'Throttled',
-            'last_name' => 'User',
-            'email' => 'throttle@example.com',
-            'phone_number' => '+1111111111',
+        // Arrange: Prepare data, but fill in the honeypot field
+        $botData = [
+            'first_name' => 'Bot',
+            'last_name' => 'McBotface',
+            'email' => 'bot@example.com',
+            'phone_number' => '+1234567890',
             'country_code' => 'ES',
+            'honeypot_field' => 'I am a bot', // <-- Bot fills this
         ];
 
-        // The first 10 should be okay
-        for ($i = 0; $i < 5; $i++) {
-            $response = $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
-            // We don't strictly need to check every response, but we can ensure it's not a 429
-            $this->assertNotEquals(429, $response->getStatusCode());
-        }
+        // Act: Post the data
+        $response = $this->post(route('public-forms.store', $this->formLink->uuid), $botData);
 
-        // The 6th attempt should be throttled
-        $response = $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
-        $response->assertStatus(429); // Assert "Too Many Requests"
+        // Assert: Check for a validation error on the honeypot field
+        $response->assertSessionHasErrors('honeypot_field');
     }
 
     /**

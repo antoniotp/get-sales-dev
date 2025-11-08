@@ -36,6 +36,7 @@ class StorePublicContactRequest extends FormRequest
             'country_code' => ['required', 'string'],
             'language_code' => ['nullable', 'string'],
             'timezone' => ['nullable', 'string'],
+            'honeypot_field' => ['prohibited'],
             // TODO: Add reCAPTCHA validation rule
         ];
 

@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers\Public;
 
+use App\Contracts\Services\PublicForm\PublicContactFormServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StorePublicContactRequest;
 use App\Models\PublicFormLink;
 
 class PublicFormController extends Controller
 {
+    public function __construct(
+        private readonly PublicContactFormServiceInterface $contactFormService
+    ) {}
+
     /**
      * Display the specified public form.
      */
@@ -30,6 +35,11 @@ class PublicFormController extends Controller
      */
     public function store(StorePublicContactRequest $request, PublicFormLink $formLink)
     {
-        return response()->json(['message' => 'Validation passed!']);
+        $this->contactFormService->register($formLink, $request->validated());
+
+        return response()->json([
+            'message' => $formLink->success_message ?? '¡Registro completado con éxito!',
+            'redirect_url' => $formLink->redirect_on_success,
+        ]);
     }
 }

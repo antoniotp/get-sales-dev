@@ -4,6 +4,7 @@ namespace Tests\Feature\Public;
 
 use App\Models\Channel;
 use App\Models\Chatbot;
+use App\Models\Contact;
 use App\Models\PublicFormLink;
 use App\Models\PublicFormTemplate;
 use Database\Seeders\DatabaseSeeder;
@@ -95,6 +96,71 @@ class ContactRegistrationTest extends TestCase
 
         // Assert: Check that there are no validation errors
         $response->assertSessionHasNoErrors();
+    }
+
+    #[Test]
+    public function it_creates_the_contact_and_attributes_on_successful_submission(): void
+    {
+        // Arrange: Prepare valid data
+        $validData = [
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'email' => 'jane.doe@example.com',
+            'phone_number' => '+1987654321',
+            'country_code' => 'ES',
+            'language_code' => 'es',
+            'timezone' => 'Europe/Madrid',
+            'custom_fields' => [
+                'tutor_birthdate' => '1992-05-20',
+                'tutor_dni' => '87654321A',
+                'tutor_address' => '456 Main St',
+                'patient_species' => 'Cat',
+                'patient_breed' => 'Siamese',
+                'patient_age' => 2,
+                'patient_sex' => 'female',
+                'patient_weight' => 4.5,
+            ],
+        ];
+
+        // Act: Post valid data to the store endpoint
+        $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
+
+        // Assert: A new contact was created with the base data
+        $this->assertDatabaseHas('contacts', [
+            'organization_id' => $this->formLink->chatbot->organization_id,
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+            'email' => 'jane.doe@example.com',
+            'phone_number' => '+1987654321',
+            'country_code' => 'ES',
+            'language_code' => 'es',
+            'timezone' => 'Europe/Madrid',
+        ]);
+
+        // Assert: A contact channel link was created
+        $contact = Contact::where('email', 'jane.doe@example.com')->first();
+        $this->assertDatabaseHas('contact_channels', [
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->formLink->chatbot_id,
+            'channel_id' => $this->formLink->channel_id,
+        ]);
+
+        // Assert: Custom attributes were created
+        $this->assertDatabaseHas('contact_attributes', [
+            'contact_id' => $contact->id,
+            'attribute_name' => 'tutor_dni',
+            'attribute_value' => '87654321A',
+        ]);
+        $this->assertDatabaseHas('contact_attributes', [
+            'contact_id' => $contact->id,
+            'attribute_name' => 'patient_species',
+            'attribute_value' => 'Cat',
+        ]);
+        $this->assertDatabaseHas('contact_attributes', [
+            'contact_id' => $contact->id,
+            'attribute_name' => 'patient_weight',
+            'attribute_value' => '4.5',
+        ]);
     }
 
     /**

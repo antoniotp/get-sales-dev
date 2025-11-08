@@ -34,7 +34,7 @@ Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('
 
 // Routes for public-facing dynamic forms to register contacts.
 Route::get('/forms/{formLink:uuid}', [PublicFormController::class, 'show'])->name('public-forms.show');
-Route::post('/forms/{formLink:uuid}', [PublicFormController::class, 'store'])->name('public-forms.store');
+Route::post('/forms/{formLink:uuid}', [PublicFormController::class, 'store'])->name('public-forms.store')->middleware('throttle:5,1');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {

@@ -163,6 +163,29 @@ class ContactRegistrationTest extends TestCase
         ]);
     }
 
+    #[Test]
+    public function it_throttles_requests_after_too_many_attempts(): void
+    {
+        $validData = [
+            'first_name' => 'Throttled',
+            'last_name' => 'User',
+            'email' => 'throttle@example.com',
+            'phone_number' => '+1111111111',
+            'country_code' => 'ES',
+        ];
+
+        // The first 10 should be okay
+        for ($i = 0; $i < 5; $i++) {
+            $response = $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
+            // We don't strictly need to check every response, but we can ensure it's not a 429
+            $this->assertNotEquals(429, $response->getStatusCode());
+        }
+
+        // The 6th attempt should be throttled
+        $response = $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
+        $response->assertStatus(429); // Assert "Too Many Requests"
+    }
+
     /**
      * Helper to get the schema definition.
      */

@@ -6,6 +6,7 @@ use App\Models\PublicFormLink;
 use App\Rules\Recaptcha;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePublicContactRequest extends FormRequest
 {
@@ -27,12 +28,20 @@ class StorePublicContactRequest extends FormRequest
         /** @var PublicFormLink $formLink */
         $formLink = $this->route('formLink');
         $formLink->load('publicFormTemplate');
+        $organizationId = $formLink->chatbot->organization_id;
 
         $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'phone_number' => ['required', 'string', 'max:20'],
+            'phone_number' => [
+                'required',
+                'string',
+                'max:20',
+                Rule::unique('contacts')->where(function ($query) use ($organizationId) {
+                    return $query->where('organization_id', $organizationId);
+                }),
+            ],
             'country_code' => ['required', 'string'],
             'language_code' => ['nullable', 'string'],
             'timezone' => ['nullable', 'string'],

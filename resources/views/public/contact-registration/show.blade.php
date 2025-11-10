@@ -11,6 +11,21 @@
 <body class="font-sans antialiased bg-gray-100">
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8" x-data="form()">
+            <div x-show="success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline" x-text="message"></span>
+            </div>
+            <div x-show="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <ul class="list-disc list-inside" x-show="Object.keys(errors).length > 0">
+                    <template x-for="(errorMessages, fieldName) in errors" :key="fieldName">
+                        <template x-for="errorMessage in errorMessages">
+                            <li x-text="errorMessage"></li>
+                        </template>
+                    </template>
+                </ul>
+                {{-- Fallback message if there are no specific field errors (e.g., network error) --}}
+                <span x-show="Object.keys(errors).length === 0" x-text="message"></span>
+            </div>
+
             <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ $formLink->publicFormTemplate->title }}</h1>
             @if($formLink->publicFormTemplate->description)
                 <p class="text-gray-600 mb-6">{{ $formLink->publicFormTemplate->description }}</p>
@@ -123,8 +138,9 @@
                 <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
 
                 <div class="mt-6">
-                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Enviar Registro
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" :disabled="submitting">
+                        <span x-show="!submitting">Enviar Registro</span>
+                        <span x-show="submitting">Enviando...</span>
                     </button>
                 </div>
             </form>
@@ -134,12 +150,53 @@
         function form() {
             return {
                 selectedCountry: '',
+                submitting: false,
+                success: false,
+                error: false,
+                message: '',
+                errors: {},
+
                 submitForm() {
-                    const form = this.$refs.formElement;
+                    this.submitting = true;
+                    this.success = false;
+                    this.error = false;
+                    this.message = '';
+                    this.errors = {};
+
                     grecaptcha.ready(() => {
                         grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'submit'}).then((token) => {
                             document.getElementById('g-recaptcha-response').value = token;
-                            form.submit();
+
+                            const formData = new FormData(this.$refs.formElement);
+
+                            fetch(this.$refs.formElement.action, {
+                                method: 'POST',
+                                body: formData,
+                                headers: {
+                                    'Accept': 'application/json',
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.errors) {
+                                    this.error = true;
+                                    this.message = data.message || 'Por favor, corrija los errores.';
+                                    this.errors = data.errors;
+                                } else {
+                                    this.success = true;
+                                    this.message = data.message;
+                                    this.$refs.formElement.reset();
+                                }
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            })
+                            .catch(() => {
+                                this.error = true;
+                                this.message = 'Ocurrió un error inesperado. Por favor, intente de nuevo.';
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            })
+                            .finally(() => {
+                                this.submitting = false;
+                            });
                         });
                     });
                 }

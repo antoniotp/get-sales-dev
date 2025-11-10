@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Public;
 
 use App\Models\PublicFormLink;
+use App\Rules\Recaptcha;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StorePublicContactRequest extends FormRequest
 {
@@ -37,7 +37,7 @@ class StorePublicContactRequest extends FormRequest
             'language_code' => ['nullable', 'string'],
             'timezone' => ['nullable', 'string'],
             'honeypot_field' => ['prohibited'],
-            // TODO: Add reCAPTCHA validation rule
+            'g-recaptcha-response' => ['required', new Recaptcha],
         ];
 
         if (empty($formLink->publicFormTemplate->custom_fields_schema)) {
@@ -46,10 +46,10 @@ class StorePublicContactRequest extends FormRequest
 
         // Add dynamic rules from custom_fields_schema
         foreach ($formLink->publicFormTemplate->custom_fields_schema as $field) {
-            $fieldName = 'custom_fields.' . $field['name'];
+            $fieldName = 'custom_fields.'.$field['name'];
             $fieldRules = $field['validation'] ?? [];
 
-            if (!empty($fieldRules)) {
+            if (! empty($fieldRules)) {
                 $rules[$fieldName] = $fieldRules;
             }
         }
@@ -81,7 +81,7 @@ class StorePublicContactRequest extends FormRequest
         }
 
         foreach ($formLink->publicFormTemplate->custom_fields_schema as $field) {
-            $attributes['custom_fields.' . $field['name']] = strtolower($field['label']);
+            $attributes['custom_fields.'.$field['name']] = strtolower($field['label']);
         }
 
         return $attributes;

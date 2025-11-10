@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $formLink->publicFormTemplate->title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.tsx'])
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
 </head>
 <body class="font-sans antialiased bg-gray-100">
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8" x-data="{ selectedCountry: '' }">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8" x-data="form()">
             <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ $formLink->publicFormTemplate->title }}</h1>
             @if($formLink->publicFormTemplate->description)
                 <p class="text-gray-600 mb-6">{{ $formLink->publicFormTemplate->description }}</p>
             @endif
 
-            {{-- TODO: Implement Alpine.js logic for AJAX submission --}}
-            <form method="POST" action="{{ route('public-forms.store', $formLink->uuid) }}">
+            <form method="POST" action="{{ route('public-forms.store', $formLink->uuid) }}" x-on:submit.prevent="submitForm" x-ref="formElement">
                 @csrf
 
                 {{-- Honeypot field for bot protection --}}
@@ -119,7 +120,7 @@
                     </div>
                 @endforeach
 
-                {{-- TODO: Add reCAPTCHA widget --}}
+                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
 
                 <div class="mt-6">
                     <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -129,5 +130,21 @@
             </form>
         </div>
     </div>
+    <script>
+        function form() {
+            return {
+                selectedCountry: '',
+                submitForm() {
+                    const form = this.$refs.formElement;
+                    grecaptcha.ready(() => {
+                        grecaptcha.execute('{{ config('services.recaptcha.site_key') }}', {action: 'submit'}).then((token) => {
+                            document.getElementById('g-recaptcha-response').value = token;
+                            form.submit();
+                        });
+                    });
+                }
+            }
+        }
+    </script>
 </body>
 </html>

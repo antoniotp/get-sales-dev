@@ -6,6 +6,9 @@ use App\Contracts\Services\PublicForm\PublicContactFormServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StorePublicContactRequest;
 use App\Models\PublicFormLink;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Redirector;
+use Illuminate\Support\Facades\App;
 
 class PublicFormController extends Controller
 {
@@ -33,9 +36,16 @@ class PublicFormController extends Controller
     /**
      * Store a new contact from the public form submission.
      */
-    public function store(StorePublicContactRequest $request, PublicFormLink $formLink)
+    public function store(Request $request, PublicFormLink $formLink)
     {
-        $this->contactFormService->register($formLink, $request->validated());
+        App::setLocale('es');
+        $formRequest = StorePublicContactRequest::createFrom($request)
+            ->setContainer(app())
+            ->setRedirector(app(Redirector::class));
+
+        $formRequest->validateResolved();
+
+        $this->contactFormService->register($formLink, $formRequest->validated());
 
         return response()->json([
             'message' => $formLink->success_message ?? '¡Registro completado con éxito!',

@@ -67,4 +67,12 @@ class Contact extends Model
     {
         return $this->hasManyThrough(Conversation::class, ContactChannel::class);
     }
+
+    /**
+     * Get the appointments for the contact.
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
 }

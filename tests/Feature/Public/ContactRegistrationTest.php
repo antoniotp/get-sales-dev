@@ -4,6 +4,7 @@ namespace Tests\Feature\Public;
 
 use App\Models\Channel;
 use App\Models\Chatbot;
+use App\Models\ChatbotChannel;
 use App\Models\Contact;
 use App\Models\PublicFormLink;
 use App\Models\PublicFormTemplate;
@@ -28,6 +29,13 @@ class ContactRegistrationTest extends TestCase
         $chatbot = Chatbot::find(1);
 
         $channel = Channel::where('slug', 'whatsapp-web')->firstOrFail();
+
+        $chatbot->chatbotChannels()->create([
+            'channel_id' => $channel->id,
+            'name' => 'WhatsApp Web Channel 1',
+            'credentials' => ['phone_number' => '+3333333333'],
+            'status' => 1,
+        ]);
 
         // 2. Create the form template with the veterinary schema
         $template = PublicFormTemplate::factory()->create([
@@ -216,5 +224,68 @@ class ContactRegistrationTest extends TestCase
     private function getVeterinarySchema(): array
     {
         return json_decode(file_get_contents(base_path('tests/Fixtures/veterinary_form_schema.json')), true);
+    }
+
+    #[Test]
+    public function it_creates_an_appointment_when_appointment_datetime_is_provided(): void
+    {
+        // Arrange: Add the appointment field to the form's schema for this test
+        $schema = $this->getVeterinarySchema();
+        $schema[] = [
+            'name' => 'appointment_datetime',
+            'label' => 'Fecha y Hora de la Cita',
+            'type' => 'datetime-local',
+            'validation' => ['required', 'date', 'after:now'],
+        ];
+        $this->formLink->publicFormTemplate->update(['custom_fields_schema' => $schema]);
+
+        $appointmentTime = now()->addDay()->toDateTimeString();
+
+        $validData = [
+            'first_name' => 'Appointment',
+            'last_name' => 'User',
+            'email' => 'appointment.user@example.com',
+            'phone_number' => '+1231231234',
+            'country_code' => 'ES',
+            'custom_fields' => [
+                'tutor_birthdate' => '1995-02-10',
+                'tutor_dni' => '11223344B',
+                'tutor_address' => '789 Appointment Ave',
+                'patient_species' => 'Dog',
+                'patient_breed' => 'Beagle',
+                'patient_age' => 3,
+                'patient_sex' => 'male',
+                'patient_weight' => 12.0,
+                'appointment_datetime' => $appointmentTime, // <-- Appointment data
+            ],
+        ];
+
+        // Act: Post valid data to the store endpoint
+        $this->post(route('public-forms.store', $this->formLink->uuid), $validData);
+
+        // Assert: A new contact was created
+        $this->assertDatabaseHas('contacts', [
+            'email' => 'appointment.user@example.com',
+        ]);
+        $contact = Contact::where('email', 'appointment.user@example.com')->first();
+
+        // Find the correct chatbot_channel_id to assert against
+        $chatbotChannel = ChatbotChannel::where('chatbot_id', $this->formLink->chatbot_id)
+            ->where('channel_id', $this->formLink->channel_id)
+            ->first();
+
+        // Assert: An appointment was created with the correct data
+        $this->assertDatabaseHas('appointments', [
+            'contact_id' => $contact->id,
+            'chatbot_channel_id' => $chatbotChannel->id,
+            'appointment_at' => $appointmentTime,
+            'status' => 'scheduled',
+        ]);
+
+        // Assert: An appointment attribute was NOT created in the generic attributes table
+        $this->assertDatabaseMissing('contact_attributes', [
+            'contact_id' => $contact->id,
+            'attribute_name' => 'appointment_datetime',
+        ]);
     }
 }

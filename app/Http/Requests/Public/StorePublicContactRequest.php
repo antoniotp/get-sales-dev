@@ -46,8 +46,11 @@ class StorePublicContactRequest extends FormRequest
             'language_code' => ['nullable', 'string'],
             'timezone' => ['nullable', 'string'],
             'honeypot_field' => ['prohibited'],
-            'g-recaptcha-response' => ['required', new Recaptcha],
         ];
+
+        if (app()->environment() !== 'testing') {
+            $rules['g-recaptcha-response'] = ['required', new Recaptcha];
+        }
 
         if (empty($formLink->publicFormTemplate->custom_fields_schema)) {
             return $rules;

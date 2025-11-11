@@ -3,6 +3,7 @@
 namespace App\Services\PublicForm;
 
 use App\Contracts\Services\PublicForm\PublicContactFormServiceInterface;
+use App\Models\ChatbotChannel;
 use App\Models\Contact;
 use App\Models\PublicFormLink;
 use Illuminate\Support\Facades\DB;
@@ -42,9 +43,27 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                     );
                 }
 
-                // 3. Create/update custom attributes
-                if (! empty($validatedData['custom_fields'])) {
-                    foreach ($validatedData['custom_fields'] as $name => $value) {
+                // 3. Handle appointment creation
+                $customFields = $validatedData['custom_fields'] ?? [];
+                if (isset($customFields['appointment_datetime'])) {
+                    // Find the correct chatbot_channel_id
+                    $chatbotChannel = ChatbotChannel::where('chatbot_id', $formLink->chatbot_id)
+                        ->where('channel_id', $formLink->channel_id)
+                        ->first();
+
+                    if ($chatbotChannel) {
+                        $contact->appointments()->create([
+                            'chatbot_channel_id' => $chatbotChannel->id,
+                            'appointment_at' => $customFields['appointment_datetime'],
+                        ]);
+                    }
+                    // Remove appointment field to prevent it from being saved as an attribute
+                    unset($customFields['appointment_datetime']);
+                }
+
+                // 4. Create/update custom attributes
+                if (! empty($customFields)) {
+                    foreach ($customFields as $name => $value) {
                         // Find the field schema to check its type
                         $fieldSchema = collect($formLink->publicFormTemplate->custom_fields_schema)
                             ->firstWhere('name', $name);

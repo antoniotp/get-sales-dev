@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Appointments;
 
+use App\Jobs\Appointments\SendAppointmentReminderMessage;
 use App\Models\Appointment;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -32,7 +33,7 @@ class SendAppointmentReminders extends Command
 
         // Get all appointments that are scheduled, in the future, and haven't been reminded yet,
         // and where the associated channel has a reminder lead time set.
-        $appointments = Appointment::with('chatbotChannel')
+        $appointments = Appointment::with('chatbotChannel', 'contact')
             ->where('status', 'scheduled')
             ->whereNull('reminder_sent_at')
             ->where('appointment_at', '>', now())
@@ -56,10 +57,10 @@ class SendAppointmentReminders extends Command
 
             // Check if it's time to send the reminder
             if (now()->gte($reminderTime)) {
-                // In a real application, you would dispatch a job or event here to send the message.
-                // For now, we'll just log it to confirm the logic is working.
+                SendAppointmentReminderMessage::dispatch($appointment);
+
                 Log::info('Sending reminder for appointment ID: '.$appointment->id);
-                $this->line('Sending reminder for appointment ID: '.$appointment->id);
+                $this->line('Dispatched reminder job for appointment ID: '.$appointment->id);
 
                 // Update the appointment to mark the reminder as sent
                 $appointment->update([
@@ -71,6 +72,6 @@ class SendAppointmentReminders extends Command
             }
         }
         Log::info("Finished. Sent {$remindersSentCount} reminders.");
-        $this->info("Finished. Sent {$remindersSentCount} reminders.");
+        $this->info("Finished. Dispatched {$remindersSentCount} reminder jobs.");
     }
 }

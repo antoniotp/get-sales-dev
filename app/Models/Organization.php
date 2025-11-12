@@ -159,7 +159,7 @@ class Organization extends Model
     {
         $subscription = $this->currentSubscription()?->subscription;
 
-        if (!$subscription) {
+        if (! $subscription) {
             return [
                 'max_chatbots' => 0,
                 'max_messages_per_month' => 0,
@@ -220,5 +220,20 @@ class Organization extends Model
     public function invitations(): HasMany
     {
         return $this->hasMany(Invitation::class);
+    }
+
+    public function getFirstEligibleManager(): ?User
+    {
+        $eligibleRoleIds = Role::where('level', '>=', 60)
+            ->pluck('id')
+            ->toArray();
+
+        return $this->organizationUsers()
+            ->with(['user', 'role'])
+            ->whereIn('role_id', $eligibleRoleIds)
+            ->get()
+            ->sortBy('role.level')
+            ->first()
+            ?->user;
     }
 }

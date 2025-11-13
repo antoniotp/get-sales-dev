@@ -5,6 +5,8 @@ namespace App\Jobs\Appointments;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Models\Appointment;
+use App\Models\ChatbotChannelSetting;
+use App\Models\MessageTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -45,7 +47,28 @@ class SendAppointmentReminderMessage implements ShouldQueue
             return;
         }
 
-        // 2. Start a human-led conversation
+        // 2. Get the reminder message template
+        $reminderTemplateSetting = ChatbotChannelSetting::where('chatbot_channel_id', $chatbotChannel->id)
+            ->where('key', 'appointment_reminder_template_id')
+            ->first();
+
+        $messageTemplate = null;
+        if ($reminderTemplateSetting && $reminderTemplateSetting->value) {
+            $messageTemplate = MessageTemplate::find($reminderTemplateSetting->value);
+        }
+
+        $defaultMessage = 'Hola {{contact.first_name}}, te recordamos tu cita para el día {{appointment.datetime}}.';
+        $templateContent = $messageTemplate ? $messageTemplate->body_content : $defaultMessage;
+
+        // Replace placeholders in the template
+        $appointmentTimeFormatted = $this->appointment->appointment_at->format('d/m/Y \a \l\a\s H:i');
+        $messageContent = str_replace(
+            ['{{contact.first_name}}', '{{appointment.datetime}}'],
+            [$contact->first_name, $appointmentTimeFormatted],
+            $templateContent
+        );
+
+        // 3. Start a human-led conversation
         $conversation = $conversationService->startHumanConversation(
             $chatbotChannel->chatbot,
             ['contact_id' => $contact->id],
@@ -53,10 +76,7 @@ class SendAppointmentReminderMessage implements ShouldQueue
             $userToAssign->id
         );
 
-        // 3. Prepare and send the message
-        $appointmentTime = $this->appointment->appointment_at->format('d/m/Y \a \l\a\s H:i');
-        $messageContent = "Hola {$contact->first_name}, te recordamos tu cita para el día {$appointmentTime}.";
-
+        // 4. Prepare and send the message
         $messageData = [
             'content' => $messageContent,
             'content_type' => 'text',

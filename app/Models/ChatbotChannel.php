@@ -28,7 +28,9 @@ class ChatbotChannel extends Model
     use HasFactory, SoftDeletes;
 
     const STATUS_DISCONNECTED = 0;
+
     const STATUS_CONNECTED = 1;
+
     const STATUS_CONNECTING = 2;
 
     protected $fillable = [
@@ -79,5 +81,13 @@ class ChatbotChannel extends Model
     public function scopeActive($query)
     {
         return $query->where('status', self::STATUS_CONNECTED);
+    }
+
+    /**
+     * Get the settings for the chatbot channel.
+     */
+    public function settings(): HasMany
+    {
+        return $this->hasMany(ChatbotChannelSetting::class);
     }
 }

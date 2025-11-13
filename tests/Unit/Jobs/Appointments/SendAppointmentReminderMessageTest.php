@@ -9,8 +9,10 @@ use App\Models\Appointment;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Models\ChatbotChannelSetting;
 use App\Models\Contact;
 use App\Models\Conversation;
+use App\Models\MessageTemplate;
 use App\Models\Organization;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -55,6 +57,20 @@ class SendAppointmentReminderMessageTest extends TestCase
             'status' => 'scheduled',
         ]);
 
+        // Create a MessageTemplate
+        $customTemplateContent = 'Hola {{contact.first_name}}! Tu cita es el {{appointment.datetime}}. ¡Te esperamos!';
+        $messageTemplate = MessageTemplate::factory()->create([
+            'chatbot_channel_id' => $chatbotChannel->id,
+            'body_content' => $customTemplateContent,
+        ]);
+
+        // Link the MessageTemplate to the ChatbotChannel via ChatbotChannelSetting
+        ChatbotChannelSetting::create([
+            'chatbot_channel_id' => $chatbotChannel->id,
+            'key' => 'appointment_reminder_template_id',
+            'value' => $messageTemplate->id,
+        ]);
+
         // Mock the services
         $conversationServiceMock = $this->mock(ConversationServiceInterface::class);
         $messageServiceMock = $this->mock(MessageServiceInterface::class);
@@ -75,9 +91,13 @@ class SendAppointmentReminderMessageTest extends TestCase
 
         $messageServiceMock->shouldReceive('createAndSendOutgoingMessage')
             ->once()
-            ->withArgs(function ($argConversation, $argMessageData) use ($mockConversation, $userToAssign) {
-                $appointmentTime = '25/12/2025 a las 10:30';
-                $expectedContent = "Hola John, te recordamos tu cita para el día {$appointmentTime}.";
+            ->withArgs(function ($argConversation, $argMessageData) use ($mockConversation, $userToAssign, $contact, $appointment, $customTemplateContent) {
+                $appointmentTimeFormatted = $appointment->appointment_at->format('d/m/Y \a \l\a\s H:i');
+                $expectedContent = str_replace(
+                    ['{{contact.first_name}}', '{{appointment.datetime}}'],
+                    [$contact->first_name, $appointmentTimeFormatted],
+                    $customTemplateContent
+                );
 
                 return $argConversation->id === $mockConversation->id &&
                        $argMessageData['content'] === $expectedContent &&

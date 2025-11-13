@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             SubscriptionSeeder::class,
             ChannelsSeeder::class,
             TestDataSeeder::class,
+            MessageTemplateCategorySeeder::class,
         ]);
     }
 }

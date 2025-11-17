@@ -4,6 +4,7 @@ namespace App\Http\Requests\Public;
 
 use App\Models\PublicFormLink;
 use App\Rules\Recaptcha;
+use App\Rules\ValidPhoneNumber;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -38,6 +39,7 @@ class StorePublicContactRequest extends FormRequest
                 'required',
                 'string',
                 'max:20',
+                new ValidPhoneNumber,
                 Rule::unique('contacts')->where(function ($query) use ($organizationId) {
                     return $query->where('organization_id', $organizationId);
                 }),

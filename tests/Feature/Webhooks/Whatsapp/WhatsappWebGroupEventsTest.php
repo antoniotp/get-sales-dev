@@ -9,8 +9,9 @@ use App\Models\Contact;
 use App\Models\Conversation;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Testing\TestResponse;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -28,6 +29,7 @@ class WhatsappWebGroupEventsTest extends TestCase
         Http::fake([
             '*/ping' => Http::response(['success' => true], 200),
         ]);
+        Event::fake();
 
         $channel = Channel::where('slug', 'whatsapp-web')->first();
         $this->chatbot->chatbotChannels()->create([

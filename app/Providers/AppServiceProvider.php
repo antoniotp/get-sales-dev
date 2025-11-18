@@ -17,7 +17,6 @@ use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
-use App\Factories\WhatsApp\WhatsAppWebServiceFactory;
 use App\Services\AI\ChatGPTService;
 use App\Services\Auth\RegistrationService;
 use App\Services\Chat\ConversationAuthorizationService;
@@ -31,8 +30,8 @@ use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\Util\PhoneService;
 use App\Services\WhatsApp\FacebookService;
 use App\Services\WhatsApp\WhatsAppService;
-use App\Services\WhatsApp\WhatsappWebServiceDetector;
-use App\Services\WhatsApp\WhatsappWebWebhookRouterService;
+use App\Services\WhatsApp\WhatsAppWebService;
+use App\Services\WhatsApp\WhatsappWebWebhookService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -65,11 +64,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MessageServiceInterface::class, MessageService::class);
         $this->app->bind(ConversationAuthorizationServiceInterface::class, ConversationAuthorizationService::class);
 
-        $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookRouterService::class);
-        $this->app->singleton(WhatsappWebServiceDetector::class);
-        $this->app->bind(WhatsAppWebServiceInterface::class, function ($app) {
-            return $app->make(WhatsAppWebServiceFactory::class)->create();
-        });
+        $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookService::class);
+        $this->app->bind(WhatsAppWebServiceInterface::class, WhatsAppWebService::class);
         $this->app->bind(PhoneNumberNormalizerInterface::class, PhoneNumberNormalizer::class);
         $this->app->bind(PhoneServiceInterface::class, PhoneService::class);
         $this->app->bind(PublicContactFormServiceInterface::class, PublicContactFormService::class);

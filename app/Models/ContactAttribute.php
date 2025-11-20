@@ -17,20 +17,24 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read ContactEntity $contactEntity
  */
 class ContactAttribute extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'contact_id',
+        'contact_entity_id',
         'attribute_name',
         'attribute_value',
         'source',
     ];
 
-    public function contact(): BelongsTo
+    /**
+     * Get the contact entity that owns the attribute.
+     */
+    public function contactEntity(): BelongsTo
     {
-        return $this->belongsTo(Contact::class);
+        return $this->belongsTo(ContactEntity::class);
     }
 }

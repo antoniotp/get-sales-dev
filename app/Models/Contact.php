@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
+ * @property-read Collection<int, ContactEntity> $contactEntities
+ * @property-read Collection<int, ContactAttribute> $attributes
  */
 class Contact extends Model
 {
@@ -58,10 +61,12 @@ class Contact extends Model
         return $this->hasMany(ContactChannel::class);
     }
 
-    public function contactAttributes(): HasMany
-    {
-        return $this->hasMany(ContactAttribute::class);
-    }
+    // This relationship contactAttributes() is now in ContactEntity,
+    // but commented out to avoid conflicts until confirmed if it should be removed.
+    // public function contactAttributes(): HasMany
+    // {
+    //     return $this->hasMany(ContactAttribute::class);
+    // }
 
     public function conversations(): HasManyThrough
     {
@@ -74,5 +79,21 @@ class Contact extends Model
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);
+    }
+
+    /**
+     * Get the contact entities for the contact.
+     */
+    public function contactEntities(): HasMany
+    {
+        return $this->hasMany(ContactEntity::class);
+    }
+
+    /**
+     * Get all attributes for the contact through its entities.
+     */
+    public function attributes(): HasManyThrough
+    {
+        return $this->hasManyThrough(ContactAttribute::class, ContactEntity::class);
     }
 }

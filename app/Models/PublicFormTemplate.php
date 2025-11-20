@@ -20,6 +20,7 @@ class PublicFormTemplate extends Model
         'title',
         'description',
         'custom_fields_schema',
+        'entity_config',
     ];
 
     /**
@@ -29,6 +30,7 @@ class PublicFormTemplate extends Model
      */
     protected $casts = [
         'custom_fields_schema' => 'array',
+        'entity_config' => 'array',
     ];
 
     /**

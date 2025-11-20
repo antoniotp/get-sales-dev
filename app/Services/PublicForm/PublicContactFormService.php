@@ -32,11 +32,24 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                     ]
                 );
 
-                // 2. Create a new ContactEntity for this submission (e.g., a new pet)
-                $entity = $contact->contactEntities()->create([
-                    'type' => 'pet',
-                    'name' => null,
-                ]);
+                // 2. Create a ContactEntity if configured in the template
+                $formTemplate = $formLink->publicFormTemplate;
+                $entityConfig = $formTemplate->entity_config ?? [];
+                $entity = null;
+
+                if ($entityConfig['creates_entity'] ?? false) {
+                    $entityType = $entityConfig['entity_type'] ?? 'default';
+                    $entityNameField = $entityConfig['entity_name_field'] ?? null;
+
+                    $entityName = $entityNameField
+                        ? ($validatedData['custom_fields'][$entityNameField] ?? null)
+                        : null;
+
+                    $entity = $contact->contactEntities()->create([
+                        'type' => $entityType,
+                        'name' => $entityName,
+                    ]);
+                }
 
                 // 3. Create the ContactChannel link
                 if ($formLink->channel_id) {
@@ -68,7 +81,7 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                 }
 
                 // 5. Create/update custom attributes for the new entity
-                if (! empty($customFields)) {
+                if ($entity && ! empty($customFields)) {
                     foreach ($customFields as $name => $value) {
                         // Find the field schema to check its type
                         $fieldSchema = collect($formLink->publicFormTemplate->custom_fields_schema)

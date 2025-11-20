@@ -6,6 +6,7 @@ use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Contact;
+use App\Models\ContactEntity;
 use App\Models\PublicFormLink;
 use App\Models\PublicFormTemplate;
 use Database\Seeders\DatabaseSeeder;
@@ -37,10 +38,15 @@ class ContactRegistrationTest extends TestCase
             'status' => 1,
         ]);
 
-        // 2. Create the form template with the veterinary schema
+        // 2. Create the form template with the veterinary schema and entity config
         $template = PublicFormTemplate::factory()->create([
             'name' => 'veterinary_registration',
             'custom_fields_schema' => $this->getVeterinarySchema(),
+            'entity_config' => [
+                'creates_entity' => true,
+                'entity_type' => 'pet',
+                'entity_name_field' => 'patient_name',
+            ],
         ]);
 
         // 3. Create the public form link associated with the template and chatbot
@@ -116,6 +122,7 @@ class ContactRegistrationTest extends TestCase
                 'tutor_dni' => '12345678Z',
                 'tutor_address' => '123 Fake St',
                 'vet_full_name' => 'Dr. Smith',
+                'patient_name' => 'Fido', // Added for entity name test
                 'patient_species' => 'Dog',
                 'patient_breed' => 'Golden Retriever',
                 'patient_age' => 5,
@@ -149,6 +156,7 @@ class ContactRegistrationTest extends TestCase
                 'tutor_birthdate' => '1992-05-20',
                 'tutor_dni' => '87654321A',
                 'tutor_address' => '456 Main St',
+                'patient_name' => 'Whiskers',
                 'patient_species' => 'Cat',
                 'patient_breed' => 'Siamese',
                 'patient_age' => 2,
@@ -180,13 +188,15 @@ class ContactRegistrationTest extends TestCase
             'channel_id' => $this->formLink->channel_id,
         ]);
 
-        // Assert: A ContactEntity was created for the contact
+        // Assert: A ContactEntity was created for the contact with the correct data
         $this->assertDatabaseHas('contact_entities', [
             'contact_id' => $contact->id,
             'type' => 'pet',
-            'name' => null, // Assuming 'patient_name' is not always present or is not a direct entity name
+            'name' => 'Whiskers',
         ]);
-        $entity = $contact->contactEntities->first();
+
+        $entity = ContactEntity::where('contact_id', $contact->id)->first();
+        $this->assertNotNull($entity);
 
         // Assert: Custom attributes were created for the entity
         $this->assertDatabaseHas('contact_attributes', [
@@ -259,12 +269,13 @@ class ContactRegistrationTest extends TestCase
                 'tutor_birthdate' => '1995-02-10',
                 'tutor_dni' => '11223344B',
                 'tutor_address' => '789 Appointment Ave',
+                'patient_name' => 'Whiskers',
                 'patient_species' => 'Dog',
                 'patient_breed' => 'Beagle',
                 'patient_age' => 3,
                 'patient_sex' => 'male',
                 'patient_weight' => 12.0,
-                'appointment_datetime' => $appointmentTime, // <-- Appointment data
+                'appointment_datetime' => $appointmentTime,
             ],
         ];
 

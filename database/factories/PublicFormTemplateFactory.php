@@ -13,6 +13,7 @@ class PublicFormTemplateFactory extends Factory
             'title' => $this->faker->sentence,
             'description' => $this->faker->paragraph,
             'custom_fields_schema' => [],
+            'entity_config' => null,
         ];
     }
 }

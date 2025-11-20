@@ -27,6 +27,13 @@
         "validation": ["nullable", "string", "max:255"]
     },
     {
+        "name": "patient_name",
+        "label": "Nombre del Paciente",
+        "type": "text",
+        "placeholder": "Ej: Max",
+        "validation": ["required", "string", "max:100"]
+    },
+    {
         "name": "patient_species",
         "label": "Especie del Paciente",
         "type": "text",

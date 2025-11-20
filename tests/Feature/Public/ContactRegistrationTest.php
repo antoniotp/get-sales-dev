@@ -180,19 +180,27 @@ class ContactRegistrationTest extends TestCase
             'channel_id' => $this->formLink->channel_id,
         ]);
 
-        // Assert: Custom attributes were created
-        $this->assertDatabaseHas('contact_attributes', [
+        // Assert: A ContactEntity was created for the contact
+        $this->assertDatabaseHas('contact_entities', [
             'contact_id' => $contact->id,
+            'type' => 'pet',
+            'name' => null, // Assuming 'patient_name' is not always present or is not a direct entity name
+        ]);
+        $entity = $contact->contactEntities->first();
+
+        // Assert: Custom attributes were created for the entity
+        $this->assertDatabaseHas('contact_attributes', [
+            'contact_entity_id' => $entity->id,
             'attribute_name' => 'tutor_dni',
             'attribute_value' => '87654321A',
         ]);
         $this->assertDatabaseHas('contact_attributes', [
-            'contact_id' => $contact->id,
+            'contact_entity_id' => $entity->id,
             'attribute_name' => 'patient_species',
             'attribute_value' => 'Cat',
         ]);
         $this->assertDatabaseHas('contact_attributes', [
-            'contact_id' => $contact->id,
+            'contact_entity_id' => $entity->id,
             'attribute_name' => 'patient_weight',
             'attribute_value' => '4.5',
         ]);
@@ -283,8 +291,10 @@ class ContactRegistrationTest extends TestCase
         ]);
 
         // Assert: An appointment attribute was NOT created in the generic attributes table
+        $entity = $contact->contactEntities->first();
+        $this->assertNotNull($entity);
         $this->assertDatabaseMissing('contact_attributes', [
-            'contact_id' => $contact->id,
+            'contact_entity_id' => $entity->id,
             'attribute_name' => 'appointment_datetime',
         ]);
     }

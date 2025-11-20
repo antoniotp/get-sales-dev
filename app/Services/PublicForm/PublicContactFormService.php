@@ -26,13 +26,19 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                         'first_name' => $validatedData['first_name'],
                         'last_name' => $validatedData['last_name'],
                         'phone_number' => $validatedData['phone_number'],
-                        'country_code' => $validatedData['country_code'],
+                        'country_code' => $validatedData['country_code'] ?? null,
                         'language_code' => $validatedData['language_code'] ?? null,
                         'timezone' => $validatedData['timezone'] ?? null,
                     ]
                 );
 
-                // 2. Create the ContactChannel link
+                // 2. Create a new ContactEntity for this submission (e.g., a new pet)
+                $entity = $contact->contactEntities()->create([
+                    'type' => 'pet',
+                    'name' => null,
+                ]);
+
+                // 3. Create the ContactChannel link
                 if ($formLink->channel_id) {
                     $contact->contactChannels()->updateOrCreate(
                         [
@@ -43,7 +49,7 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                     );
                 }
 
-                // 3. Handle appointment creation
+                // 4. Handle appointment creation
                 $customFields = $validatedData['custom_fields'] ?? [];
                 if (isset($customFields['appointment_datetime'])) {
                     // Find the correct chatbot_channel_id
@@ -61,7 +67,7 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                     unset($customFields['appointment_datetime']);
                 }
 
-                // 4. Create/update custom attributes
+                // 5. Create/update custom attributes for the new entity
                 if (! empty($customFields)) {
                     foreach ($customFields as $name => $value) {
                         // Find the field schema to check its type
@@ -73,7 +79,8 @@ class PublicContactFormService implements PublicContactFormServiceInterface
                             $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
                         }
 
-                        $contact->contactAttributes()->updateOrCreate(
+                        // Associate attribute with the new entity
+                        $entity->attributes()->updateOrCreate(
                             ['attribute_name' => $name],
                             ['attribute_value' => $value]
                         );

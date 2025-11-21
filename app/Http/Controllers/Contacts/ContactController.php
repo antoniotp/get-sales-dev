@@ -24,7 +24,7 @@ class ContactController extends Controller
     {
         $query = Contact::query()
             ->where('organization_id', $this->organization->id)
-            ->with(['contactChannels.channel', 'conversations.chatbotChannel.chatbot']);
+            ->with(['contactChannels.channel', 'contactChannels.chatbot']);
 
         if ($request->filled('search')) {
             $search = strtolower($request->input('search'));
@@ -45,7 +45,7 @@ class ContactController extends Controller
         }
 
         if ($request->filled('chatbot')) {
-            $query->whereHas('conversations.chatbotChannel', function ($q) use ($request) {
+            $query->whereHas('contactChannels', function ($q) use ($request) {
                 $q->where('chatbot_id', $request->input('chatbot'));
             });
         }

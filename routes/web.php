@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Appointment\AppointmentController;
 use App\Http\Controllers\Chat\ChatAssignmentController;
 use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chatbot\ChatbotController;
@@ -65,6 +66,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
+
+    Route::get('/chatbots/{chatbot}/calendar', [AppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('/chatbots/{chatbot}/appointments', [AppointmentController::class, 'list'])->name('appointments.list');
+
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
     Route::post('/contacts', [ContactController::class, 'upsert'])->name('contacts.store');
     Route::put('/contacts/{contact}', [ContactController::class, 'upsert'])->name('contacts.update');

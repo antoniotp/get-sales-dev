@@ -1,0 +1,151 @@
+<?php
+
+namespace Tests\Feature\Appointment;
+
+use App\Models\Appointment;
+use App\Models\Chatbot;
+use App\Models\ChatbotChannel;
+use App\Models\Contact;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\Test;
+use Tests\TestCase;
+
+class AppointmentTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(DatabaseSeeder::class);
+    }
+
+    #[Test]
+    public function it_returns_appointments_within_date_range_for_a_specific_chatbot(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        // Use pre-seeded data as per TestDataSeeder
+        $targetChatbot = Chatbot::find(1); // Belongs to Org 1
+        $targetChannel = ChatbotChannel::find(1); // Belongs to Chatbot 1
+
+        $otherChatbotInOrg = Chatbot::find(2); // Also belongs to Org 1
+        $otherChannelInOrg = ChatbotChannel::find(2);
+
+        $contact = Contact::factory()->create(['organization_id' => $targetChatbot->organization_id]);
+
+        $startDate = '2025-12-01';
+        $endDate = '2025-12-31';
+
+        // Appointment IN range for the correct chatbot
+        $appointmentInRange = Appointment::factory()->create([
+            'chatbot_channel_id' => $targetChannel->id,
+            'contact_id' => $contact->id,
+            'appointment_at' => '2025-12-15 10:00:00',
+        ]);
+
+        // Appointment OUT of range
+        Appointment::factory()->create([
+            'chatbot_channel_id' => $targetChannel->id,
+            'contact_id' => $contact->id,
+            'appointment_at' => '2026-01-10 10:00:00',
+        ]);
+
+        // Appointment for a DIFFERENT chatbot in the same org
+        Appointment::factory()->create([
+            'chatbot_channel_id' => $otherChannelInOrg->id,
+            'contact_id' => $contact->id,
+            'appointment_at' => '2025-12-20 10:00:00',
+        ]);
+
+        // --- Act ---
+        $response = $this->getJson(route('appointments.list', [
+            'chatbot' => $targetChatbot->id,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]));
+
+        // --- Assert ---
+        $response->assertOk();
+        $response->assertJsonCount(1);
+        $response->assertJsonFragment([
+            'id' => $appointmentInRange->id,
+            'contact_id' => $contact->id,
+        ]);
+    }
+
+    #[Test]
+    public function it_returns_an_empty_list_when_no_appointments_are_in_range(): void
+    {
+        // --- Arrange ---
+        $this->actingAs(User::find(1));
+        $chatbot = Chatbot::find(1);
+        $channel = $chatbot->chatbotChannels->first();
+        $contact = Contact::factory()->create(['organization_id' => $chatbot->organization_id]);
+        $startDate = '2025-11-01';
+        $endDate = '2025-11-30';
+
+        // Appointment OUT of range
+        Appointment::factory()->create([
+            'chatbot_channel_id' => $channel->id,
+            'contact_id' => $contact->id,
+            'appointment_at' => '2025-12-15 10:00:00',
+        ]);
+
+        // --- Act ---
+        $response = $this->getJson(route('appointments.list', [
+            'chatbot' => $chatbot->id,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]));
+
+        // --- Assert ---
+        $response->assertOk();
+        $response->assertJsonCount(0);
+    }
+
+    #[Test]
+    public function it_returns_validation_error_if_dates_are_missing(): void
+    {
+        // --- Arrange ---
+        $this->actingAs(User::find(1));
+        $chatbot = Chatbot::find(1);
+
+        // --- Act ---
+        $response = $this->getJson(route('appointments.list', [
+            'chatbot' => $chatbot->id,
+        ]));
+
+        // --- Assert ---
+        $response->assertStatus(422); // Unprocessable Entity
+        $response->assertJsonValidationErrors(['start_date', 'end_date']);
+    }
+
+    #[Test]
+    public function another_organization_user_cannot_access_appointments(): void
+    {
+        // --- Arrange ---
+        // User 2 belongs to Org 2, as per TestDataSeeder
+        $otherUser = User::find(2);
+        $this->actingAs($otherUser);
+
+        // Try to access appointments for a chatbot from Org 1
+        $chatbotFromOrg1 = Chatbot::find(1);
+
+        // --- Act ---
+        $response = $this->getJson(route('appointments.list', [
+            'chatbot' => $chatbotFromOrg1->id,
+            'start_date' => now()->subMonth()->toDateString(),
+            'end_date' => now()->addMonth()->toDateString(),
+        ]));
+
+        // --- Assert ---
+        // Should fail because of Route Model Binding authorization which is handled by a custom implementation.
+        $response->assertForbidden();
+    }
+}

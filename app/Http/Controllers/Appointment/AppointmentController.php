@@ -12,7 +12,7 @@ class AppointmentController extends Controller
 {
     public function index(Chatbot $chatbot)
     {
-        return Inertia::render('Appointments/Index', [
+        return Inertia::render('appointments/index', [
             'chatbot' => $chatbot,
         ]);
     }

@@ -17,10 +17,14 @@ const locales = {
     'es': es,
 };
 
+const mondayStartOfWeek = (date: Date) => {
+    return startOfWeek(date, { weekStartsOn: 1 }); // 1 = Monday
+};
+
 const localizer = dateFnsLocalizer({
     format,
     parse,
-    startOfWeek,
+    startOfWeek: mondayStartOfWeek,
     getDay,
     locales,
 });

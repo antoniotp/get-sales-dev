@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\Chatbot;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class AppointmentController extends Controller
@@ -35,15 +36,20 @@ class AppointmentController extends Controller
 
     public function list(Request $request, Chatbot $chatbot)
     {
-        $request->validate([
+        $validated = $request->validate([
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after_or_equal:start_date'],
         ]);
 
+        $startDate = $validated['start_date'];
+        // Parse the end date and add a day to create an exclusive upper bound.
+        $endDate = Carbon::parse($validated['end_date'])->addDay();
+
         $chatbotChannelIds = $chatbot->chatbotChannels()->pluck('id');
 
         $appointments = Appointment::whereIn('chatbot_channel_id', $chatbotChannelIds)
-            ->whereBetween('appointment_at', [$request->start_date, $request->end_date])
+            ->where('appointment_at', '>=', $startDate)
+            ->where('appointment_at', '<', $endDate)
             ->with('contact:id,first_name,last_name') // Eager load contact details
             ->get();
 

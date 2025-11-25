@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers\Appointment;
 
+use App\Contracts\Services\Appointment\AppointmentServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Appointment\StoreAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Chatbot;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AppointmentController extends Controller
 {
+    public function __construct(private readonly AppointmentServiceInterface $appointmentService) {}
+
     public function index(Chatbot $chatbot)
     {
         return Inertia::render('appointments/index', [
@@ -32,5 +37,12 @@ class AppointmentController extends Controller
             ->get();
 
         return response()->json($appointments);
+    }
+
+    public function store(StoreAppointmentRequest $request, Chatbot $chatbot): JsonResponse
+    {
+        $appointment = $this->appointmentService->schedule($chatbot, $request->validated());
+
+        return response()->json($appointment, 201);
     }
 }

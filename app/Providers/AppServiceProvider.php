@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\Services\AI\AIServiceInterface;
+use App\Contracts\Services\Appointment\AppointmentServiceInterface;
 use App\Contracts\Services\Auth\RegistrationServiceInterface;
 use App\Contracts\Services\Chat\ConversationAuthorizationServiceInterface;
 use App\Contracts\Services\Chat\ConversationServiceInterface;
@@ -18,6 +19,7 @@ use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Services\AI\ChatGPTService;
+use App\Services\Appointment\AppointmentService;
 use App\Services\Auth\RegistrationService;
 use App\Services\Chat\ConversationAuthorizationService;
 use App\Services\Chat\ConversationService;
@@ -62,6 +64,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ChatbotServiceInterface::class, ChatbotService::class);
         $this->app->bind(ConversationServiceInterface::class, ConversationService::class);
         $this->app->bind(MessageServiceInterface::class, MessageService::class);
+        $this->app->bind(AppointmentServiceInterface::class, AppointmentService::class);
         $this->app->bind(ConversationAuthorizationServiceInterface::class, ConversationAuthorizationService::class);
 
         $this->app->bind(WhatsappWebWebhookServiceInterface::class, WhatsappWebWebhookService::class);

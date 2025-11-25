@@ -148,4 +148,96 @@ class AppointmentTest extends TestCase
         // Should fail because of Route Model Binding authorization which is handled by a custom implementation.
         $response->assertForbidden();
     }
+
+    #[Test]
+    public function it_creates_an_appointment_for_an_existing_contact(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        $chatbot = Chatbot::find(1);
+        $channel = $chatbot->chatbotChannels->first();
+        $existingContact = Contact::factory()->create(['organization_id' => $chatbot->organization_id]);
+        $appointmentCarbon = now()->addDays(5)->startOfHour()->utc();
+        $appointmentForDb = $appointmentCarbon->toDateTimeString();
+        // Format to match Laravel's default model serialization
+        $appointmentForJson = $appointmentCarbon->format('Y-m-d\TH:i:s.u\Z');
+
+        $postData = [
+            'contact_id' => $existingContact->id,
+            'chatbot_channel_id' => $channel->id,
+            'appointment_at' => $appointmentForDb, // Send standard format
+        ];
+
+        // --- Act ---
+        $response = $this->postJson(route('appointments.store', ['chatbot' => $chatbot->id]), $postData);
+
+        // --- Assert ---
+        $response->assertCreated();
+        $response->assertJsonFragment([
+            'contact_id' => $existingContact->id,
+            'appointment_at' => $appointmentForJson, // Assert against ISO format
+            'status' => 'scheduled',
+        ]);
+
+        $this->assertDatabaseHas('appointments', [
+            'contact_id' => $existingContact->id,
+            'chatbot_channel_id' => $channel->id,
+            'appointment_at' => $appointmentForDb, // Assert against DB format
+        ]);
+    }
+
+    #[Test]
+    public function it_creates_a_new_contact_and_an_appointment(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        $chatbot = Chatbot::find(1);
+        $channel = $chatbot->chatbotChannels->first();
+        $appointmentCarbon = now()->addDays(10)->startOfHour()->utc();
+        $appointmentForDb = $appointmentCarbon->toDateTimeString();
+        // Format to match Laravel's default model serialization
+        $appointmentForJson = $appointmentCarbon->format('Y-m-d\TH:i:s.u\Z');
+        $newPhoneNumber = '+15005550006';
+
+        $postData = [
+            'phone_number' => $newPhoneNumber,
+            'first_name' => 'John',
+            'last_name' => 'New',
+            'chatbot_channel_id' => $channel->id,
+            'appointment_at' => $appointmentForDb, // Send standard format
+        ];
+
+        // --- Act ---
+        $response = $this->postJson(route('appointments.store', ['chatbot' => $chatbot->id]), $postData);
+
+        // --- Assert ---
+        $response->assertCreated();
+
+        // Assert a new contact was created
+        $this->assertDatabaseHas('contacts', [
+            'organization_id' => $chatbot->organization_id,
+            'phone_number' => $newPhoneNumber,
+            'first_name' => 'John',
+            'last_name' => 'New',
+        ]);
+
+        $newContact = Contact::where('phone_number', $newPhoneNumber)->first();
+        $this->assertNotNull($newContact);
+
+        // Assert the appointment was created for the new contact
+        $this->assertDatabaseHas('appointments', [
+            'contact_id' => $newContact->id,
+            'chatbot_channel_id' => $channel->id,
+            'appointment_at' => $appointmentForDb, // Assert against DB format
+        ]);
+
+        $response->assertJsonFragment([
+            'contact_id' => $newContact->id,
+            'appointment_at' => $appointmentForJson, // Assert against ISO format
+        ]);
+    }
 }

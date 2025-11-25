@@ -9,6 +9,7 @@ import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth } from 'da
 import { es } from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import axios from 'axios';
+import { NewAppointmentModal } from './partials/NewAppointmentModal';
 
 // Set up the localizer by providing the date-fns functions
 // to the correct localizer.
@@ -37,16 +38,25 @@ interface FormattedEvent extends CalendarEvent {
     resource: Appointment;
 }
 
+interface ChatbotChannelType extends ChatbotChannel{
+    id: number;
+    name: string;
+    phone_number: string | null;
+    credentials: {
+        phone_number: string;
+    } | null;
+}
 
 interface PageProps extends GlobalPageProps {
-    whatsAppChannel: ChatbotChannel | null;
-    whatsAppWebChatbotChannel: ChatbotChannel | null;
+    chatbotChannels: ChatbotChannelType[];
 }
 
 
 export default function AppointmentsIndex(){
-    const { chatbot } = usePage<PageProps>().props;
+    const { chatbot, chatbotChannels } = usePage<PageProps>().props;
     const [events, setEvents] = useState<FormattedEvent[]>([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newAppointmentDate, setNewAppointmentDate] = useState<Date | null>(null);
 
     const breadcrumbs = [
         { title: 'Chatbots', href: route('chatbots.index') },
@@ -105,6 +115,27 @@ export default function AppointmentsIndex(){
         fetchAppointments(start, end);
     }, [fetchAppointments]);
 
+    const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
+        setNewAppointmentDate(start);
+        setIsModalOpen(true);
+    }, []);
+
+    const handleModalClose = () => {
+        setIsModalOpen(false);
+        setNewAppointmentDate(null);
+    };
+
+    const handleModalSuccess = (newAppointment: Appointment) => {
+        const appointmentDate = new Date(newAppointment.appointment_at);
+        const newEvent: FormattedEvent = {
+            title: `${newAppointment.contact.first_name} ${newAppointment.contact.last_name || ''}`.trim(),
+            start: appointmentDate,
+            end: new Date(appointmentDate.getTime() + 60 * 60 * 1000),
+            resource: newAppointment,
+        };
+        setEvents(prevEvents => [...prevEvents, newEvent]);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Agenda" />
@@ -119,6 +150,8 @@ export default function AppointmentsIndex(){
                                 endAccessor="end"
                                 onRangeChange={handleRangeChange}
                                 culture='es'
+                                selectable={true}
+                                onSelectSlot={handleSelectSlot}
                                 messages={{
                                     next: "Siguiente",
                                     previous: "Anterior",
@@ -137,6 +170,13 @@ export default function AppointmentsIndex(){
                     </Card>
                 </div>
             </AppContentDefaultLayout>
+            <NewAppointmentModal
+                isOpen={isModalOpen}
+                onClose={handleModalClose}
+                onSuccess={handleModalSuccess}
+                initialDate={newAppointmentDate}
+                chatbotChannels={chatbotChannels}
+            />
         </AppLayout>
     );
 };

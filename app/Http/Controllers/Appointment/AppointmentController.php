@@ -17,8 +17,19 @@ class AppointmentController extends Controller
 
     public function index(Chatbot $chatbot)
     {
+        $chatbotChannels = $chatbot->chatbotChannels()->with('channel')->get();
+
+        $transformedChannels = $chatbotChannels->map(function ($chatbotChannel) {
+            return [
+                'id' => $chatbotChannel->id,
+                'name' => $chatbotChannel->channel->name,
+                'credentials' => $chatbotChannel->credentials,
+            ];
+        });
+
         return Inertia::render('appointments/index', [
             'chatbot' => $chatbot,
+            'chatbotChannels' => $transformedChannels,
         ]);
     }
 
@@ -42,6 +53,9 @@ class AppointmentController extends Controller
     public function store(StoreAppointmentRequest $request, Chatbot $chatbot): JsonResponse
     {
         $appointment = $this->appointmentService->schedule($chatbot, $request->validated());
+
+        // Eager-load the contact relationship so it's included in the JSON response
+        $appointment->load('contact');
 
         return response()->json($appointment, 201);
     }

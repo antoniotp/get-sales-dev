@@ -69,6 +69,16 @@ interface Props {
     chatbotChannels: ChatbotChannelType[];
 }
 
+// Helper function to format a Date object into a YYYY-MM-DDTHH:mm string in local time
+function toLocalISOString(date: Date): string {
+    const pad = (num: number) => num < 10 ? '0' + num : '' + num;
+    return date.getFullYear() +
+        '-' + pad(date.getMonth() + 1) +
+        '-' + pad(date.getDate()) +
+        'T' + pad(date.getHours()) +
+        ':' + pad(date.getMinutes());
+}
+
 export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
     ({ isOpen, onClose, onSuccess, initialDate, chatbotChannels }, ref) => {
         const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
@@ -102,7 +112,7 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
                     last_name: '',
                     phone_number: '',
                     chatbot_channel_id: chatbotChannels.length === 1 ? chatbotChannels[0].id : undefined,
-                    appointment_at: initialDate ? initialDate.toISOString().slice(0, 16) : '',
+                    appointment_at: initialDate ? toLocalISOString(initialDate) : '',
                 });
                 setSelectedContact(null);
                 setIsCreatingNew(false);

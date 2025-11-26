@@ -8,6 +8,7 @@ import { Calendar, dateFnsLocalizer, Event as CalendarEvent } from 'react-big-ca
 import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { toZonedTime } from 'date-fns-tz';
 import axios from 'axios';
 import { NewAppointmentModal } from './partials/NewAppointmentModal';
 
@@ -57,7 +58,7 @@ interface PageProps extends GlobalPageProps {
 
 
 export default function AppointmentsIndex(){
-    const { chatbot, chatbotChannels } = usePage<PageProps>().props;
+    const { chatbot, chatbotChannels, organization } = usePage<PageProps>().props;
     const [events, setEvents] = useState<FormattedEvent[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newAppointmentDate, setNewAppointmentDate] = useState<Date | null>(null);
@@ -67,6 +68,8 @@ export default function AppointmentsIndex(){
         { title: chatbot.name, href: route('chatbots.edit', { chatbot: chatbot.id }) },
         { title: 'Agenda', href: route('appointments.index', { chatbot: chatbot.id }) },
     ];
+
+    const organizationTimezone = organization.current.timezone || 'UTC';
 
     const fetchAppointments = useCallback(async (start: Date, end: Date) => {
         try {
@@ -79,32 +82,28 @@ export default function AppointmentsIndex(){
             const appointments: Appointment[] = response.data;
 
             const formattedEvents: FormattedEvent[] = appointments.map((apt: Appointment) => {
-                const appointmentDate = new Date(apt.appointment_at);
+                const appointmentDate = toZonedTime(new Date(apt.appointment_at), organizationTimezone);
+
                 return {
                     title: `${apt.contact.first_name} ${apt.contact.last_name || ''}`.trim(),
                     start: appointmentDate,
-                    // Assuming a 1-hour duration for each appointment for now
-                    end: new Date(appointmentDate.getTime() + 60 * 60 * 1000),
+                    end: new Date(appointmentDate.getTime() + 60 * 60 * 1000), // Assuming 1-hour duration
                     resource: apt,
                 };
             });
             setEvents(formattedEvents);
         } catch (error) {
             console.error("Failed to fetch appointments:", error);
-            // Consider adding a user-facing error message here (e.g., a toast)
         }
-    }, [chatbot.id]);
+    }, [chatbot.id, organizationTimezone]);
 
     // Handler for when the calendar's visible range changes
     const handleRangeChange = useCallback((range: Date[] | { start: Date; end: Date; }) => {
         let start: Date, end: Date;
-
         if (Array.isArray(range)) {
-            // This is for week or day view
             start = range[0];
             end = range[range.length - 1];
         } else {
-            // This is for month view
             start = range.start;
             end = range.end;
         }
@@ -130,7 +129,8 @@ export default function AppointmentsIndex(){
     };
 
     const handleModalSuccess = (newAppointment: Appointment) => {
-        const appointmentDate = new Date(newAppointment.appointment_at);
+        const appointmentDate = toZonedTime(new Date(newAppointment.appointment_at), organizationTimezone);
+
         const newEvent: FormattedEvent = {
             title: `${newAppointment.contact.first_name} ${newAppointment.contact.last_name || ''}`.trim(),
             start: appointmentDate,

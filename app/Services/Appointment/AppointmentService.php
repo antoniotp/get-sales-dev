@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\Chatbot;
 use App\Models\Contact;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 
 class AppointmentService implements AppointmentServiceInterface
 {
@@ -28,6 +29,12 @@ class AppointmentService implements AppointmentServiceInterface
         $firstName = Arr::get($data, 'first_name');
         $lastName = Arr::get($data, 'last_name');
 
+        // --- Timezone handling ---
+        $organizationTimezone = $chatbot->organization->timezone;
+        $localAppointmentTime = Carbon::parse(Arr::get($data, 'appointment_at'), $organizationTimezone);
+        $utcAppointmentTime = $localAppointmentTime->utc();
+        // --- End Timezone handling ---
+
         // Find or create contact
         if (! $contactId) {
             $contact = Contact::firstOrCreate(
@@ -47,7 +54,7 @@ class AppointmentService implements AppointmentServiceInterface
         return Appointment::create([
             'contact_id' => $contactId,
             'chatbot_channel_id' => Arr::get($data, 'chatbot_channel_id'),
-            'appointment_at' => Arr::get($data, 'appointment_at'),
+            'appointment_at' => $utcAppointmentTime, // Use the UTC Carbon instance
             'status' => 'scheduled', // Default status
         ]);
     }

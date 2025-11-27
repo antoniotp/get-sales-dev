@@ -70,6 +70,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chatbots/{chatbot}/calendar', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/chatbots/{chatbot}/appointments', [AppointmentController::class, 'list'])->name('appointments.list');
     Route::post('/chatbots/{chatbot}/appointments', [AppointmentController::class, 'store'])->name('appointments.store');
+    Route::put('/appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
+    Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])->name('appointments.destroy');
 
     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
     Route::post('/contacts', [ContactController::class, 'upsert'])->name('contacts.store');

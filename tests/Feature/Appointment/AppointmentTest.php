@@ -9,7 +9,6 @@ use App\Models\Contact;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -239,5 +238,101 @@ class AppointmentTest extends TestCase
             'contact_id' => $newContact->id,
             'appointment_at' => $appointmentForJson, // Assert against ISO format
         ]);
+    }
+
+    #[Test]
+    public function it_updates_an_appointment_datetime(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        $chatbot = Chatbot::find(1);
+        $appointment = Appointment::factory()->create([
+            'chatbot_channel_id' => $chatbot->chatbotChannels->first()->id,
+        ]);
+
+        $newAppointmentCarbon = now()->addDays(20)->startOfHour()->utc();
+        $newAppointmentForDb = $newAppointmentCarbon->toDateTimeString();
+        $newAppointmentForJson = $newAppointmentCarbon->format('Y-m-d\TH:i:s.u\Z');
+
+        // --- Act ---
+        $response = $this->putJson(route('appointments.update', ['appointment' => $appointment->id]), [
+            'appointment_at' => $newAppointmentForDb,
+        ]);
+
+        // --- Assert ---
+        $response->assertOk();
+        $response->assertJsonFragment([
+            'id' => $appointment->id,
+            'appointment_at' => $newAppointmentForJson,
+        ]);
+
+        $this->assertDatabaseHas('appointments', [
+            'id' => $appointment->id,
+            'appointment_at' => $newAppointmentForDb,
+        ]);
+    }
+
+    #[Test]
+    public function it_deletes_an_appointment(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        $chatbot = Chatbot::find(1);
+        $appointment = Appointment::factory()->create([
+            'chatbot_channel_id' => $chatbot->chatbotChannels->first()->id,
+        ]);
+
+        $this->assertDatabaseHas('appointments', ['id' => $appointment->id]);
+
+        // --- Act ---
+        $response = $this->deleteJson(route('appointments.destroy', ['appointment' => $appointment->id]));
+
+        // --- Assert ---
+        $response->assertNoContent();
+        $this->assertSoftDeleted('appointments', ['id' => $appointment->id]);
+    }
+
+    #[Test]
+    public function another_organization_user_cannot_update_an_appointment(): void
+    {
+        // --- Arrange ---
+        $chatbotFromOrg1 = Chatbot::find(1);
+        $appointmentFromOrg1 = Appointment::factory()->create([
+            'chatbot_channel_id' => $chatbotFromOrg1->chatbotChannels->first()->id,
+        ]);
+
+        $userFromOrg2 = User::find(2); // Belongs to Org 2
+        $this->actingAs($userFromOrg2);
+
+        // --- Act ---
+        $response = $this->putJson(route('appointments.update', ['appointment' => $appointmentFromOrg1->id]), [
+            'appointment_at' => now()->addDay()->toDateTimeString(),
+        ]);
+
+        // --- Assert ---
+        $response->assertForbidden();
+    }
+
+    #[Test]
+    public function another_organization_user_cannot_delete_an_appointment(): void
+    {
+        // --- Arrange ---
+        $chatbotFromOrg1 = Chatbot::find(1);
+        $appointmentFromOrg1 = Appointment::factory()->create([
+            'chatbot_channel_id' => $chatbotFromOrg1->chatbotChannels->first()->id,
+        ]);
+
+        $userFromOrg2 = User::find(2); // Belongs to Org 2
+        $this->actingAs($userFromOrg2);
+
+        // --- Act ---
+        $response = $this->deleteJson(route('appointments.destroy', ['appointment' => $appointmentFromOrg1->id]));
+
+        // --- Assert ---
+        $response->assertForbidden();
     }
 }

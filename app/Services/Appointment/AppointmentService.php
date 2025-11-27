@@ -58,4 +58,35 @@ class AppointmentService implements AppointmentServiceInterface
             'status' => 'scheduled', // Default status
         ]);
     }
+
+    /**
+     * Updates an existing appointment.
+     *
+     * @param Appointment $appointment The appointment to update.
+     * @param array $data The data to update the appointment with.
+     * @return Appointment The updated appointment.
+     */
+    public function update(Appointment $appointment, array $data): Appointment
+    {
+        if (Arr::has($data, 'appointment_at')) {
+            $organizationTimezone = $appointment->chatbotChannel->chatbot->organization->timezone;
+            $localAppointmentTime = Carbon::parse(Arr::get($data, 'appointment_at'), $organizationTimezone);
+            $data['appointment_at'] = $localAppointmentTime->utc();
+        }
+
+        $appointment->update($data);
+
+        return $appointment;
+    }
+
+    /**
+     * Cancels/deletes an existing appointment.
+     *
+     * @param Appointment $appointment The appointment to cancel.
+     * @return void
+     */
+    public function cancel(Appointment $appointment): void
+    {
+        $appointment->delete();
+    }
 }

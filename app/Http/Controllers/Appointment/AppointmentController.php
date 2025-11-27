@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Appointment;
 use App\Contracts\Services\Appointment\AppointmentServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Appointment\StoreAppointmentRequest;
+use App\Http\Requests\Appointment\UpdateAppointmentRequest;
 use App\Models\Appointment;
 use App\Models\Chatbot;
 use Illuminate\Http\JsonResponse;
@@ -64,5 +65,24 @@ class AppointmentController extends Controller
         $appointment->load('contact');
 
         return response()->json($appointment, 201);
+    }
+
+    public function update(UpdateAppointmentRequest $request, Appointment $appointment): JsonResponse
+    {
+        $this->authorize('update', $appointment);
+
+        $updatedAppointment = $this->appointmentService->update($appointment, $request->validated());
+        $updatedAppointment->load('contact');
+
+        return response()->json($updatedAppointment);
+    }
+
+    public function destroy(Appointment $appointment): JsonResponse
+    {
+        $this->authorize('delete', $appointment);
+
+        $this->appointmentService->cancel($appointment);
+
+        return response()->json(null, 204);
     }
 }

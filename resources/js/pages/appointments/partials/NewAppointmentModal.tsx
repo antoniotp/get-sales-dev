@@ -14,7 +14,7 @@ import { UserPlus } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
-import type { Chatbot, PageProps, ChatbotChannel } from '@/types';
+import type { Chatbot, PageProps, ChatbotChannel, Appointment } from '@/types';
 
 // Zod Schema for the form
 const formSchema = z.object({
@@ -35,15 +35,6 @@ const formSchema = z.object({
 });
 
 type FormData = z.infer<typeof formSchema>;
-
-interface Appointment {
-    id: number;
-    appointment_at: string;
-    contact: {
-        first_name: string;
-        last_name: string;
-    };
-}
 
 interface ContactSearchResult {
     id: number;

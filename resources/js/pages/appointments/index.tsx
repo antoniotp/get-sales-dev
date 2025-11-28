@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { type PageProps as GlobalPageProps, type ChatbotChannel } from '@/types';
 import { Head, usePage } from '@inertiajs/react';
+import { type PageProps as GlobalPageProps, type ChatbotChannel, Appointment } from '@/types';
 import AppContentDefaultLayout from "@/layouts/app/app-content-default-layout";
 import { Card } from "@/components/ui/card";
 import { Calendar, dateFnsLocalizer, Event as CalendarEvent } from 'react-big-calendar';
@@ -11,6 +11,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { toZonedTime } from 'date-fns-tz';
 import axios from 'axios';
 import { NewAppointmentModal } from './partials/NewAppointmentModal';
+import { AppointmentDetailsModal } from './partials/AppointmentDetailsModal';
 
 // Set up the localizer by providing the date-fns functions
 // to the correct localizer.
@@ -29,15 +30,6 @@ const localizer = dateFnsLocalizer({
     getDay,
     locales,
 });
-
-interface Appointment {
-    id: number;
-    appointment_at: string;
-    contact: {
-        first_name: string;
-        last_name: string;
-    };
-}
 
 interface FormattedEvent extends CalendarEvent {
     resource: Appointment;
@@ -60,8 +52,14 @@ interface PageProps extends GlobalPageProps {
 export default function AppointmentsIndex(){
     const { chatbot, chatbotChannels, organization } = usePage<PageProps>().props;
     const [events, setEvents] = useState<FormattedEvent[]>([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // State for Create Modal
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newAppointmentDate, setNewAppointmentDate] = useState<Date | null>(null);
+
+    // State for Details/Edit Modal
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
     const breadcrumbs = [
         { title: 'Chatbots', href: route('chatbots.index') },
@@ -83,7 +81,6 @@ export default function AppointmentsIndex(){
 
             const formattedEvents: FormattedEvent[] = appointments.map((apt: Appointment) => {
                 const appointmentDate = toZonedTime(new Date(apt.appointment_at), organizationTimezone);
-
                 return {
                     title: `${apt.contact.first_name} ${apt.contact.last_name || ''}`.trim(),
                     start: appointmentDate,
@@ -97,7 +94,7 @@ export default function AppointmentsIndex(){
         }
     }, [chatbot.id, organizationTimezone]);
 
-    // Handler for when the calendar's visible range changes
+    // ... (handleRangeChange and initial load useEffect remain the same)
     const handleRangeChange = useCallback((range: Date[] | { start: Date; end: Date; }) => {
         let start: Date, end: Date;
         if (Array.isArray(range)) {
@@ -118,19 +115,26 @@ export default function AppointmentsIndex(){
         fetchAppointments(start, end);
     }, [fetchAppointments]);
 
+    // --- Modal and Event Handlers ---
     const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
         setNewAppointmentDate(start);
-        setIsModalOpen(true);
+        setIsCreateModalOpen(true);
     }, []);
 
-    const handleModalClose = () => {
-        setIsModalOpen(false);
+    const handleSelectEvent = useCallback((event: FormattedEvent) => {
+        setSelectedAppointment(event.resource);
+        setIsDetailsModalOpen(true);
+    }, []);
+
+    const handleCloseModals = () => {
+        setIsCreateModalOpen(false);
+        setIsDetailsModalOpen(false);
         setNewAppointmentDate(null);
+        setSelectedAppointment(null);
     };
 
-    const handleModalSuccess = (newAppointment: Appointment) => {
+    const handleCreateSuccess = (newAppointment: Appointment) => {
         const appointmentDate = toZonedTime(new Date(newAppointment.appointment_at), organizationTimezone);
-
         const newEvent: FormattedEvent = {
             title: `${newAppointment.contact.first_name} ${newAppointment.contact.last_name || ''}`.trim(),
             start: appointmentDate,
@@ -138,6 +142,26 @@ export default function AppointmentsIndex(){
             resource: newAppointment,
         };
         setEvents(prevEvents => [...prevEvents, newEvent]);
+    };
+
+    const handleUpdateSuccess = (updatedAppointment: Appointment) => {
+        setEvents(prevEvents => prevEvents.map(event => {
+            if (event.resource.id === updatedAppointment.id) {
+                const appointmentDate = toZonedTime(new Date(updatedAppointment.appointment_at), organizationTimezone);
+                return {
+                    ...event,
+                    title: `${updatedAppointment.contact.first_name} ${updatedAppointment.contact.last_name || ''}`.trim(),
+                    start: appointmentDate,
+                    end: new Date(appointmentDate.getTime() + 60 * 60 * 1000),
+                    resource: updatedAppointment,
+                };
+            }
+            return event;
+        }));
+    };
+
+    const handleDeleteSuccess = (appointmentId: number) => {
+        setEvents(prevEvents => prevEvents.filter(event => event.resource.id !== appointmentId));
     };
 
     return (
@@ -156,6 +180,7 @@ export default function AppointmentsIndex(){
                                 culture='es'
                                 selectable={true}
                                 onSelectSlot={handleSelectSlot}
+                                onSelectEvent={handleSelectEvent}
                                 messages={{
                                     next: "Siguiente",
                                     previous: "Anterior",
@@ -175,11 +200,19 @@ export default function AppointmentsIndex(){
                 </div>
             </AppContentDefaultLayout>
             <NewAppointmentModal
-                isOpen={isModalOpen}
-                onClose={handleModalClose}
-                onSuccess={handleModalSuccess}
+                isOpen={isCreateModalOpen}
+                onClose={handleCloseModals}
+                onSuccess={handleCreateSuccess}
                 initialDate={newAppointmentDate}
                 chatbotChannels={chatbotChannels}
+            />
+            <AppointmentDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={handleCloseModals}
+                onUpdate={handleUpdateSuccess}
+                onDelete={handleDeleteSuccess}
+                appointment={selectedAppointment}
+                organizationTimezone={organizationTimezone}
             />
         </AppLayout>
     );

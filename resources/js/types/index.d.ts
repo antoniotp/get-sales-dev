@@ -61,6 +61,19 @@ export interface Chatbot {
     created_at: string;
 }
 
+export interface Appointment {
+    id: number;
+    appointment_at: string;
+    contact: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        phone_number: string;
+    };
+    chatbot_channel_id: number;
+    status: string;
+}
+
 export interface Channel {
     id: number;
     name: string;

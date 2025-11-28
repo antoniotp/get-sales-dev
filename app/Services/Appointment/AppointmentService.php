@@ -33,6 +33,19 @@ class AppointmentService implements AppointmentServiceInterface
         $organizationTimezone = $chatbot->organization->timezone;
         $localAppointmentTime = Carbon::parse(Arr::get($data, 'appointment_at'), $organizationTimezone);
         $utcAppointmentTime = $localAppointmentTime->utc();
+
+        // Initialize to null, then assign if data exists
+        $utcEndAt = null;
+        if (Arr::has($data, 'end_at')) {
+            $endAt = Arr::get($data, 'end_at');
+            $utcEndAt = $endAt ? Carbon::parse($endAt, $organizationTimezone)->utc() : null;
+        }
+
+        $utcRemindAt = null;
+        if (Arr::has($data, 'remind_at')) {
+            $remindAt = Arr::get($data, 'remind_at');
+            $utcRemindAt = $remindAt ? Carbon::parse($remindAt, $organizationTimezone)->utc() : null;
+        }
         // --- End Timezone handling ---
 
         // Find or create contact
@@ -55,23 +68,36 @@ class AppointmentService implements AppointmentServiceInterface
             'contact_id' => $contactId,
             'chatbot_channel_id' => Arr::get($data, 'chatbot_channel_id'),
             'appointment_at' => $utcAppointmentTime, // Use the UTC Carbon instance
+            'end_at' => $utcEndAt,
             'status' => 'scheduled', // Default status
+            'remind_at' => $utcRemindAt,
         ]);
     }
 
     /**
      * Updates an existing appointment.
      *
-     * @param Appointment $appointment The appointment to update.
-     * @param array $data The data to update the appointment with.
+     * @param  Appointment  $appointment  The appointment to update.
+     * @param  array  $data  The data to update the appointment with.
      * @return Appointment The updated appointment.
      */
     public function update(Appointment $appointment, array $data): Appointment
     {
+        $organizationTimezone = $appointment->chatbotChannel->chatbot->organization->timezone;
+
         if (Arr::has($data, 'appointment_at')) {
-            $organizationTimezone = $appointment->chatbotChannel->chatbot->organization->timezone;
             $localAppointmentTime = Carbon::parse(Arr::get($data, 'appointment_at'), $organizationTimezone);
             $data['appointment_at'] = $localAppointmentTime->utc();
+        }
+
+        if (Arr::has($data, 'end_at')) {
+            $endAt = Arr::get($data, 'end_at');
+            $data['end_at'] = $endAt ? Carbon::parse($endAt, $organizationTimezone)->utc() : null;
+        }
+
+        if (Arr::has($data, 'remind_at')) {
+            $remindAt = Arr::get($data, 'remind_at');
+            $data['remind_at'] = $remindAt ? Carbon::parse($remindAt, $organizationTimezone)->utc() : null;
         }
 
         $appointment->update($data);
@@ -82,8 +108,7 @@ class AppointmentService implements AppointmentServiceInterface
     /**
      * Cancels/deletes an existing appointment.
      *
-     * @param Appointment $appointment The appointment to cancel.
-     * @return void
+     * @param  Appointment  $appointment  The appointment to cancel.
      */
     public function cancel(Appointment $appointment): void
     {

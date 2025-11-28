@@ -20,8 +20,10 @@ class Appointment extends Model
         'contact_id',
         'chatbot_channel_id',
         'appointment_at',
+        'end_at',
         'status',
         'reminder_sent_at',
+        'remind_at',
     ];
 
     /**
@@ -31,7 +33,9 @@ class Appointment extends Model
      */
     protected $casts = [
         'appointment_at' => 'datetime',
+        'end_at' => 'datetime',
         'reminder_sent_at' => 'datetime',
+        'remind_at' => 'datetime',
     ];
 
     /**

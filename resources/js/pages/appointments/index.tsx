@@ -69,6 +69,17 @@ export default function AppointmentsIndex(){
 
     const organizationTimezone = organization.current.timezone || 'UTC';
 
+    // Calculates the end Date for a calendar event
+    const getEventEndDate = (appointment: Appointment, organizationTimezone: string): Date => {
+        if (appointment.end_at) {
+            // Apply timezone conversion to end_at as well
+            return toZonedTime(new Date(appointment.end_at), organizationTimezone);
+        }
+        // Fallback to 1-hour duration if end_at is not provided
+        const appointmentDate = toZonedTime(new Date(appointment.appointment_at), organizationTimezone);
+        return new Date(appointmentDate.getTime() + 60 * 60 * 1000);
+    };
+
     const fetchAppointments = useCallback(async (start: Date, end: Date) => {
         try {
             const response = await axios.get(route('appointments.list', {
@@ -81,10 +92,12 @@ export default function AppointmentsIndex(){
 
             const formattedEvents: FormattedEvent[] = appointments.map((apt: Appointment) => {
                 const appointmentDate = toZonedTime(new Date(apt.appointment_at), organizationTimezone);
+                const eventEndDate = getEventEndDate(apt, organizationTimezone);
+
                 return {
                     title: `${apt.contact.first_name} ${apt.contact.last_name || ''}`.trim(),
                     start: appointmentDate,
-                    end: new Date(appointmentDate.getTime() + 60 * 60 * 1000), // Assuming 1-hour duration
+                    end: eventEndDate,
                     resource: apt,
                 };
             });
@@ -135,10 +148,12 @@ export default function AppointmentsIndex(){
 
     const handleCreateSuccess = (newAppointment: Appointment) => {
         const appointmentDate = toZonedTime(new Date(newAppointment.appointment_at), organizationTimezone);
+        const eventEndDate = getEventEndDate(newAppointment, organizationTimezone);
+
         const newEvent: FormattedEvent = {
             title: `${newAppointment.contact.first_name} ${newAppointment.contact.last_name || ''}`.trim(),
             start: appointmentDate,
-            end: new Date(appointmentDate.getTime() + 60 * 60 * 1000),
+            end: eventEndDate,
             resource: newAppointment,
         };
         setEvents(prevEvents => [...prevEvents, newEvent]);
@@ -148,11 +163,13 @@ export default function AppointmentsIndex(){
         setEvents(prevEvents => prevEvents.map(event => {
             if (event.resource.id === updatedAppointment.id) {
                 const appointmentDate = toZonedTime(new Date(updatedAppointment.appointment_at), organizationTimezone);
+                const eventEndDate = getEventEndDate(updatedAppointment, organizationTimezone);
+
                 return {
                     ...event,
                     title: `${updatedAppointment.contact.first_name} ${updatedAppointment.contact.last_name || ''}`.trim(),
                     start: appointmentDate,
-                    end: new Date(appointmentDate.getTime() + 60 * 60 * 1000),
+                    end: eventEndDate,
                     resource: updatedAppointment,
                 };
             }

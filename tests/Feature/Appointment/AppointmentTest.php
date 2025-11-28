@@ -158,15 +158,25 @@ class AppointmentTest extends TestCase
         $chatbot = Chatbot::find(1);
         $channel = $chatbot->chatbotChannels->first();
         $existingContact = Contact::factory()->create(['organization_id' => $chatbot->organization_id]);
+
         $appointmentCarbon = now()->addDays(5)->startOfHour()->utc();
         $appointmentForDb = $appointmentCarbon->toDateTimeString();
-        // Format to match Laravel's default model serialization
         $appointmentForJson = $appointmentCarbon->format('Y-m-d\TH:i:s.u\Z');
+
+        $endAtCarbon = $appointmentCarbon->copy()->addHour();
+        $endAtForDb = $endAtCarbon->toDateTimeString();
+        $endAtForJson = $endAtCarbon->format('Y-m-d\TH:i:s.u\Z');
+
+        $remindAtCarbon = $appointmentCarbon->copy()->subDay();
+        $remindAtForDb = $remindAtCarbon->toDateTimeString();
+        $remindAtForJson = $remindAtCarbon->format('Y-m-d\TH:i:s.u\Z');
 
         $postData = [
             'contact_id' => $existingContact->id,
             'chatbot_channel_id' => $channel->id,
             'appointment_at' => $appointmentForDb, // Send standard format
+            'end_at' => $endAtForDb,
+            'remind_at' => $remindAtForDb,
         ];
 
         // --- Act ---
@@ -177,13 +187,17 @@ class AppointmentTest extends TestCase
         $response->assertJsonFragment([
             'contact_id' => $existingContact->id,
             'appointment_at' => $appointmentForJson, // Assert against ISO format
+            'end_at' => $endAtForJson,
             'status' => 'scheduled',
+            'remind_at' => $remindAtForJson,
         ]);
 
         $this->assertDatabaseHas('appointments', [
             'contact_id' => $existingContact->id,
             'chatbot_channel_id' => $channel->id,
             'appointment_at' => $appointmentForDb, // Assert against DB format
+            'end_at' => $endAtForDb,
+            'remind_at' => $remindAtForDb,
         ]);
     }
 
@@ -202,12 +216,22 @@ class AppointmentTest extends TestCase
         $appointmentForJson = $appointmentCarbon->format('Y-m-d\TH:i:s.u\Z');
         $newPhoneNumber = '+15005550006';
 
+        $endAtCarbon = $appointmentCarbon->copy()->addHour();
+        $endAtForDb = $endAtCarbon->toDateTimeString();
+        $endAtForJson = $endAtCarbon->format('Y-m-d\TH:i:s.u\Z');
+
+        $remindAtCarbon = $appointmentCarbon->copy()->subDay();
+        $remindAtForDb = $remindAtCarbon->toDateTimeString();
+        $remindAtForJson = $remindAtCarbon->format('Y-m-d\TH:i:s.u\Z');
+
         $postData = [
             'phone_number' => $newPhoneNumber,
             'first_name' => 'John',
             'last_name' => 'New',
             'chatbot_channel_id' => $channel->id,
             'appointment_at' => $appointmentForDb, // Send standard format
+            'end_at' => $endAtForDb,
+            'remind_at' => $remindAtForDb,
         ];
 
         // --- Act ---
@@ -232,11 +256,15 @@ class AppointmentTest extends TestCase
             'contact_id' => $newContact->id,
             'chatbot_channel_id' => $channel->id,
             'appointment_at' => $appointmentForDb, // Assert against DB format
+            'end_at' => $endAtForDb,
+            'remind_at' => $remindAtForDb,
         ]);
 
         $response->assertJsonFragment([
             'contact_id' => $newContact->id,
             'appointment_at' => $appointmentForJson, // Assert against ISO format
+            'end_at' => $endAtForJson,
+            'remind_at' => $remindAtForJson,
         ]);
     }
 
@@ -256,9 +284,19 @@ class AppointmentTest extends TestCase
         $newAppointmentForDb = $newAppointmentCarbon->toDateTimeString();
         $newAppointmentForJson = $newAppointmentCarbon->format('Y-m-d\TH:i:s.u\Z');
 
+        $newEndAtCarbon = $newAppointmentCarbon->copy()->addHours(2);
+        $newEndAtForDb = $newEndAtCarbon->toDateTimeString();
+        $newEndAtForJson = $newEndAtCarbon->format('Y-m-d\TH:i:s.u\Z');
+
+        $newRemindAtCarbon = $newAppointmentCarbon->copy()->subHours(6);
+        $newRemindAtForDb = $newRemindAtCarbon->toDateTimeString();
+        $newRemindAtForJson = $newRemindAtCarbon->format('Y-m-d\TH:i:s.u\Z');
+
         // --- Act ---
         $response = $this->putJson(route('appointments.update', ['appointment' => $appointment->id]), [
             'appointment_at' => $newAppointmentForDb,
+            'end_at' => $newEndAtForDb,
+            'remind_at' => $newRemindAtForDb,
         ]);
 
         // --- Assert ---
@@ -266,11 +304,15 @@ class AppointmentTest extends TestCase
         $response->assertJsonFragment([
             'id' => $appointment->id,
             'appointment_at' => $newAppointmentForJson,
+            'end_at' => $newEndAtForJson,
+            'remind_at' => $newRemindAtForJson,
         ]);
 
         $this->assertDatabaseHas('appointments', [
             'id' => $appointment->id,
             'appointment_at' => $newAppointmentForDb,
+            'end_at' => $newEndAtForDb,
+            'remind_at' => $newRemindAtForDb,
         ]);
     }
 

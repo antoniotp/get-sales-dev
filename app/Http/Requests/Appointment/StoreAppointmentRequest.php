@@ -41,6 +41,8 @@ class StoreAppointmentRequest extends FormRequest
 
             ],
             'appointment_at' => ['required', 'date'],
+            'end_at' => ['nullable', 'date', 'after:appointment_at'],
+            'remind_at' => ['nullable', 'date'],
             'chatbot_channel_id' => [
                 'required',
                 'integer',

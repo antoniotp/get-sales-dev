@@ -24,12 +24,22 @@ const formSchema = z.object({
     phone_number: z.string().optional(),
     chatbot_channel_id: z.number({ required_error: "A channel must be selected." }).min(1, "A channel must be selected."),
     appointment_at: z.string({ required_error: "Appointment date is required." }).min(1, "Appointment date is required."),
+    end_at: z.string().nullable().optional(), // New: Optional end time
+    remind_at: z.string().nullable().optional(), // New: Optional reminder time
 }).superRefine((data, ctx) => {
     if (!data.contact_id && !data.phone_number) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: ['phone_number'],
             message: 'Phone number is required for a new contact.',
+        });
+    }
+    // New: end_at must be after appointment_at if both are present
+    if (data.appointment_at && data.end_at && data.appointment_at >= data.end_at) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['end_at'],
+            message: 'End time must be after start time.',
         });
     }
 });
@@ -97,13 +107,18 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
         // Reset form state when the modal is closed or opened
         useEffect(() => {
             if (isOpen) {
+                const defaultAppointmentAt = initialDate ? toLocalISOString(initialDate) : '';
+                const defaultEndAt = initialDate ? toLocalISOString(new Date(initialDate.getTime() + 60 * 60 * 1000)) : ''; // Default 1 hour later
+
                 reset({
                     contact_id: null,
                     first_name: '',
                     last_name: '',
                     phone_number: '',
                     chatbot_channel_id: chatbotChannels.length === 1 ? chatbotChannels[0].id : undefined,
-                    appointment_at: initialDate ? toLocalISOString(initialDate) : '',
+                    appointment_at: defaultAppointmentAt,
+                    end_at: defaultEndAt, // New
+                    remind_at: '', // New - initialize as empty string
                 });
                 setSelectedContact(null);
                 setIsCreatingNew(false);
@@ -258,8 +273,36 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
 
                                 <FormField control={form.control} name="appointment_at" render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Appointment Time</FormLabel>
+                                        <FormLabel>Start Time</FormLabel>
                                         <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+
+                                <FormField control={form.control} name="end_at" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>End Time (Optional)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="datetime-local"
+                                                {...field}
+                                                value={field.value || ''} // Fix: Provide empty string for null/undefined
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+
+                                <FormField control={form.control} name="remind_at" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Reminder Time (Optional)</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="datetime-local"
+                                                {...field}
+                                                value={field.value || ''} // Fix: Provide empty string for null/undefined
+                                            />
+                                        </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )} />

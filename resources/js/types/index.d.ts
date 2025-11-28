@@ -64,6 +64,7 @@ export interface Chatbot {
 export interface Appointment {
     id: number;
     appointment_at: string;
+    end_at: string | null;
     contact: {
         id: number;
         first_name: string;
@@ -72,6 +73,7 @@ export interface Appointment {
     };
     chatbot_channel_id: number;
     status: string;
+    remind_at: string | null;
 }
 
 export interface Channel {

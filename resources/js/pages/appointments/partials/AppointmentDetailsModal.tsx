@@ -15,6 +15,8 @@ import { formatPhoneNumber } from '@/lib/utils';
 // Zod Schema for the form
 const formSchema = z.object({
     appointment_at: z.string({ required_error: "Appointment date is required." }),
+    end_at: z.string().nullable().optional(), // New
+    remind_at: z.string().nullable().optional(), // New
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -52,6 +54,8 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                 const zonedDate = toZonedTime(new Date(appointment.appointment_at), organizationTimezone);
                 reset({
                     appointment_at: toLocalISOString(zonedDate),
+                    end_at: appointment.end_at ? toLocalISOString(toZonedTime(new Date(appointment.end_at), organizationTimezone)) : '',
+                    remind_at: appointment.remind_at ? toLocalISOString(toZonedTime(new Date(appointment.remind_at), organizationTimezone)) : '',
                 });
             }
         }, [appointment, reset, organizationTimezone]);
@@ -123,8 +127,36 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                                 <form id="update-appointment-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                     <FormField control={form.control} name="appointment_at" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Appointment Time</FormLabel>
+                                            <FormLabel>Start Time</FormLabel>
                                             <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+
+                                    <FormField control={form.control} name="end_at" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>End Time (Optional)</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="datetime-local"
+                                                    {...field}
+                                                    value={field.value || ''} // Fix: Provide empty string for null/undefined
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+
+                                    <FormField control={form.control} name="remind_at" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Reminder Time (Optional)</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="datetime-local"
+                                                    {...field}
+                                                    value={field.value || ''} // Fix: Provide empty string for null/undefined
+                                                />
+                                            </FormControl>
                                             <FormMessage />
                                         </FormItem>
                                     )} />

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Appointment } from '@/types';
 import { toZonedTime } from 'date-fns-tz';
 import { toast } from 'sonner';
+import { formatPhoneNumber } from '@/lib/utils';
 
 // Zod Schema for the form
 const formSchema = z.object({
@@ -115,7 +116,7 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                             <div className="p-3 border rounded-md bg-muted/50">
                                 <p className="text-sm font-medium text-muted-foreground">Contact</p>
                                 <p className="font-semibold">{`${appointment.contact.first_name} ${appointment.contact.last_name || ''}`.trim()}</p>
-                                <p className="text-sm">{appointment.contact.phone_number}</p>
+                                <p className="text-sm">{formatPhoneNumber(appointment.contact.phone_number)}</p>
                             </div>
 
                             <Form {...form}>

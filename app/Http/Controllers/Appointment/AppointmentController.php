@@ -51,7 +51,7 @@ class AppointmentController extends Controller
         $appointments = Appointment::whereIn('chatbot_channel_id', $chatbotChannelIds)
             ->where('appointment_at', '>=', $startDate)
             ->where('appointment_at', '<', $endDate)
-            ->with('contact:id,first_name,last_name') // Eager load contact details
+            ->with('contact:id,first_name,last_name,phone_number') // Eager load contact details
             ->get();
 
         return response()->json($appointments);

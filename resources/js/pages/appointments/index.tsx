@@ -4,7 +4,7 @@ import { Head, usePage } from '@inertiajs/react';
 import { type PageProps as GlobalPageProps, type ChatbotChannel, Appointment } from '@/types';
 import AppContentDefaultLayout from "@/layouts/app/app-content-default-layout";
 import { Card } from "@/components/ui/card";
-import { Calendar, dateFnsLocalizer, Event as CalendarEvent } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Event as CalendarEvent, EventProps } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -181,6 +181,15 @@ export default function AppointmentsIndex(){
         setEvents(prevEvents => prevEvents.filter(event => event.resource.id !== appointmentId));
     };
 
+    const CustomMonthEvent = ({ event } : EventProps<FormattedEvent>) => {
+        const startHour = event.start? format(event.start, 'HH:mm') : '';
+        return (
+            <span className="text-xs">
+              {startHour && `${startHour} `}{event.title}
+            </span>
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Agenda" />
@@ -199,8 +208,8 @@ export default function AppointmentsIndex(){
                                 onSelectSlot={handleSelectSlot}
                                 onSelectEvent={handleSelectEvent}
                                 messages={{
-                                    next: "Siguiente",
-                                    previous: "Anterior",
+                                    next: ">",
+                                    previous: "<",
                                     today: "Hoy",
                                     month: "Mes",
                                     week: "Semana",
@@ -210,6 +219,9 @@ export default function AppointmentsIndex(){
                                     time: "Hora",
                                     event: "Evento",
                                     noEventsInRange: "No hay citas en este rango.",
+                                }}
+                                components={{
+                                    month: { event: CustomMonthEvent },
                                 }}
                             />
                         </div>

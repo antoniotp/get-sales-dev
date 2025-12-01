@@ -14,6 +14,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
+use Illuminate\Validation\Rule;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -173,6 +174,15 @@ class ChatController extends Controller
 
     public function startFromLink(Request $request, Chatbot $chatbot, $phone_number): RedirectResponse
     {
+        $request->validate([
+            'cc_id' => [
+                'required',
+                'integer',
+                Rule::exists('chatbot_channels', 'id')->where(function ($query) use ($chatbot) {
+                    $query->where('chatbot_id', $chatbot->id);
+                }),
+            ],
+        ]);
         try {
             $conversation = $this->conversationService->startConversationFromLink(
                 $request->user(),

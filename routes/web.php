@@ -55,7 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/reconnect', [WhatsAppIntegrationController::class, 'reconnectWhatsappWebSession'])->name('chatbots.integrations.whatsapp-web.reconnect');
     Route::get('/chatbots/{chatbot}/chats/{conversation?}', [ChatController::class, 'index'])->name('chats');
     Route::post('/chatbots/{chatbot}/chats', [ChatController::class, 'store'])->name('chats.store');
-    Route::get('/chatbots/{chatbot}/chats/start/{phone_number}', [ChatController::class, 'startFromLink'])->name('chats.start');
+    Route::get('/chatbots/{chatbot}/chats/start/{phone_number}', [ChatController::class, 'startFromLink'])->name('chats.start'); // required: "?cc_id={chatbot_channel_id}" optional: "?text={initial%20message}"
     Route::get('/chats/{conversation}/messages', [ChatController::class, 'getMessages'])->name('chats.messages');
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');
     Route::put('/chats/{conversation}/mode', [ChatController::class, 'updateConversationMode'])->name('chats.mode.update');

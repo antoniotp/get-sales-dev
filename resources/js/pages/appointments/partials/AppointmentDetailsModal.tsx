@@ -1,4 +1,5 @@
 import { useState, useEffect, forwardRef } from 'react';
+import { usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Appointment } from '@/types';
+import { Appointment, Chatbot, PageProps } from '@/types';
 import { toZonedTime } from 'date-fns-tz';
 import { toast } from 'sonner';
 import { formatPhoneNumber } from '@/lib/utils';
@@ -38,6 +39,7 @@ interface Props {
 
 export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
     ({ isOpen, onClose, onUpdate, onDelete, appointment, organizationTimezone }, ref) => {
+        const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
         const [isSubmitting, setIsSubmitting] = useState(false);
         const [isDeleting, setIsDeleting] = useState(false);
         const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -181,6 +183,22 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                                 </Button>
                             </div>
                         </DialogFooter>
+                        {appointment?.contact.phone_number && (
+                            <div className="mt-4 pt-4 border-t flex justify-end">
+                                <a
+                                    href={route('chats.start', {
+                                        chatbot: chatbot.id,
+                                        phone_number: appointment.contact.phone_number,
+                                        cc_id: appointment.chatbot_channel_id
+                                    })}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 bg-blue-500 text-primary-foreground hover:bg-blue-600"
+                                >
+                                    Enviar Mensaje al Cliente
+                                </a>
+                            </div>
+                        )}
                     </DialogContent>
                 </Dialog>
 

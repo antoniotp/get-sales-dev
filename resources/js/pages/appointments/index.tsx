@@ -5,13 +5,14 @@ import { type PageProps as GlobalPageProps, type ChatbotChannel, Appointment } f
 import AppContentDefaultLayout from "@/layouts/app/app-content-default-layout";
 import { Card } from "@/components/ui/card";
 import { Calendar, dateFnsLocalizer, Event as CalendarEvent, EventProps } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth } from 'date-fns';
+import { format, parse, startOfWeek, getDay, startOfMonth, endOfMonth, addDays } from 'date-fns';
 import { es } from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { toZonedTime } from 'date-fns-tz';
 import axios from 'axios';
 import { NewAppointmentModal } from './partials/NewAppointmentModal';
 import { AppointmentDetailsModal } from './partials/AppointmentDetailsModal';
+import { CalendarToolbar } from './partials/CalendarToolbar';
 
 // Set up the localizer by providing the date-fns functions
 // to the correct localizer.
@@ -181,6 +182,12 @@ export default function AppointmentsIndex(){
         setEvents(prevEvents => prevEvents.filter(event => event.resource.id !== appointmentId));
     };
 
+    const handleCreate = useCallback(() => {
+        const tomorrow = addDays(new Date(), 1);
+        setNewAppointmentDate(tomorrow);
+        setIsCreateModalOpen(true);
+    }, []);
+
     const CustomMonthEvent = ({ event } : EventProps<FormattedEvent>) => {
         const startHour = event.start? format(event.start, 'HH:mm') : '';
         return (
@@ -222,6 +229,12 @@ export default function AppointmentsIndex(){
                                 }}
                                 components={{
                                     month: { event: CustomMonthEvent },
+                                    toolbar: (toolbarProps) => (
+                                        <CalendarToolbar
+                                            {...toolbarProps}
+                                            onCreate={handleCreate}
+                                        />
+                                    ),
                                 }}
                             />
                         </div>

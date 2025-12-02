@@ -106,7 +106,7 @@ class StartFromLinkTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('chats.start', [
             'chatbot' => $this->chatbot,
             'phone_number' => $phoneNumber,
-            'channel_id' => $chatbotChannel->id,
+            'cc_id' => $chatbotChannel->id,
         ]));
 
         // Assert
@@ -118,6 +118,7 @@ class StartFromLinkTest extends TestCase
     {
         // Arrange
         $phoneNumber = '15551234567';
+        $chatbotChannel = $this->chatbot->chatbotChannels->first();
 
         $mockService = $this->mock(ConversationServiceInterface::class);
         $mockService->shouldReceive('startConversationFromLink')
@@ -130,11 +131,27 @@ class StartFromLinkTest extends TestCase
         $response = $this->actingAs($this->user)->get(route('chats.start', [
             'chatbot' => $this->chatbot,
             'phone_number' => $phoneNumber,
-            'channel_id' => 999, // Non-existent channel
+            'cc_id' => $chatbotChannel->id,
         ]));
 
         // Assert
         $response->assertRedirect($expectedRoute);
         $response->assertSessionHas('error', 'The specified channel was not found.');
+    }
+
+    public function test_it_fails_validation_for_invalid_cc_id(): void
+    {
+        // Arrange
+        $phoneNumber = '15551234567';
+
+        // Act
+        $response = $this->actingAs($this->user)->get(route('chats.start', [
+            'chatbot' => $this->chatbot,
+            'phone_number' => $phoneNumber,
+            'cc_id' => 999, // An ID that doesn't exist
+        ]));
+
+        // Assert
+        $response->assertSessionHasErrors(['cc_id' => 'The selected cc id is invalid.']);
     }
 }

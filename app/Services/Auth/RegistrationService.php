@@ -15,9 +15,7 @@ class RegistrationService implements RegistrationServiceInterface
     /**
      * Handle the registration of a new user and optionally their organization.
      *
-     * @param array<string, string> $data
-     * @param bool $createOrganization
-     * @return User
+     * @param  array<string, string>  $data
      */
     public function register(array $data, bool $createOrganization = true): User
     {
@@ -30,8 +28,8 @@ class RegistrationService implements RegistrationServiceInterface
 
             if ($createOrganization) {
                 $organization = Organization::create([
-                    'name' => $data['name'] . '\'s Organization',
-                    'slug' => Str::slug($data['name'] . '-organization'),
+                    'name' => $data['name'].'\'s Organization',
+                    'slug' => Str::slug($data['name'].'-organization-'.$user->id),
                     'owner_id' => $user->id,
                 ]);
 

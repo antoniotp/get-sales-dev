@@ -3,6 +3,7 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
+use App\Facades\WwebjsUrl;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\Message;
@@ -12,24 +13,21 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppWebService implements WhatsAppWebServiceInterface
 {
-    private string $wwebjs_url;
-
     private string $wwebjs_key;
 
     public function __construct()
     {
-        $this->wwebjs_url = rtrim(config('services.wwebjs_service.url'), '/');
         $this->wwebjs_key = config('services.wwebjs_service.key');
 
-        if (empty($this->wwebjs_url) || empty($this->wwebjs_key)) {
-            Log::error('WhatsApp Web Service URL or Key is not configured. Please check config/services.php and your .env file.');
-            throw new Exception('WhatsApp Web Service URL or API Key is not configured.');
+        if (empty($this->wwebjs_key)) {
+            Log::error('WhatsApp Web Service Key is not configured. Please check config/services.php and your .env file.');
+            throw new Exception('WhatsApp Web Service API Key is not configured.');
         }
     }
 
     public function startSession(string $sessionId): bool
     {
-        $url = $this->wwebjs_url.'/session/start/'.$sessionId;
+        $url = WwebjsUrl::getUrlForChatbot($sessionId).'/session/start/'.$sessionId;
         Log::info('Starting session via WhatsApp Web Service', ['session_id' => $sessionId, 'url' => $url]);
 
         try {
@@ -64,7 +62,7 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
     public function getSessionStatus(Chatbot $chatbot): array
     {
         $sessionId = 'chatbot-'.$chatbot->id;
-        $url = $this->wwebjs_url.'/session/status/'.$sessionId;
+        $url = WwebjsUrl::getUrlForChatbot($sessionId).'/session/status/'.$sessionId;
         Log::info('Getting session status from WhatsApp Web Service', ['session_id' => $sessionId, 'url' => $url, 'key' => $this->wwebjs_key]);
         try {
             $response = Http::withHeaders([
@@ -133,7 +131,7 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
         }
 
         $sessionId = 'chatbot-'.$chatbot->id;
-        $url = $this->wwebjs_url.'/session/restart/'.$sessionId;
+        $url = WwebjsUrl::getUrlForChatbot($sessionId).'/session/restart/'.$sessionId;
         Log::info('Reconnecting session via WhatsApp Web Service', ['session_id' => $sessionId, 'url' => $url]);
 
         try {
@@ -173,7 +171,7 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
             $chatId .= '@c.us';
         }
 
-        $url = $this->wwebjs_url.'/client/sendMessage/'.$sessionId;
+        $url = WwebjsUrl::getUrlForChatbot($sessionId).'/client/sendMessage/'.$sessionId;
 
         Log::info('Sending message via WhatsApp Web Service', [
             'session_id' => $sessionId,
@@ -243,7 +241,7 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
 
     public function getGroupChatInfo(string $sessionId, string $groupId): ?array
     {
-        $url = $this->wwebjs_url.'/groupChat/getClassInfo/'.$sessionId;
+        $url = WwebjsUrl::getUrlForChatbot($sessionId).'/groupChat/getClassInfo/'.$sessionId;
         Log::info('Getting group chat info from WhatsApp Web Service', ['session_id' => $sessionId, 'group_id' => $groupId]);
 
         try {

@@ -34,6 +34,7 @@ use App\Services\WhatsApp\FacebookService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\WhatsApp\WhatsAppWebService;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
+use App\Services\WhatsApp\WwebjsUrlManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton('wwebjs-url-manager', function ($app) {
+            $defaultUrl = rtrim(config('services.wwebjs_service.url'), '/');
+
+            return new WwebjsUrlManager($defaultUrl);
+        });
+
         $this->app->bind(WhatsAppServiceInterface::class, WhatsAppService::class);
         $this->app->bind(AIServiceInterface::class, function ($app) {
             return new ChatGPTService(

@@ -10,6 +10,7 @@ use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Events\NewWhatsAppConversation;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
+use App\Facades\WwebjsUrl;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
@@ -29,10 +30,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
     private ?Conversation $conversation = null;
 
-    private string $wwebjs_url;
-
-    private string $wwebjs_key;
-
     public function __construct(
         private readonly ConversationServiceInterface $conversationService,
         private readonly MessageServiceInterface $messageService,
@@ -40,8 +37,6 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         private readonly WhatsappWebServiceInterface $whatsappWebService,
     ) {
         $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
-        $this->wwebjs_url = rtrim(config('services.wwebjs_service.url'), '/');
-        $this->wwebjs_key = config('services.wwebjs_service.key');
     }
 
     public function handle(array $data): void
@@ -113,9 +108,10 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         Log::info('Handling ready event', ['session_id' => $sessionId]);
 
         try {
+            $url = WwebjsUrl::getUrlForChatbot($sessionId).'/client/getClassInfo/'.$sessionId;
             // Make an API call to get session info
-            $response = Http::withHeaders(['x-api-key' => $this->wwebjs_key])
-                ->get($this->wwebjs_url.'/client/getClassInfo/'.$sessionId);
+            $response = Http::withHeaders(['x-api-key' => config('services.wwebjs_service.key')])
+                ->get($url);
 
             if (! $response->successful()) {
                 Log::error('Failed to get session info for ready event.', [

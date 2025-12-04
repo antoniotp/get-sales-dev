@@ -47,6 +47,7 @@ class WhatsAppIntegrationController extends Controller
                 ],
                 'status' => $whatsAppWebChatbotChannel->status,
             ] : null,
+            'isWhatsappOnboardingEnabled' => config('services.facebook.enable_onboarding'),
         ]);
     }
 

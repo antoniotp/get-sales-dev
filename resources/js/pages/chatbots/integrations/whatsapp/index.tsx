@@ -20,10 +20,11 @@ import { WhatsappWebConnection } from '@/components/chatbot/integrations/Whatsap
 interface PageProps extends GlobalPageProps {
     whatsAppChannel: ChatbotChannel | null;
     whatsAppWebChatbotChannel: ChatbotChannel | null;
+    isWhatsappOnboardingEnabled: boolean;
 }
 
 export default function WhatsAppIntegration() {
-    const { chatbot, whatsAppChannel, whatsAppWebChatbotChannel } = usePage<PageProps>().props;
+    const { chatbot, whatsAppChannel, whatsAppWebChatbotChannel, isWhatsappOnboardingEnabled } = usePage<PageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -101,6 +102,7 @@ export default function WhatsAppIntegration() {
                                                     <TableCell colSpan={4} className="text-center">
                                                         <p className="py-4">No WhatsApp number connected.</p>
                                                         <FacebookEmbeddedSignUpBtn
+                                                            isWhatsappOnboardingEnabled={isWhatsappOnboardingEnabled}
                                                             onSuccess={() => {
                                                                 console.log('Facebook sign-up successful');
                                                                 router.reload();

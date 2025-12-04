@@ -48,11 +48,12 @@ declare global {
 
 interface Props {
     onSuccess: () => void;
+    isWhatsappOnboardingEnabled: boolean;
 }
 
 axios.defaults.withCredentials = true
 
-export function FacebookEmbeddedSignUpBtn({ onSuccess }: Props) {
+export function FacebookEmbeddedSignUpBtn({ onSuccess, isWhatsappOnboardingEnabled }: Props) {
     const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
     const [isLoading, setIsLoading] = useState(false);
     const [authCode, setAuthCode] = useState<string | null>(null);
@@ -143,6 +144,18 @@ export function FacebookEmbeddedSignUpBtn({ onSuccess }: Props) {
         setAuthCode(null);
         setPhoneNumberId(null);
 
+        const extras = isWhatsappOnboardingEnabled ?
+            {
+                featureType: 'whatsapp_business_app_onboarding',
+                sessionInfoVersion: '3',
+                setup: {},
+            } :
+            {
+                feature: 'EMBEDDED_SIGNUP',
+                sessionInfoVersion: '3',
+                setup: {},
+            };
+
         window.FB.login(
             (response: FacebookLoginResponse) => {
                 if (response.authResponse?.code) {
@@ -156,11 +169,7 @@ export function FacebookEmbeddedSignUpBtn({ onSuccess }: Props) {
                 config_id: import.meta.env.VITE_FACEBOOK_CONFIG_ID,
                 response_type: 'code',
                 override_default_response_type: true,
-                extras: {
-                    feature: 'EMBEDDED_SIGNUP',
-                    sessionInfoVersion: '3',
-                    setup: {},
-                },
+                extras,
             }
         );
     };

@@ -15,6 +15,7 @@ use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
 use App\Http\Controllers\Public\PublicFormController;
+use App\Http\Controllers\Webhooks\TextMeBotWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\WhatsAppWebController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,7 @@ Route::get('/policies', function () {
 Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify'])->name('webhook.whatsapp_business.verify');
 Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle'])->name('webhook.whatsapp_business');
 Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle'])->name('webhook.whatsapp_web');
+Route::post('/webhook/textmebot', [TextMeBotWebhookController::class, 'handle'])->name('webhook.textmebot');
 
 // Public invitation acceptance page
 Route::get('/invitations/accept', [InvitationController::class, 'show'])->name('invitations.show');

@@ -184,6 +184,9 @@ class WhatsappWebWebhookServiceTest extends TestCase
             'data' => [
                 'message' => [
                     'id' => ['_serialized' => $externalMessageId],
+                    '_data' => [
+                        'notifyName' => 'Test User Name',
+                    ],
                     'body' => $messageBody,
                     'type' => 'chat',
                     'timestamp' => $timestamp,

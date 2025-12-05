@@ -197,10 +197,11 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
 
     private function handleDirectMessage(array $messageData): void
     {
+        $notifyName = $messageData['_data']['notifyName'] ?? 'WhatsApp User';
         $this->conversation = $this->conversationService->findOrCreate(
             $this->chatbotChannel,
             $messageData['from'],
-            $messageData['notifyName'] ?? 'WhatsApp User',
+            $notifyName,
             $this->whatsAppWebChannel->id
         );
 

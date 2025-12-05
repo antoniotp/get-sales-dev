@@ -109,6 +109,16 @@ class ConversationService implements ConversationServiceInterface
         $organizationId = $chatbotChannel->chatbot->organization_id;
         $normalizedIdentifier = $this->normalizer->normalize($channelIdentifier);
 
+        $contact = Contact::firstOrCreate(
+            ['organization_id' => $organizationId, 'phone_number' => $normalizedIdentifier],
+            ['first_name' => $contactName]
+        );
+
+        if (! $contact->wasRecentlyCreated && $contact->first_name != $contactName) {
+            $contact->update(['first_name' => $contactName]);
+            $contact->refresh();
+        }
+
         $contactChannel = ContactChannel::firstOrCreate(
             [
                 'chatbot_id' => $chatbotChannel->chatbot_id,
@@ -116,10 +126,7 @@ class ConversationService implements ConversationServiceInterface
                 'channel_identifier' => $normalizedIdentifier,
             ],
             [
-                'contact_id' => Contact::firstOrCreate(
-                    ['organization_id' => $organizationId, 'phone_number' => $normalizedIdentifier],
-                    ['first_name' => $contactName]
-                )->id,
+                'contact_id' => $contact->id,
             ]
         );
 
@@ -141,17 +148,19 @@ class ConversationService implements ConversationServiceInterface
             ]
         );
 
-        if (! $conversation->wasRecentlyCreated && is_null($conversation->contact_channel_id)) {
-            $conversation->update(['contact_channel_id' => $contactChannel->id]);
-        }
-
-        if ($conversation->wasRecentlyCreated) {
+        if (! $conversation->wasRecentlyCreated) {
+            $dataToUpdate = ['last_message_at' => now()];
+            if ($conversation->contact_name !== $contactName) {
+                $dataToUpdate['contact_name'] = $contactName;
+            }
+            if (is_null($conversation->contact_channel_id)) {
+                $dataToUpdate['contact_channel_id'] = $contactChannel->id;
+            }
+            $conversation->update($dataToUpdate);
+            $conversation->refresh();
+        } else {
             Log::info('New direct conversation created', ['conversation_id' => $conversation->id]);
             event(new NewWhatsAppConversation($conversation));
-        }
-
-        if (! $conversation->wasRecentlyCreated) {
-            $conversation->update(['last_message_at' => now()]);
         }
 
         return $conversation;

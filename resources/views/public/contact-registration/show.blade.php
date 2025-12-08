@@ -104,47 +104,49 @@
                     </div>
                 </div>
 
-                <hr class="my-6">
-
-                <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">Datos del Paciente y Otros</h2>
-
                 {{-- Dynamic Custom Fields --}}
                 @foreach($formLink->publicFormTemplate->custom_fields_schema as $field)
-                    <div class="mb-4">
-                        <label for="custom_{{ $field['name'] }}" class="block text-sm font-medium text-gray-700">
+                    @if($field['type'] === 'separator')
+                        <hr class="my-6">
+                        <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">
                             {{ $field['label'] }}
-                            @if(in_array('required', $field['validation'] ?? []))
-                                <span class="text-red-500">*</span>
+                        </h2>
+                    @else
+                        <div class="mb-4">
+                            <label for="custom_{{ $field['name'] }}" class="block text-sm font-medium text-gray-700">
+                                {{ $field['label'] }}
+                                @if(in_array('required', $field['validation'] ?? []))
+                                    <span class="text-red-500">*</span>
+                                @endif
+                            </label>
+                            @if($field['type'] === 'textarea')
+                                <textarea name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
+                                          placeholder="{{ $field['placeholder'] ?? '' }}"
+                                          @if(in_array('required', $field['validation'] ?? [])) required @endif
+                                          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-1"></textarea>
+                            @elseif($field['type'] === 'select')
+                                <select name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
+                                        @if(in_array('required', $field['validation'] ?? [])) required @endif
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-1">
+                                    <option value="">Seleccione una opción</option>
+                                    @foreach($field['options'] ?? [] as $option)
+                                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            @elseif($field['type'] === 'checkbox')
+                                <input type="checkbox" name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
+                                       value="1"
+                                       class="mt-1 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @else
+                                <input type="{{ $field['type'] }}" name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
+                                       placeholder="{{ $field['placeholder'] ?? '' }}"
+                                       @if(in_array('required', $field['validation'] ?? [])) required @endif
+                                       @if(isset($field['step'])) step="{{ $field['step'] }}" @endif
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-1">
                             @endif
-                        </label>
-                        @if($field['type'] === 'textarea')
-                            <textarea name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
-                                      placeholder="{{ $field['placeholder'] ?? '' }}"
-                                      @if(in_array('required', $field['validation'] ?? [])) required @endif
-                                      class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-1"></textarea>
-                        @elseif($field['type'] === 'select')
-                            <select name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
-                                    @if(in_array('required', $field['validation'] ?? [])) required @endif
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-1">
-                                <option value="">Seleccione una opción</option>
-                                @foreach($field['options'] ?? [] as $option)
-                                    <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                                @endforeach
-                            </select>
-                        @elseif($field['type'] === 'checkbox')
-                            <input type="checkbox" name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
-                                   value="1"
-                                   class="mt-1 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                        @else
-                            <input type="{{ $field['type'] }}" name="custom_fields[{{ $field['name'] }}]" id="custom_{{ $field['name'] }}"
-                                   placeholder="{{ $field['placeholder'] ?? '' }}"
-                                   @if(in_array('required', $field['validation'] ?? [])) required @endif
-                                   @if(isset($field['step'])) step="{{ $field['step'] }}" @endif
-                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-1">
-                        @endif
-                    </div>
+                        </div>
+                    @endif
                 @endforeach
-
                 <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
 
                 <div class="mt-6">

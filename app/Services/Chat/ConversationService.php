@@ -114,11 +114,6 @@ class ConversationService implements ConversationServiceInterface
             ['first_name' => $contactName]
         );
 
-        if (! $contact->wasRecentlyCreated && $contact->first_name != $contactName) {
-            $contact->update(['first_name' => $contactName]);
-            $contact->refresh();
-        }
-
         $contactChannel = ContactChannel::firstOrCreate(
             [
                 'chatbot_id' => $chatbotChannel->chatbot_id,
@@ -150,9 +145,6 @@ class ConversationService implements ConversationServiceInterface
 
         if (! $conversation->wasRecentlyCreated) {
             $dataToUpdate = ['last_message_at' => now()];
-            if ($conversation->contact_name !== $contactName) {
-                $dataToUpdate['contact_name'] = $contactName;
-            }
             if (is_null($conversation->contact_channel_id)) {
                 $dataToUpdate['contact_channel_id'] = $contactChannel->id;
             }

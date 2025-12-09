@@ -74,6 +74,7 @@ class ConversationService implements ConversationServiceInterface
                 'external_conversation_id' => $normalizedPhoneNumber,
             ],
             [
+                'type' => Type::DIRECT,
                 'contact_channel_id' => $contactChannel->id,
                 'contact_name' => $contactName ?: $normalizedPhoneNumber,
                 'contact_phone' => $normalizedPhoneNumber,

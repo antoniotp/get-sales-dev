@@ -207,6 +207,13 @@ class ConversationService implements ConversationServiceInterface
         );
     }
 
+    public function updateContactName(Conversation $conversation, string $newName): bool
+    {
+        $conversation->contact_name = $newName;
+
+        return $conversation->save();
+    }
+
     public function getConversationsForChatbot(Chatbot $chatbot, User $user): Collection
     {
         $conversationsQuery = Conversation::query()

@@ -53,4 +53,6 @@ interface ConversationServiceInterface
     public function startConversationFromLink(User $user, Chatbot $chatbot, string $phoneNumber, ?string $text, ?int $chatbotChannelId): Conversation;
 
     public function updateGroupName(ChatbotChannel $chatbotChannel, string $groupId, string $name): void;
+
+    public function updateContactName(Conversation $conversation, string $newName): bool;
 }

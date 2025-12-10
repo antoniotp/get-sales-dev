@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
  */
 class Message extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'conversation_id',
@@ -45,6 +46,7 @@ class Message extends Model
         'read_at',
         'failed_at',
         'error_message',
+        'sent_at',
     ];
 
     protected $casts = [
@@ -52,6 +54,7 @@ class Message extends Model
         'delivered_at' => 'datetime',
         'read_at' => 'datetime',
         'failed_at' => 'datetime',
+        'sent_at' => 'datetime',
     ];
 
     /**
@@ -163,7 +166,7 @@ class Message extends Model
      */
     public function hasMedia(): bool
     {
-        return !empty($this->media_url);
+        return ! empty($this->media_url);
     }
 
     /**
@@ -171,7 +174,7 @@ class Message extends Model
      */
     public function hasFailed(): bool
     {
-        return !is_null($this->failed_at);
+        return ! is_null($this->failed_at);
     }
 
     /**
@@ -179,7 +182,7 @@ class Message extends Model
      */
     public function isDelivered(): bool
     {
-        return !is_null($this->delivered_at);
+        return ! is_null($this->delivered_at);
     }
 
     /**
@@ -187,6 +190,6 @@ class Message extends Model
      */
     public function isRead(): bool
     {
-        return !is_null($this->read_at);
+        return ! is_null($this->read_at);
     }
 }

@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -20,7 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class OrganizationSubscription extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -70,8 +71,8 @@ class OrganizationSubscription extends Model
     public function isActive(): bool
     {
         return $this->status === 1 &&
-            !$this->isCancelled() &&
-            !$this->isExpired();
+            ! $this->isCancelled() &&
+            ! $this->isExpired();
     }
 
     /**
@@ -91,7 +92,7 @@ class OrganizationSubscription extends Model
      */
     public function isCancelled(): bool
     {
-        return !is_null($this->cancelled_at);
+        return ! is_null($this->cancelled_at);
     }
 
     /**
@@ -124,6 +125,7 @@ class OrganizationSubscription extends Model
         }
 
         $daysUntilExpiration = $this->getDaysUntilExpiration();
+
         return $daysUntilExpiration !== null && $daysUntilExpiration <= $days && $daysUntilExpiration > 0;
     }
 
@@ -141,11 +143,11 @@ class OrganizationSubscription extends Model
     /**
      * Renew the subscription.
      */
-    public function renew(Carbon $newExpirationDate = null): void
+    public function renew(?Carbon $newExpirationDate = null): void
     {
         $billingPeriod = $this->subscription->billing_period;
 
-        if (!$newExpirationDate) {
+        if (! $newExpirationDate) {
             $currentExpiration = $this->expires_at ?? now();
             $newExpirationDate = $this->calculateNextExpirationDate($currentExpiration, $billingPeriod);
         }

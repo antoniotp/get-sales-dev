@@ -4,6 +4,7 @@ namespace Tests\Unit\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\Contact\ContactServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
@@ -37,6 +38,8 @@ class WhatsappWebWebhookServiceTest extends TestCase
 
     private MockInterface $whatsAppWebServiceMock;
 
+    private MockInterface $contactServiceMock;
+
     private Channel $whatsappWebChannel;
 
     private Chatbot $chatbot;
@@ -45,11 +48,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
     {
         parent::setUp();
 
-        // Fake the HTTP client to prevent real API calls from the service detector
-        Http::fake([
-            '*/ping' => Http::response(['success' => true], 200),
-        ]);
-
+        Http::fake(['*/ping' => Http::response(['success' => true], 200)]);
         $this->seed(DatabaseSeeder::class);
 
         config()->set('services.wwebjs_service.url', 'http://test.wwebjs.service');
@@ -58,6 +57,7 @@ class WhatsappWebWebhookServiceTest extends TestCase
         $this->conversationServiceMock = $this->mock(ConversationServiceInterface::class);
         $this->messageServiceMock = $this->mock(MessageServiceInterface::class);
         $this->whatsAppWebServiceMock = $this->mock(WhatsAppWebServiceInterface::class);
+        $this->contactServiceMock = $this->mock(ContactServiceInterface::class);
 
         $this->service = $this->app->make(WhatsappWebWebhookService::class);
 
@@ -239,6 +239,77 @@ class WhatsappWebWebhookServiceTest extends TestCase
         $this->service->handle($webhookPayload);
 
         // Assertions are handled by mock expectations
+    }
+
+    #[Test]
+    public function it_updates_contact_and_conversation_name_for_direct_message_if_name_changed(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $senderId = '5212221112233@c.us';
+        $oldContactName = 'Old Contact Name';
+        $newContactName = 'New Contact Name Updated';
+        $messageBody = 'Hello there!';
+        $externalMessageId = 'some_external_message_id_name_change';
+        $timestamp = 1678886400;
+
+        $chatbotChannel = ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId],
+            'status' => ChatbotChannel::STATUS_CONNECTED,
+        ]);
+
+        $contact = Contact::factory()->create(['first_name' => $oldContactName]);
+        $contactChannel = ContactChannel::factory()->create([
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'channel_identifier' => $senderId,
+        ]);
+
+        $existingConversation = Conversation::factory()->create([
+            'contact_channel_id' => $contactChannel->id,
+            'chatbot_channel_id' => $chatbotChannel->id,
+            'external_conversation_id' => $senderId,
+            'contact_name' => $oldContactName,
+        ]);
+        $existingConversation->wasRecentlyCreated = false;
+
+        $webhookPayload = [
+            'dataType' => 'message',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                    '_data' => ['notifyName' => $newContactName],
+                    'body' => $messageBody,
+                    'type' => 'chat',
+                    'timestamp' => $timestamp,
+                    'from' => $senderId,
+                    'to' => '5212213835257@c.us',
+                    'fromMe' => false,
+                ],
+            ],
+        ];
+
+        $this->conversationServiceMock->shouldReceive('findOrCreate')
+            ->once()
+            ->andReturn($existingConversation);
+
+        $this->conversationServiceMock->shouldReceive('updateContactName')
+            ->once()
+            ->with($existingConversation, $newContactName);
+
+        $this->contactServiceMock->shouldReceive('updateFirstName')
+            ->once()
+            ->with($contact->id, $newContactName);
+
+        $this->messageServiceMock->shouldReceive('handleIncomingMessage')->once();
+
+        // Act
+        $this->service->handle($webhookPayload);
     }
 
     #[Test]

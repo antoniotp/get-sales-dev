@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\Contact\ContactServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
@@ -35,6 +36,7 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
         private readonly MessageServiceInterface $messageService,
         private readonly PhoneNumberNormalizerInterface $phoneNumberNormalizer,
         private readonly WhatsappWebServiceInterface $whatsappWebService,
+        private readonly ContactServiceInterface $contactService,
     ) {
         $this->whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
     }
@@ -204,6 +206,18 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             $notifyName,
             $this->whatsAppWebChannel->id
         );
+
+        if (
+            ! $this->conversation->wasRecentlyCreated &&
+            $this->conversation->contact_name !== $notifyName
+        ) {
+            $this->conversationService->updateContactName($this->conversation, $notifyName);
+
+            $contactId = $this->conversation->contactChannel->contact_id ?? null;
+            if ($contactId) {
+                $this->contactService->updateFirstName($contactId, $notifyName);
+            }
+        }
 
         $this->routeMessageByType($messageData);
     }

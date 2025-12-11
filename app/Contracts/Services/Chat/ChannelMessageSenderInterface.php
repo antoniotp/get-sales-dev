@@ -2,6 +2,7 @@
 
 namespace App\Contracts\Services\Chat;
 
+use App\DataTransferObjects\Chat\MessageSendResult;
 use App\Models\Message;
 
 /**
@@ -12,8 +13,7 @@ interface ChannelMessageSenderInterface
     /**
      * Sends a message.
      *
-     * @param Message $message The message to be sent.
-     * @return void
+     * @param  Message  $message  The message to be sent.
      */
-    public function sendMessage(Message $message): void;
+    public function sendMessage(Message $message): MessageSendResult;
 }

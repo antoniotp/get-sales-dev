@@ -3,8 +3,8 @@
 namespace App\Factories\Chat;
 
 use App\Contracts\Services\Chat\ChannelMessageSenderInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
-use App\Services\WhatsApp\WhatsAppService;
 use Exception;
 
 class MessageSenderFactory
@@ -19,7 +19,7 @@ class MessageSenderFactory
     public function make(string $channelSlug): ChannelMessageSenderInterface
     {
         return match ($channelSlug) {
-            'whatsapp' => app(WhatsAppService::class),
+            'whatsapp' => app(WhatsAppServiceInterface::class),
             'whatsapp-web' => app(WhatsAppWebServiceInterface::class),
             default => throw new Exception("Message sender for channel '{$channelSlug}' not found."),
         };

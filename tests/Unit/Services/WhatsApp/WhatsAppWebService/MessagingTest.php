@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Services\WhatsApp\WhatsAppWebService;
 
+use App\DataTransferObjects\Chat\MessageSendResult;
+use App\Exceptions\MessageSendException;
 use App\Models\Chatbot;
 use App\Models\Contact;
 use App\Models\ContactChannel;
@@ -33,7 +35,16 @@ class MessagingTest extends TestCase
     {
         // Arrange
         Http::fake([
-            '*' => Http::response(['success' => true], 200),
+            '*' => Http::response([
+                'success' => true,
+                'message' => [
+                    '_data' => [
+                        'id' => [
+                            '_serialized' => 'test-external-id',
+                        ],
+                    ],
+                ],
+            ], 200),
         ]);
 
         $chatbot = Chatbot::find(1);
@@ -61,15 +72,19 @@ class MessagingTest extends TestCase
         $url = config('services.wwebjs_service.url').'/client/sendMessage/'.$sessionId;
 
         // Act
-        $service->sendMessage($message);
+        $result = $service->sendMessage($message);
 
-        // Assert
+        // Assert HTTP Request
         Http::assertSent(function (\Illuminate\Http\Client\Request $request) use ($url, $contactChannel, $message) {
             return $request->url() == $url &&
                    $request['chatId'] == $contactChannel->channel_identifier &&
                    $request['contentType'] == 'string' &&
                    $request['content'] == $message->content;
         });
+
+        // Assert Return Value
+        $this->assertInstanceOf(MessageSendResult::class, $result);
+        $this->assertEquals('test-external-id', $result->externalId);
     }
 
     #[Test]
@@ -100,12 +115,8 @@ class MessagingTest extends TestCase
         $service = new WhatsAppWebService;
 
         // Act & Assert
-        $this->expectNotToPerformAssertions();
-        try {
-            $service->sendMessage($message);
-        } catch (\Exception $e) {
-            $this->fail('sendMessage should not throw exceptions on API failure.');
-        }
+        $this->expectException(MessageSendException::class);
+        $service->sendMessage($message);
     }
 
     #[Test]
@@ -136,12 +147,8 @@ class MessagingTest extends TestCase
         $service = new WhatsAppWebService;
 
         // Act & Assert
-        $this->expectNotToPerformAssertions();
-        try {
-            $service->sendMessage($message);
-        } catch (\Exception $e) {
-            $this->fail('sendMessage should not throw exceptions on API failure.');
-        }
+        $this->expectException(MessageSendException::class);
+        $service->sendMessage($message);
     }
 
     #[Test]
@@ -174,11 +181,7 @@ class MessagingTest extends TestCase
         $service = new WhatsAppWebService;
 
         // Act & Assert
-        $this->expectNotToPerformAssertions();
-        try {
-            $service->sendMessage($message);
-        } catch (\Exception $e) {
-            $this->fail('sendMessage should not throw exceptions on API failure.');
-        }
+        $this->expectException(MessageSendException::class);
+        $service->sendMessage($message);
     }
 }

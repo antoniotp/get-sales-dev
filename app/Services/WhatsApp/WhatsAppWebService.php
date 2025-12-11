@@ -3,6 +3,8 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
+use App\DataTransferObjects\Chat\MessageSendResult;
+use App\Exceptions\MessageSendException;
 use App\Facades\WwebjsUrl;
 use App\Models\Channel;
 use App\Models\Chatbot;
@@ -160,19 +162,18 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
         }
     }
 
-    public function sendMessage(Message $message): void
+    public function sendMessage(Message $message): MessageSendResult
     {
         $chatbot = $message->conversation->chatbotChannel->chatbot;
         $contactChannel = $message->conversation->contactChannel;
-
         $sessionId = 'chatbot-'.$chatbot->id;
         $chatId = $contactChannel->channel_identifier;
+
         if (! str_ends_with($chatId, '@c.us')) {
             $chatId .= '@c.us';
         }
 
         $url = WwebjsUrl::getUrlForChatbot($sessionId).'/client/sendMessage/'.$sessionId;
-
         Log::info('Sending message via WhatsApp Web Service', [
             'session_id' => $sessionId,
             'message_id' => $message->id,
@@ -189,53 +190,28 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
             ]);
 
             if (! $response->successful()) {
+                $errorBody = $response->body();
                 Log::error('Failed to send message via WhatsApp Web Service.', [
                     'session_id' => $sessionId,
                     'message_id' => $message->id,
                     'status' => $response->status(),
-                    'body' => $response->body(),
+                    'body' => $errorBody,
                 ]);
-            } else {
-                Log::info('Message sent successfully via WhatsApp Web Service.', [
-                    'session_id' => $sessionId,
-                    'message_id' => $message->id,
-                ]);
-
-                $responseBody = $response->json();
-                $externalId = $responseBody['message']['_data']['id']['_serialized'] ?? null;
-                $timestamp = $responseBody['message']['_data']['t'] ?? time();
-
-                if ($externalId) {
-                    // Update the message with the external ID from the API response.
-                    // Use updateQuietly to avoid firing model events unnecessarily.
-                    try {
-                        $message->updateQuietly(['external_message_id' => $externalId, 'delivered_at' => $timestamp]);
-                        Log::info('Updated message with external ID from API response.', [
-                            'message_id' => $message->id,
-                            'external_id' => $externalId,
-                        ]);
-                    } catch (Exception $e) {
-                        Log::error('Failed to update message with external ID from API response.', [
-                            'session_id' => $sessionId,
-                            'message_id' => $message->id,
-                            'external_id' => $externalId,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
-                } else {
-                    Log::warning('No external message ID found in API response.', [
-                        'message_id' => $message->id,
-                        'response_body' => $responseBody,
-                    ]);
-                }
+                throw new MessageSendException('Failed to send message via service. Status: '.$response->status().' Body: '.$errorBody);
             }
 
+            $responseBody = $response->json();
+            $externalId = $responseBody['message']['_data']['id']['_serialized'] ?? null;
+
+            return new MessageSendResult($externalId);
         } catch (Exception $e) {
             Log::error('Error sending message via WhatsApp Web Service', [
                 'session_id' => $sessionId,
                 'message_id' => $message->id,
                 'error' => $e->getMessage(),
             ]);
+            // Re-throw as a specific exception for the listener to catch
+            throw new MessageSendException($e->getMessage(), $e->getCode(), $e);
         }
     }
 

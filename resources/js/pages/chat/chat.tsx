@@ -192,12 +192,16 @@ export default function Chat(
                     const currentSelectedChat = selectedChatRef.current;
                     if (currentSelectedChat?.id === e.message.conversationId) {
                         setMessages(prevMessages => {
-                            // Avoid duplicates
-                            const exists = prevMessages.some(msg => msg.id === e.message.id);
-                            if (!exists) {
+                            const messageIndex = prevMessages.findIndex(msg => msg.id === e.message.id);
+
+                            // If message exists, update it. Otherwise, add it.
+                            if (messageIndex !== -1) {
+                                const updatedMessages = [...prevMessages];
+                                updatedMessages[messageIndex] = e.message;
+                                return updatedMessages;
+                            } else {
                                 return [...prevMessages, e.message];
                             }
-                            return prevMessages;
                         });
                     }
 

@@ -147,3 +147,20 @@ export interface Chat {
     recipient: string | null
     type: string | null
 }
+
+interface Message {
+    id: number;
+    content: string;
+    sender: string;
+    senderId: number | string;
+    timestamp: string;
+    type: 'incoming' | 'outgoing';
+    contentType: string;
+    mediaUrl?: string;
+    conversationId: number;
+    sent_at?: string | null;
+    delivered_at?: string | null;
+    read_at?: string | null;
+    failed_at?: string | null;
+    error_message?: string | null;
+}

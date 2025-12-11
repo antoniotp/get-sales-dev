@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $sender_user_id
  * @property int|null $sender_contact_id
  * @property array|null $metadata
+ * @property Carbon|null $sent_at
  * @property Carbon|null $delivered_at
  * @property Carbon|null $read_at
  * @property Carbon|null $failed_at
@@ -191,5 +192,13 @@ class Message extends Model
     public function isRead(): bool
     {
         return ! is_null($this->read_at);
+    }
+
+    /**
+     * Check if a message was sent.
+     */
+    public function isSent(): bool
+    {
+        return ! is_null($this->sent_at);
     }
 }

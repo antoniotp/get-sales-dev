@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import { useRoute } from 'ziggy-js';
 import Echo from 'laravel-echo';
 import parsePhoneNumber from 'libphonenumber-js';
-import type { BreadcrumbItem, Chatbot, PageProps, Organizations, Agent, Chat } from '@/types';
+import type { BreadcrumbItem, Chatbot, PageProps, Organizations, Agent, Chat, Message } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { ArrowLeft } from 'lucide-react';
 import AgentAssignmentDropdown from '@/components/chat/AgentAssignmentDropdown';
@@ -15,18 +15,7 @@ import { NewConversationView } from '@/pages/chat/partials/NewConversationView';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import LinkifyText from '@/components/chat/LinkifyText';
-
-interface Message {
-    id: number;
-    content: string;
-    sender: string;
-    senderId: number | string;
-    timestamp: string;
-    type: 'incoming' | 'outgoing';
-    contentType: string;
-    mediaUrl?: string;
-    conversationId: number;
-}
+import MessageStatus from '@/components/chat/MessageStatus';
 
 interface NewMessageEvent {
     message: Message;
@@ -501,8 +490,9 @@ export default function Chat(
                     ) : (
                         <LinkifyText text={message.content} className="break-words whitespace-pre-wrap" />
                     )}
-                    <span className="mt-1 text-xs opacity-70 block text-right">
-                        {format(new Date(message.timestamp), 'dd/MM/yyyy HH:mm')}
+                    <span className="mt-1 text-xs flex items-center justify-end">
+                        <span className="opacity-70">{format(new Date(message.timestamp), 'dd/MM/yyyy HH:mm')}</span>
+                        <MessageStatus message={message} />
                     </span>
                 </div>
             </div>

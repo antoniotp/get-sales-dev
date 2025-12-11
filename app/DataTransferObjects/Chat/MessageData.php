@@ -17,7 +17,12 @@ class MessageData implements Arrayable
         public string $type,
         public string $contentType,
         public ?string $mediaUrl,
-        public ?int $conversationId = null
+        public ?int $conversationId = null,
+        public ?string $sent_at = null,
+        public ?string $delivered_at = null,
+        public ?string $read_at = null,
+        public ?string $failed_at = null,
+        public ?string $error_message = null
     ) {}
 
     public static function fromMessage(Message $message): self
@@ -44,7 +49,12 @@ class MessageData implements Arrayable
             type: $message->type,
             contentType: $message->content_type,
             mediaUrl: $message->media_url,
-            conversationId: $message->conversation_id
+            conversationId: $message->conversation_id,
+            sent_at: $message->sent_at,
+            delivered_at: $message->delivered_at,
+            read_at: $message->read_at,
+            failed_at: $message->failed_at,
+            error_message: $message->error_message
         );
     }
 
@@ -59,6 +69,11 @@ class MessageData implements Arrayable
             'type' => $this->type,
             'contentType' => $this->contentType,
             'mediaUrl' => $this->mediaUrl,
+            'sent_at' => $this->sent_at,
+            'delivered_at' => $this->delivered_at,
+            'read_at' => $this->read_at,
+            'failed_at' => $this->failed_at,
+            'error_message' => $this->error_message,
         ];
 
         if ($this->conversationId !== null) {

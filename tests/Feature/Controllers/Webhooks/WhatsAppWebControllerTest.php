@@ -84,10 +84,11 @@ class WhatsAppWebControllerTest extends TestCase
     public function it_handles_a_valid_data_type_webhook_and_calls_the_service(): void
     {
         // Arrange
+        // Use a known valid dataType from the validation rule.
         $payload = [
-            'dataType' => 'some_data_type',
+            'dataType' => 'qr',
             'sessionId' => 'test-session-456',
-            'data' => ['info' => 'value'],
+            'data' => ['qr' => 'test-qr-code'],
         ];
 
         // Mock the service interface. The router is bound to this, so this mock

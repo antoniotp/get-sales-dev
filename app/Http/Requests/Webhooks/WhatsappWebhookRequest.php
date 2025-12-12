@@ -24,12 +24,12 @@ class WhatsappWebhookRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'event_type' => [
                 'prohibits:dataType', // Cannot exist if dataType exists
                 'required_without:dataType',
                 'string',
-                'in:qr_code_received,client_ready,message_received,authenticated,message_sent,disconnected,message_ack',
+                'in:qr_code_received,client_ready,message_received,authenticated,message_sent,disconnected',
             ],
             'session_id' => ['required_with:event_type', 'string'],
             'qr_code' => ['nullable', 'string'],
@@ -41,11 +41,17 @@ class WhatsappWebhookRequest extends FormRequest
                 'prohibits:event_type', // Cannot exist if event_type exists
                 'required_without:event_type',
                 'string',
+                'in:qr,ready,message,media,message_create,group_update,message_ack',
             ],
             'sessionId' => ['required_with:dataType', 'string'],
             'data' => ['nullable', 'array'],
-            'data.ack' => ['required_if:dataType,message_ack', 'integer'],
-            'data.message.id._serialized' => ['required_if:dataType,message_ack', 'string'],
         ];
+
+        if ($this->input('dataType') === 'message_ack') {
+            $rules['data.ack'] = ['required', 'integer'];
+            $rules['data.message.id._serialized'] = ['required', 'string'];
+        }
+
+        return $rules;
     }
 }

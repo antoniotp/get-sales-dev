@@ -13,6 +13,7 @@ class WwebjsUrlManager
      */
     private const SPECIAL_URLS = [
         '19' => 'http://wweb-api.get-sales.com:8080/',
+        '21' => 'http://wweb-api.get-sales.com:8080/',
     ];
 
     public function __construct(private readonly string $defaultUrl) {}

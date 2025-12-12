@@ -29,7 +29,7 @@ class WhatsappWebhookRequest extends FormRequest
                 'prohibits:dataType', // Cannot exist if dataType exists
                 'required_without:dataType',
                 'string',
-                'in:qr_code_received,client_ready,message_received,authenticated,message_sent,disconnected',
+                'in:qr_code_received,client_ready,message_received,authenticated,message_sent,disconnected,message_ack',
             ],
             'session_id' => ['required_with:event_type', 'string'],
             'qr_code' => ['nullable', 'string'],
@@ -44,6 +44,8 @@ class WhatsappWebhookRequest extends FormRequest
             ],
             'sessionId' => ['required_with:dataType', 'string'],
             'data' => ['nullable', 'array'],
+            'data.ack' => ['required_if:dataType,message_ack', 'integer'],
+            'data.message.id._serialized' => ['required_if:dataType,message_ack', 'string'],
         ];
     }
 }

@@ -64,6 +64,9 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             case 'group_update':
                 $this->handleGroupUpdate($data);
                 break;
+            case 'message_ack':
+                $this->handleMessageAck($data);
+                break;
             default:
                 Log::warning("No handler for WhatsApp Web webhook event: {$dataType}", $data);
         }
@@ -577,5 +580,27 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             ->where('created_at', '>=', now()->subSeconds(30))
             ->orderBy('created_at', 'desc')
             ->first();
+    }
+
+    private function handleMessageAck(array $payload): void
+    {
+        $externalId = $payload['data']['message']['id']['_serialized'];
+        $ackStatus = $payload['data']['ack'];
+
+        Log::info('Handling message_ack event', [
+            'session_id' => $payload['sessionId'],
+            'external_id' => $externalId,
+            'ack' => $ackStatus,
+        ]);
+
+        try {
+            $this->messageService->updateStatusFromWebhook($externalId, $ackStatus);
+        } catch (Exception $e) {
+            Log::error('Error processing message_ack webhook', [
+                'session_id' => $payload['sessionId'],
+                'external_id' => $externalId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

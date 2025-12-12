@@ -51,4 +51,9 @@ interface MessageServiceInterface
         string $contentType,
         int $chatbotId,
     ): Message;
+
+    public function updateStatusFromWebhook(
+        string $externalMessageId,
+        int $ackStatus
+    ): ?Message;
 }

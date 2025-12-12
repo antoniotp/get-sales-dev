@@ -141,6 +141,55 @@ class MessageService implements MessageServiceInterface
         ];
     }
 
+    public function updateStatusFromWebhook(string $externalMessageId, int $ackStatus): ?Message
+    {
+        $message = Message::where('external_message_id', $externalMessageId)->first();
+
+        if (! $message) {
+            Log::warning('Received message_ack for an unknown external_message_id', ['external_id' => $externalMessageId]);
+
+            return null;
+        }
+
+        $updated = false;
+
+        switch ($ackStatus) {
+            case 2: // DELIVERED
+                if (is_null($message->delivered_at)) {
+                    $message->delivered_at = now();
+                    $updated = true;
+                }
+                break;
+
+            case 3: // READ
+                if (is_null($message->read_at)) {
+                    // If it's read, it must also be delivered.
+                    if (is_null($message->delivered_at)) {
+                        $message->delivered_at = now();
+                    }
+                    $message->read_at = now();
+                    $updated = true;
+                }
+                break;
+
+                // case -1:
+                //     if (is_null($message->failed_at)) {
+                //         $message->failed_at = now();
+                //         $message->error_message = 'Received failure ACK from channel.';
+                //         $updated = true;
+                //     }
+                //     break;
+        }
+
+        if ($updated) {
+            $message->save();
+            event(new NewWhatsAppMessage($message));
+            Log::info('Message status updated from ACK.', ['message_id' => $message->id, 'ack' => $ackStatus]);
+        }
+
+        return $message;
+    }
+
     private function normalizeMimeType(?string $mimeType): ?string
     {
         if (! $mimeType) {

@@ -16,6 +16,7 @@ use App\Models\ChatbotChannel;
 use App\Models\Contact;
 use App\Models\ContactChannel;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -622,5 +623,70 @@ class WhatsappWebWebhookServiceTest extends TestCase
             'id' => $existingMessage->id,
             'external_message_id' => $externalMessageId,
         ]);
+    }
+
+    #[Test]
+    public function it_handles_message_ack_data_type_and_updates_message_status(): void
+    {
+        // Arrange
+        $sessionId = 'chatbot-'.$this->chatbot->id;
+        $externalMessageId = 'test_outgoing_external_id_ack';
+        $ackStatus = 3; // Example: Read status
+        $contactNumber = '5212221931663@c.us';
+
+        // Ensure the chatbot channel exists
+        $chatbotChannel = ChatbotChannel::create([
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'name' => 'WA-Web '.$this->chatbot->name,
+            'credentials' => ['session_id' => $sessionId],
+            'status' => ChatbotChannel::STATUS_CONNECTED,
+        ]);
+
+        $contact = Contact::factory()->create();
+        $contactChannel = ContactChannel::factory()->create([
+            'contact_id' => $contact->id,
+            'chatbot_id' => $this->chatbot->id,
+            'channel_id' => $this->whatsappWebChannel->id,
+            'channel_identifier' => $contactNumber,
+        ]);
+
+        $conversation = Conversation::factory()->create([
+            'contact_channel_id' => $contactChannel->id,
+            'chatbot_channel_id' => $chatbotChannel->id,
+            'external_conversation_id' => $contactNumber,
+        ]);
+
+        // Create a message that this ACK will update (not strictly necessary for this test, as we mock messageService)
+        // but good for context
+        $conversation->messages()->create([
+            'type' => 'outgoing',
+            'sender_type' => 'human',
+            'content_type' => 'text',
+            'content' => 'Test message for ACK',
+            'external_message_id' => $externalMessageId,
+            'sent_at' => now(), // Assume it was sent
+        ]);
+
+        $webhookPayload = [
+            'dataType' => 'message_ack',
+            'sessionId' => $sessionId,
+            'data' => [
+                'message' => [
+                    'id' => ['_serialized' => $externalMessageId],
+                ],
+                'ack' => $ackStatus,
+            ],
+        ];
+
+        // Expect the messageService to be called with the correct external ID and ACK status
+        $this->messageServiceMock->shouldReceive('updateStatusFromWebhook')
+            ->once()
+            ->with($externalMessageId, $ackStatus);
+
+        // Act
+        $this->service->handle($webhookPayload);
+
+        // Assertions are handled by mock expectations
     }
 }

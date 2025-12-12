@@ -20,19 +20,19 @@ const MessageStatus = ({ message }: MessageStatusProps) => {
     let statusText: string;
 
     if (message.failed_at) {
-        statusIcon = <XCircle className="h-4 w-4 text-red-500" />;
+        statusIcon = <XCircle className="h-5 w-5 text-red-500" />;
         statusText = `Failed: ${message.error_message || 'Unknown error'}`;
     } else if (message.read_at) {
-        statusIcon = <CheckCheck className="h-4 w-4 text-blue-500" />;
+        statusIcon = <CheckCheck className="h-5 w-5 text-green-300" />;
         statusText = `Read at ${new Date(message.read_at).toLocaleString()}`;
     } else if (message.delivered_at) {
-        statusIcon = <CheckCheck className="h-4 w-4 text-white" />;
+        statusIcon = <CheckCheck className="h-5 w-5 text-white" />;
         statusText = `Delivered at ${new Date(message.delivered_at).toLocaleString()}`;
     } else if (message.sent_at) {
-        statusIcon = <Check className="h-4 w-4 text-white" />;
+        statusIcon = <Check className="h-5 w-5 text-white" />;
         statusText = `Sent at ${new Date(message.sent_at).toLocaleString()}`;
     } else {
-        statusIcon = <Clock className="h-4 w-4 text-white animate-spin" />;
+        statusIcon = <Clock className="h-5 w-5 text-white animate-spin" />;
         statusText = 'Sending...';
     }
 

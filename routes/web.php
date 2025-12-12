@@ -69,6 +69,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
 
+    Route::post('/messages/{message}/retry', [ChatController::class, 'retryMessage'])->name('messages.retry');
+
     Route::get('/chatbots/{chatbot}/calendar', [AppointmentController::class, 'index'])->name('appointments.index');
     Route::get('/chatbots/{chatbot}/appointments', [AppointmentController::class, 'list'])->name('appointments.list');
     Route::post('/chatbots/{chatbot}/appointments', [AppointmentController::class, 'store'])->name('appointments.store');

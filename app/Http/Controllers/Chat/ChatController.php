@@ -6,6 +6,8 @@ use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\DataTransferObjects\Chat\ConversationData;
 use App\DataTransferObjects\Chat\MessageData;
+use App\Events\MessageSent;
+use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Chat\StoreChatRequest;
 use App\Models\Chatbot;
@@ -14,12 +16,12 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
-use Illuminate\Validation\Rule;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -189,7 +191,7 @@ class ChatController extends Controller
                 $chatbot,
                 $phone_number,
                 $request->query('text'),
-                $request->query('cc_id') //chatbot channel id
+                $request->query('cc_id') // chatbot channel id
             );
 
             return redirect()->route('chats', [
@@ -206,5 +208,31 @@ class ChatController extends Controller
                 'chatbot' => $chatbot,
             ])->with('error', 'The specified channel was not found.');
         }
+    }
+
+    public function retryMessage(Message $message): JsonResponse
+    {
+        // Authorization: Ensure the message belongs to the user's organization.
+        // The policy will check if the user can update the conversation the message belongs to.
+        $this->authorize('update', $message->conversation);
+
+        // We only retry messages that have actually failed.
+        if (! $message->hasFailed()) {
+            return response()->json(['error' => 'Message has not failed.'], 400);
+        }
+
+        // 1. Reset the failure status.
+        $message->update([
+            'failed_at' => null,
+            'error_message' => null,
+        ]);
+
+        // 2. Notify the frontend to show the "sending" (clock) icon again.
+        event(new NewWhatsAppMessage($message));
+
+        // 3. Put the message back into the sending queue.
+        event(new MessageSent($message));
+
+        return response()->json(['success' => true, 'message' => 'Message is being retried.']);
     }
 }

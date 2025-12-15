@@ -51,16 +51,16 @@ const MessageStatus = ({ message }: MessageStatusProps) => {
         );
         statusText = `Failed: ${message.error_message || 'Unknown error'}`;
     } else if (message.read_at) {
-        statusIcon = <CheckCheck className="h-5 w-5 text-green-300" />;
+        statusIcon = <CheckCheck className="h-5 w-5 text-blue-800" />;
         statusText = `Read at ${new Date(message.read_at).toLocaleString()}`;
     } else if (message.delivered_at) {
-        statusIcon = <CheckCheck className="h-5 w-5 text-white" />;
+        statusIcon = <CheckCheck className="h-5 w-5 text-gray-100" />;
         statusText = `Delivered at ${new Date(message.delivered_at).toLocaleString()}`;
     } else if (message.sent_at) {
-        statusIcon = <Check className="h-5 w-5 text-white" />;
+        statusIcon = <Check className="h-5 w-5 text-gray-100" />;
         statusText = `Sent at ${new Date(message.sent_at).toLocaleString()}`;
     } else {
-        statusIcon = <Clock className="h-5 w-5 text-white animate-spin" />;
+        statusIcon = <Clock className="h-5 w-5 text-gray-100" />;
         statusText = 'Sending...';
     }
 

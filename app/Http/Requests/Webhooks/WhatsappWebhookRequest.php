@@ -41,7 +41,7 @@ class WhatsappWebhookRequest extends FormRequest
                 'prohibits:event_type', // Cannot exist if event_type exists
                 'required_without:event_type',
                 'string',
-                'in:qr,ready,message,media,message_create,group_update,message_ack',
+                'in:qr,ready,message,media,message_create,group_update,message_ack,call',
             ],
             'sessionId' => ['required_with:dataType', 'string'],
             'data' => ['nullable', 'array'],
@@ -50,6 +50,11 @@ class WhatsappWebhookRequest extends FormRequest
         if ($this->input('dataType') === 'message_ack') {
             $rules['data.ack'] = ['required', 'integer'];
             $rules['data.message.id._serialized'] = ['required', 'string'];
+        }
+
+        if ($this->input('dataType') === 'call') {
+            $rules['data.call.id'] = ['required', 'string'];
+            $rules['data.call.from'] = ['required', 'string'];
         }
 
         return $rules;

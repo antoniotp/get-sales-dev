@@ -67,6 +67,9 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
             case 'message_ack':
                 $this->handleMessageAck($data);
                 break;
+            case 'call':
+                $this->handleCall($data);
+                break;
             default:
                 Log::warning("No handler for WhatsApp Web webhook event: {$dataType}", $data);
         }
@@ -602,5 +605,21 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private function handleCall(array $payload): void
+    {
+        $sessionId = $payload['sessionId'];
+        $callId = $payload['data']['call']['id'];
+        $from = $payload['data']['call']['from'];
+        $message = 'Sorry, this number does not accept calls. Please send a text message.';
+
+        Log::info('Handling call event and rejecting with message.', [
+            'session_id' => $sessionId,
+            'call_id' => $callId,
+            'from' => $from,
+        ]);
+
+        $this->whatsappWebService->rejectCall($sessionId, $callId, $from, $message);
     }
 }

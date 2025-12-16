@@ -251,4 +251,52 @@ class WhatsAppWebService implements WhatsAppWebServiceInterface
             return null;
         }
     }
+
+    public function rejectCall(string $sessionId, string $callId, string $recipient, string $message): void
+    {
+        // TODO: This could be a single endpoint call to /client/rejectCall/:sessionId
+        // which will handle both rejecting the call and sending the message. It doesn't exist yet.
+        Log::info('Simulating call rejection and sending message.', [
+            'session_id' => $sessionId,
+            'call_id' => $callId,
+        ]);
+
+        $chatId = $recipient;
+        if (! str_ends_with($chatId, '@c.us') && ! str_ends_with($chatId, '@g.us') && ! str_ends_with($chatId, '@lid')) {
+            // It might be a LID address without the suffix, or a number.
+            // if it contains '@', it's likely a LID. Otherwise, it's a phone number.
+            $suffix = str_contains($chatId, '@') ? '' : '@c.us';
+            $chatId .= $suffix;
+        }
+
+        $url = WwebjsUrl::getUrlForChatbot($sessionId).'/client/sendMessage/'.$sessionId;
+
+        Log::info('Sending call rejection message via WhatsApp Web Service', [
+            'session_id' => $sessionId,
+            'recipient' => $chatId,
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $this->wwebjs_key,
+            ])->post($url, [
+                'chatId' => $chatId,
+                'contentType' => 'string',
+                'content' => $message,
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('Failed to send call rejection message.', [
+                    'session_id' => $sessionId,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        } catch (Exception $e) {
+            Log::error('Error sending call rejection message.', [
+                'session_id' => $sessionId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
 }

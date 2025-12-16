@@ -23,4 +23,6 @@ interface WhatsAppWebServiceInterface extends ChannelMessageSenderInterface
     public function reconnectSession(Chatbot $chatbot): array;
 
     public function getGroupChatInfo(string $sessionId, string $groupId): ?array;
+
+    public function rejectCall(string $sessionId, string $callId, string $recipient, string $message): void;
 }

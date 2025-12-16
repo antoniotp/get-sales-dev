@@ -8,6 +8,7 @@ use App\Contracts\Services\Contact\ContactServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
+use App\Enums\ChatbotChannel\SettingKey;
 use App\Events\NewWhatsAppConversation;
 use App\Events\WhatsApp\WhatsappConnectionStatusUpdated;
 use App\Events\WhatsApp\WhatsappQrCodeReceived;
@@ -610,16 +611,30 @@ class WhatsappWebWebhookService implements WhatsappWebWebhookServiceInterface
     private function handleCall(array $payload): void
     {
         $sessionId = $payload['sessionId'];
+
+        if (! $this->identifyChatbotChannel($sessionId)) {
+            Log::error('WhatsApp channel not found for session ID: '.$sessionId);
+
+            return;
+        }
+
         $callId = $payload['data']['call']['id'];
         $from = $payload['data']['call']['from'];
-        $message = 'Sorry, this number does not accept calls. Please send a text message.';
 
-        Log::info('Handling call event and rejecting with message.', [
-            'session_id' => $sessionId,
-            'call_id' => $callId,
-            'from' => $from,
-        ]);
+        // Retrieve the custom message from settings
+        $rejectionMessageSetting = $this->chatbotChannel->settings()
+            ->where('key', SettingKey::CALL_REJECTION_MESSAGE->value)
+            ->first();
 
-        $this->whatsappWebService->rejectCall($sessionId, $callId, $from, $message);
+        // Reject the call if a custom message is configured
+        if ( $rejectionMessageSetting && $rejectionMessageSetting->value) {
+            Log::info('Handling call event and rejecting with message.', [
+                'session_id' => $sessionId,
+                'call_id' => $callId,
+                'from' => $from,
+                'message' => $rejectionMessageSetting->value,
+            ]);
+            $this->whatsappWebService->rejectCall($sessionId, $callId, $from, $rejectionMessageSetting->value);
+        }
     }
 }

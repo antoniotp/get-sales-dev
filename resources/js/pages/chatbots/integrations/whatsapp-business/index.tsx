@@ -15,16 +15,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-react';
 import { FacebookEmbeddedSignUpBtn } from '@/components/facebook-embedded-signup-btn';
-import { WhatsappWebConnection } from '@/components/chatbot/integrations/WhatsappWebConnection';
 
 interface PageProps extends GlobalPageProps {
     whatsAppChannel: ChatbotChannel | null;
-    whatsAppWebChatbotChannel: ChatbotChannel | null;
     isWhatsappOnboardingEnabled: boolean;
 }
 
-export default function WhatsAppIntegration() {
-    const { chatbot, whatsAppChannel, whatsAppWebChatbotChannel, isWhatsappOnboardingEnabled } = usePage<PageProps>().props;
+export default function WhatsAppBusinessIntegration() {
+    const { chatbot, whatsAppChannel, isWhatsappOnboardingEnabled } = usePage<PageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -37,8 +35,8 @@ export default function WhatsAppIntegration() {
                 href: route('chatbots.integrations', { chatbot: chatbot.id }),
             },
             {
-                title: 'WhatsApp',
-                href: route('chatbots.integrations.whatsapp', { chatbot: chatbot.id }),
+                title: 'WhatsApp Business API',
+                href: route('chatbots.integrations.whatsapp-business', { chatbot: chatbot.id }),
             },
         ],
         [chatbot]
@@ -53,7 +51,7 @@ export default function WhatsAppIntegration() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="WhatsApp Integration" />
+            <Head title="WhatsApp Business API Integration" />
             <AppContentDefaultLayout>
                 <div className="flex flex-col gap-6">
                     <div className="grid gap-6 md:grid-cols-2">
@@ -130,8 +128,6 @@ export default function WhatsAppIntegration() {
                             </CardContent>
                         </Card>
                     </div>
-                    {/* Render the unified WhatsappWebConnection component */}
-                    <WhatsappWebConnection chatbot={chatbot} chatbotChannel={whatsAppWebChatbotChannel} />
                 </div>
             </AppContentDefaultLayout>
         </AppLayout>

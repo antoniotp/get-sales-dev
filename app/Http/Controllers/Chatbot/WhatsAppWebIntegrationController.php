@@ -6,36 +6,22 @@ use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Chatbot;
-use App\Models\Organization;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class WhatsAppIntegrationController extends Controller
+class WhatsAppWebIntegrationController extends Controller
 {
-    public function __construct(private Organization $organization) {}
+    public function __construct() {}
 
-    public function index(Chatbot $chatbot, Request $request): Response
+    public function index(Chatbot $chatbot): Response
     {
-        $whatsAppChannel = $chatbot->chatbotChannels()
-            ->where('channel_id', 1)
-            ->where('status', 1)
-            ->first();
         $whatsAppWebChannel = Channel::where('slug', 'whatsapp-web')->first();
         $whatsAppWebChatbotChannel = $chatbot->chatbotChannels()
             ->where('channel_id', $whatsAppWebChannel->id)
             ->first();
 
-        return Inertia::render('chatbots/integrations/whatsapp/index', [
+        return Inertia::render('chatbots/integrations/whatsapp-web/index', [
             'chatbot' => $chatbot,
-            'whatsAppChannel' => $whatsAppChannel ? [
-                'id' => $whatsAppChannel->id,
-                'data' => [
-                    'display_phone_number' => $whatsAppChannel->credentials['display_phone_number'] ?? '',
-                    'phone_number_id' => $whatsAppChannel->credentials['phone_number_id'] ?? '',
-                ],
-                'status' => $whatsAppChannel->status,
-            ] : null,
             'whatsAppWebChatbotChannel' => $whatsAppWebChatbotChannel ? [
                 'id' => $whatsAppWebChatbotChannel->id,
                 'data' => [
@@ -43,11 +29,10 @@ class WhatsAppIntegrationController extends Controller
                     'phone_number_verified_name' => $whatsAppWebChatbotChannel->credentials['phone_number_verified_name'] ?? '',
                     'display_phone_number' => $whatsAppWebChatbotChannel->credentials['display_phone_number'] ?? '',
                     'phone_number_id' => $whatsAppWebChatbotChannel->credentials['phone_number_id'] ?? '',
-                    'phone_number' => $whatsAppWebChatbotChannel->credentials['phone_number'] ?? ''
+                    'phone_number' => $whatsAppWebChatbotChannel->credentials['phone_number'] ?? '',
                 ],
                 'status' => $whatsAppWebChatbotChannel->status,
             ] : null,
-            'isWhatsappOnboardingEnabled' => config('services.facebook.enable_onboarding'),
         ]);
     }
 

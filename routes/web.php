@@ -6,7 +6,8 @@ use App\Http\Controllers\Chat\ChatController;
 use App\Http\Controllers\Chatbot\ChatbotController;
 use App\Http\Controllers\Chatbot\ChatbotSwitcherController;
 use App\Http\Controllers\Chatbot\IntegrationsController;
-use App\Http\Controllers\Chatbot\WhatsAppIntegrationController;
+use App\Http\Controllers\Chatbot\WhatsAppBusinessIntegrationController;
+use App\Http\Controllers\Chatbot\WhatsAppWebIntegrationController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
@@ -51,10 +52,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/chatbots/{chatbot}', [ChatbotController::class, 'update'])->name('chatbots.update');
     Route::delete('/chatbots/{chatbot}', [ChatbotController::class, 'destroy'])->name('chatbots.destroy');
     Route::get('/chatbots/{chatbot}/integrations', [IntegrationsController::class, 'index'])->name('chatbots.integrations');
-    Route::get('/chatbots/{chatbot}/integrations/whatsapp', [WhatsAppIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp');
-    Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/start', [WhatsAppIntegrationController::class, 'startWhatsappWebServer'])->name('chatbots.integrations.whatsapp-web.start');
-    Route::get('/chatbots/{chatbot}/integrations/whatsapp-web/status', [WhatsAppIntegrationController::class, 'getWhatsAppWebStatus'])->name('chatbots.integrations.whatsapp-web.status');
-    Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/reconnect', [WhatsAppIntegrationController::class, 'reconnectWhatsappWebSession'])->name('chatbots.integrations.whatsapp-web.reconnect');
+    Route::get('/chatbots/{chatbot}/integrations/whatsapp-business', [WhatsAppBusinessIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp-business');
+    Route::get('/chatbots/{chatbot}/integrations/whatsapp-web', [WhatsAppWebIntegrationController::class, 'index'])->name('chatbots.integrations.whatsapp-web');
+    Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/start', [WhatsAppWebIntegrationController::class, 'startWhatsappWebServer'])->name('chatbots.integrations.whatsapp-web.start');
+    Route::get('/chatbots/{chatbot}/integrations/whatsapp-web/status', [WhatsAppWebIntegrationController::class, 'getWhatsAppWebStatus'])->name('chatbots.integrations.whatsapp-web.status');
+    Route::post('/chatbots/{chatbot}/integrations/whatsapp-web/reconnect', [WhatsAppWebIntegrationController::class, 'reconnectWhatsappWebSession'])->name('chatbots.integrations.whatsapp-web.reconnect');
     Route::get('/chatbots/{chatbot}/chats/{conversation?}', [ChatController::class, 'index'])->name('chats');
     Route::post('/chatbots/{chatbot}/chats', [ChatController::class, 'store'])->name('chats.store');
     Route::get('/chatbots/{chatbot}/chats/start/{phone_number}', [ChatController::class, 'startFromLink'])->name('chats.start'); // required: "?cc_id={chatbot_channel_id}" optional: "?text={initial%20message}"

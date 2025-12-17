@@ -4,8 +4,12 @@ import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMemo } from 'react';
-import type { BreadcrumbItem, ChatbotChannel, PageProps as GlobalPageProps } from '@/types';
+import type { BreadcrumbItem, ChatbotChannel as GlobalChatbotChannel, PageProps as GlobalPageProps } from '@/types';
 import { WhatsAppIcon } from '@/components/icons/whatsapp';
+
+interface ChatbotChannel extends GlobalChatbotChannel {
+    slug: string;
+}
 
 interface PageProps extends GlobalPageProps{
     linkedChannels: ChatbotChannel[];
@@ -30,19 +34,33 @@ export default function Integrations() {
         [chatbot]
     );
 
-    // Check if there is a connected WhatsApp channel (channel_id = 1)
-    const whatsappChannel = useMemo(() => {
-        return linkedChannels.find(channel => channel.channel_id === 1);
+    // Check if there is a connected WhatsApp channel (slug = 'whatsapp' for WABA)
+    const whatsAppBusinessChannel = useMemo(() => {
+        return linkedChannels.find((channel) => channel.slug === 'whatsapp');
     }, [linkedChannels]);
 
-    const whatsappButton = useMemo(() => {
-        const buttonText = whatsappChannel ? 'Manage' : 'Connect';
+    // Check if there is a connected WhatsApp Web channel (slug = 'whatsapp-web' for WA-Web)
+    const whatsAppWebChannel = useMemo(() => {
+        return linkedChannels.find((channel) => channel.slug === 'whatsapp-web');
+    }, [linkedChannels]);
+
+    const whatsAppBusinessButton = useMemo(() => {
+        const buttonText = whatsAppBusinessChannel ? 'Manage' : 'Connect';
         return (
-            <Link href={route('chatbots.integrations.whatsapp', { chatbot: chatbot.id })}>
+            <Link href={route('chatbots.integrations.whatsapp-business', { chatbot: chatbot.id })}>
                 <Button>{buttonText}</Button>
             </Link>
         );
-    }, [whatsappChannel, chatbot.id]);
+    }, [whatsAppBusinessChannel, chatbot.id]);
+
+    const whatsAppWebButton = useMemo(() => {
+        const buttonText = whatsAppWebChannel ? 'Manage' : 'Connect';
+        return (
+            <Link href={route('chatbots.integrations.whatsapp-web', { chatbot: chatbot.id })}>
+                <Button>{buttonText}</Button>
+            </Link>
+        );
+    }, [whatsAppWebChannel, chatbot.id]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -57,20 +75,37 @@ export default function Integrations() {
                         </div>
                     </div>
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        <Card>
-                            <CardContent>
-                                <CardHeader className="flex flex-row items-center gap-2">
-                                    <WhatsAppIcon className="bg-green-500 p-2 text-white rounded-lg" size={48} />
-                                    <CardTitle>WhatsApp</CardTitle>
+                        <Card className="flex flex-col justify-between">
+                            <div>
+                                <CardHeader className="flex flex-row items-center gap-4">
+                                    <img
+                                        src="/images/whatsapp-business-app-icon-320.png"
+                                        alt="WhatsApp Business Icon"
+                                        className="text-white rounded-lg w-12 h-12"
+                                    />
+                                    <CardTitle>WhatsApp Business API</CardTitle>
                                 </CardHeader>
                                 <CardContent className="py-4">
-                                    <CardDescription>Connect your WhatsApp account in just a few steps.</CardDescription>
+                                    <CardDescription>
+                                        Connect via the official Meta API for scalable, reliable communication.
+                                    </CardDescription>
                                 </CardContent>
-                                <CardFooter className="flex justify-end gap-2">
-                                    {/*<Button variant="outline">Guía de conexión</Button>*/}
-                                    {whatsappButton}
-                                </CardFooter>
-                            </CardContent>
+                            </div>
+                            <CardFooter className="flex justify-end gap-2">{whatsAppBusinessButton}</CardFooter>
+                        </Card>
+                        <Card className="flex flex-col justify-between">
+                            <div>
+                                <CardHeader className="flex flex-row items-center gap-2">
+                                    <WhatsAppIcon className="bg-green-500 p-2 text-white rounded-lg" size={48} />
+                                    <CardTitle>WhatsApp Web (QR)</CardTitle>
+                                </CardHeader>
+                                <CardContent className="py-4">
+                                    <CardDescription>
+                                        Connect a number by scanning a QR code, ideal for testing and small-scale use.
+                                    </CardDescription>
+                                </CardContent>
+                            </div>
+                            <CardFooter className="flex justify-end gap-2">{whatsAppWebButton}</CardFooter>
                         </Card>
                     </div>
                 </div>

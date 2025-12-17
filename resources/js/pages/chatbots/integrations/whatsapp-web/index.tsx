@@ -4,13 +4,15 @@ import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { useMemo } from 'react';
 import type { BreadcrumbItem, ChatbotChannel, PageProps as GlobalPageProps } from '@/types';
 import { WhatsappWebConnection } from '@/components/chatbot/integrations/WhatsappWebConnection';
+import { WhatsappWebSettings } from '@/components/chatbot/integrations/WhatsappWebSettings';
 
 interface PageProps extends GlobalPageProps {
     whatsAppWebChatbotChannel: ChatbotChannel | null;
+    callRejectionMessage: string | null;
 }
 
 export default function WhatsAppWebIntegration() {
-    const { chatbot, whatsAppWebChatbotChannel } = usePage<PageProps>().props;
+    const { chatbot, whatsAppWebChatbotChannel, callRejectionMessage } = usePage<PageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -35,8 +37,14 @@ export default function WhatsAppWebIntegration() {
             <Head title="WhatsApp Web Integration" />
             <AppContentDefaultLayout>
                 <div className="flex flex-col gap-6">
-                    {/* Render the unified WhatsappWebConnection component */}
                     <WhatsappWebConnection chatbot={chatbot} chatbotChannel={whatsAppWebChatbotChannel} />
+
+                    {whatsAppWebChatbotChannel && (
+                        <WhatsappWebSettings
+                            chatbotChannel={whatsAppWebChatbotChannel}
+                            callRejectionMessage={callRejectionMessage}
+                        />
+                    )}
                 </div>
             </AppContentDefaultLayout>
         </AppLayout>

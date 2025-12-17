@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Chatbot;
 
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
+use App\Enums\ChatbotChannel\SettingKey;
 use App\Http\Controllers\Controller;
 use App\Models\Channel;
 use App\Models\Chatbot;
@@ -20,6 +21,14 @@ class WhatsAppWebIntegrationController extends Controller
             ->where('channel_id', $whatsAppWebChannel->id)
             ->first();
 
+        $callRejectionMessage = null;
+        if ($whatsAppWebChatbotChannel) {
+            $setting = $whatsAppWebChatbotChannel->settings()
+                ->where('key', SettingKey::CALL_REJECTION_MESSAGE->value)
+                ->first();
+            $callRejectionMessage = $setting?->value;
+        }
+
         return Inertia::render('chatbots/integrations/whatsapp-web/index', [
             'chatbot' => $chatbot,
             'whatsAppWebChatbotChannel' => $whatsAppWebChatbotChannel ? [
@@ -33,6 +42,7 @@ class WhatsAppWebIntegrationController extends Controller
                 ],
                 'status' => $whatsAppWebChatbotChannel->status,
             ] : null,
+            'callRejectionMessage' => $callRejectionMessage,
         ]);
     }
 

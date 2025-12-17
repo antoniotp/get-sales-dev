@@ -8,6 +8,7 @@ use App\Http\Controllers\Chatbot\ChatbotSwitcherController;
 use App\Http\Controllers\Chatbot\IntegrationsController;
 use App\Http\Controllers\Chatbot\WhatsAppBusinessIntegrationController;
 use App\Http\Controllers\Chatbot\WhatsAppWebIntegrationController;
+use App\Http\Controllers\ChatbotChannel\ChatbotChannelSettingController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
@@ -99,6 +100,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/chatbot_switcher', [ChatbotSwitcherController::class, 'list'])->name('chatbot_switcher.list');
     Route::post('/chatbot_switcher', [ChatbotSwitcherController::class, 'switch'])->name('chatbot_switcher.switch');
+
+    Route::post('/chatbot_channels/{chatbot_channel}/settings', [ChatbotChannelSettingController::class, 'store'])->name('chatbot_channels.settings.store');
 });
 
 require __DIR__.'/settings.php';

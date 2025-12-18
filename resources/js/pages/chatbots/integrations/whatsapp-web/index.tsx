@@ -5,6 +5,8 @@ import { useMemo } from 'react';
 import type { BreadcrumbItem, ChatbotChannel, PageProps as GlobalPageProps } from '@/types';
 import { WhatsappWebConnection } from '@/components/chatbot/integrations/WhatsappWebConnection';
 import { WhatsappWebSettings } from '@/components/chatbot/integrations/WhatsappWebSettings';
+import { WhatsappWebURLGenerator } from '@/components/chatbot/integrations/WhatsappWebURLGenerator';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 interface PageProps extends GlobalPageProps {
     whatsAppWebChatbotChannel: ChatbotChannel | null;
@@ -32,6 +34,21 @@ export default function WhatsAppWebIntegration() {
         [chatbot]
     );
 
+    const defaultCountry = useMemo(() => {
+        const connectedNumber = whatsAppWebChatbotChannel?.data?.phone_number;
+        if (connectedNumber) {
+            let parsableNumber = connectedNumber;
+            if (!parsableNumber.startsWith('+')) {
+                parsableNumber = '+' + parsableNumber;
+            }
+            const phoneNumber = parsePhoneNumberFromString(parsableNumber);
+            if (phoneNumber?.country) {
+                return phoneNumber.country.toLowerCase();
+            }
+        }
+        return 'us'; // Fallback country
+    }, [whatsAppWebChatbotChannel]);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="WhatsApp Web Integration" />
@@ -40,10 +57,17 @@ export default function WhatsAppWebIntegration() {
                     <WhatsappWebConnection chatbot={chatbot} chatbotChannel={whatsAppWebChatbotChannel} />
 
                     {whatsAppWebChatbotChannel && (
-                        <WhatsappWebSettings
-                            chatbotChannel={whatsAppWebChatbotChannel}
-                            callRejectionMessage={callRejectionMessage}
-                        />
+                        <>
+                            <WhatsappWebSettings
+                                chatbotChannel={whatsAppWebChatbotChannel}
+                                callRejectionMessage={callRejectionMessage}
+                            />
+                            <WhatsappWebURLGenerator
+                                chatbotId={chatbot.id}
+                                chatbotChannelId={whatsAppWebChatbotChannel.id}
+                                defaultCountry={defaultCountry}
+                            />
+                        </>
                     )}
                 </div>
             </AppContentDefaultLayout>

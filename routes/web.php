@@ -17,6 +17,7 @@ use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
 use App\Http\Controllers\Public\PublicFormController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Webhooks\TextMeBotWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\WhatsAppWebController;
@@ -102,6 +103,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chatbot_switcher', [ChatbotSwitcherController::class, 'switch'])->name('chatbot_switcher.switch');
 
     Route::post('/chatbot_channels/{chatbot_channel}/settings', [ChatbotChannelSettingController::class, 'store'])->name('chatbot_channels.settings.store');
+
+    // Notifications
+    Route::post('/notifications/subscriptions', [PushSubscriptionController::class, 'store'])->name('notifications.subscriptions.store');
 });
 
 require __DIR__.'/settings.php';

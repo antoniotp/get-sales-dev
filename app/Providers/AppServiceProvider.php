@@ -11,6 +11,7 @@ use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Contact\ContactServiceInterface;
 use App\Contracts\Services\Invitation\InvitationServiceInterface;
+use App\Contracts\Services\Notification\PushSubscriptionServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\PublicForm\PublicContactFormServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
@@ -28,6 +29,7 @@ use App\Services\Chat\MessageService;
 use App\Services\Chatbot\ChatbotService;
 use App\Services\Contact\ContactService;
 use App\Services\Invitation\InvitationService;
+use App\Services\Notification\PushSubscriptionService;
 use App\Services\Organization\OrganizationService;
 use App\Services\PublicForm\PublicContactFormService;
 use App\Services\Util\PhoneNumberNormalizer;
@@ -82,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PhoneServiceInterface::class, PhoneService::class);
         $this->app->bind(PublicContactFormServiceInterface::class, PublicContactFormService::class);
         $this->app->bind(ContactServiceInterface::class, ContactService::class);
+        $this->app->bind(PushSubscriptionServiceInterface::class, PushSubscriptionService::class);
     }
 
     /**

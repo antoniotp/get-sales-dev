@@ -8,6 +8,7 @@
         "php": "^8.2",
         "google/recaptcha": "^1.3",
         "inertiajs/inertia-laravel": "^2.0",
+        "laravel-notification-channels/webpush": "^10.4",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "propaganistas/laravel-phone": "^6.0",

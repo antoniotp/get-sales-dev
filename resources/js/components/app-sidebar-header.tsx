@@ -3,6 +3,7 @@ import { type BreadcrumbItem as BreadcrumbItemType, PageProps } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import AppLogoIcon from './app-logo-icon';
 import { CustomSidebarTrigger } from '@/components/custom-sidebar-trigger';
+import { NotificationBell } from '@/components/general/NotificationBell';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
 
@@ -11,7 +12,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
     breadcrumbs = [{title:organization.current.name,href:route('dashboard')}, ...breadcrumbs]
 
     return (
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
             <div className="flex items-center gap-2">
                 <CustomSidebarTrigger className="-ml-1" />
                 <Link href={route('organizations.edit')} prefetch>
@@ -20,6 +21,9 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                     </div>
                 </Link>
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
+            </div>
+            <div className="flex items-center ml-auto">
+                <NotificationBell />
             </div>
         </header>
     );

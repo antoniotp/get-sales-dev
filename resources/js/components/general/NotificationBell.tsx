@@ -17,7 +17,7 @@ import {
 const LAST_DISMISSED_KEY = 'notification_prompt_dismissed_at';
 const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
-export const NotificationBell: React.FC = () => {
+export const NotificationBell = () => {
     const { isSupported, permissionStatus, isSubscribed, subscribe, loading, error } = usePushNotifications();
     const [showPrompt, setShowPrompt] = useState(false);
 

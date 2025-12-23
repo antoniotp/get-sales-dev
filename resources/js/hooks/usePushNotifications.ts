@@ -116,8 +116,7 @@ export const usePushNotifications = () => {
 
             if (subscription) {
                 await subscription.unsubscribe();
-                // TODO: a DELETE endpoint
-                // await axios.delete('/notifications/subscriptions', { data: subscription.toJSON() });
+                await axios.delete(route('notifications.subscriptions.destroy'), { data: subscription.toJSON() });
 
                 setState((prev) => ({ ...prev, isSubscribed: false, loading: false }));
             } else {

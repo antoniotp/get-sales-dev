@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { Separator } from '@/components/ui/separator'; // Added import
+import { UpdateNotificationsSettings } from '@/components/settings/UpdateNotificationsSettings'; // Added import
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -118,6 +120,10 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             </Transition>
                         </div>
                     </form>
+
+                    <Separator />
+
+                    <UpdateNotificationsSettings />
                 </div>
 
                 <DeleteUser />

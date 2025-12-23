@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\Services\Notification\PushSubscriptionServiceInterface;
+use App\Http\Requests\Notification\DeletePushSubscriptionRequest;
 use App\Http\Requests\Notification\StorePushSubscriptionRequest;
 use Illuminate\Http\JsonResponse;
 
@@ -23,5 +24,15 @@ class PushSubscriptionController extends Controller
         $this->pushSubscriptionService->store($request->user(), $request->validated());
 
         return response()->json(['success' => true], 201);
+    }
+
+    /**
+     * Remove a push subscription.
+     */
+    public function destroy(DeletePushSubscriptionRequest $request): JsonResponse
+    {
+        $this->pushSubscriptionService->remove($request->user(), $request->validated('endpoint'));
+
+        return response()->json(['success' => true], 200);
     }
 }

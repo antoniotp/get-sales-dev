@@ -106,6 +106,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Notifications
     Route::post('/notifications/subscriptions', [PushSubscriptionController::class, 'store'])->name('notifications.subscriptions.store');
+    Route::delete('/notifications/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('notifications.subscriptions.destroy');
 });
 
 require __DIR__.'/settings.php';

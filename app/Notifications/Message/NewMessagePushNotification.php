@@ -29,7 +29,7 @@ class NewMessagePushNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return [WebPushChannel::class];
+        return [WebPushChannel::class, 'database'];
     }
 
     /**

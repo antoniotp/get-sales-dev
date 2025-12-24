@@ -3,6 +3,7 @@
 namespace App\Services\Chat;
 
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Events\Message\NewMessageReceived;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Jobs\ProcessAIResponse;
@@ -37,6 +38,9 @@ class MessageService implements MessageServiceInterface
 
         // Dispatch the event for real-time updates to the frontend.
         event(new NewWhatsAppMessage($newMessage));
+
+        // Dispatch the event for push notifications.
+        event(new NewMessageReceived($newMessage));
 
         // If the conversation is in AI mode, dispatch a job to process the AI response.
         if ($conversation->mode === 'ai') {

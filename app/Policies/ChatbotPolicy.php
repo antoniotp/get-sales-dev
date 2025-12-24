@@ -5,9 +5,7 @@ namespace App\Policies;
 use App\Models\Chatbot;
 use App\Models\Organization;
 use App\Models\User;
-use App\Services\Organization\OrganizationService;
 use Illuminate\Auth\Access\Response;
-use Illuminate\Http\Request;
 
 class ChatbotPolicy
 {
@@ -24,7 +22,7 @@ class ChatbotPolicy
      */
     public function view(User $user, Chatbot $chatbot): bool
     {
-        return true;
+        return $user->belongsToOrganization($chatbot->organization);
     }
 
     /**

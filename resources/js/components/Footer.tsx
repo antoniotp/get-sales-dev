@@ -7,9 +7,9 @@ const Footer = () => {
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div>
-            <h3 className="font-heading text-xl font-bold text-white mb-6">GetAlert</h3>
+            <img src="https://0cf46a50-ecd1-461a-82a3-b86625fd2e0d.lovable.app/assets/getsales-logo-BwI4cKNa.png" alt="GetSales" className="h-8 mb-6 brightness-0 invert" />
             <p className="text-gray-400 mb-6">
-              We connect businesses with professional agents to maximize sales through WhatsApp Business.
+              Ayudamos a los negocios a maximizar sus ventas usando WhatsApp con agentes de inteligencia artificial.
             </p>
             <div className="flex space-x-4">
               {/*<a href="#" className="bg-gray-800 hover:bg-brandBlue p-2 rounded-full transition-colors">
@@ -57,12 +57,12 @@ const Footer = () => {
               <li>
                 <a href="/policies" className="text-gray-400 hover:text-white transition-colors">Privacy policy</a>
               </li>
-              {/*<li>
+              <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">Cookie policy</a>
               </li>
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">FAQ</a>
-              </li>*/}
+              </li>
             </ul>
           </div>
 

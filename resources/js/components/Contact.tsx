@@ -50,11 +50,11 @@ const Contact = () => {
 
                         <div className="mb-8 space-y-6 dark:text-gray-950">
                             <div className="flex items-start gap-4">
-                                <div className="rounded-full bg-brandBlue/10 p-3">
-                                    <Phone className="h-6 w-6 text-brandBlue" />
+                                <div className="rounded-full bg-whatsapp/10 p-3">
+                                    <MessageSquare className="h-6 w-6 text-whatsapp" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold">Call us</h3>
+                                    <h3 className="text-lg font-bold">WhatsApp</h3>
                                     <p className="text-gray-600">+34 666 632 755</p>
                                 </div>
                             </div>
@@ -65,7 +65,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Email</h3>
-                                    <p className="text-gray-600">getalert@aiscreener.io</p>
+                                    <p className="text-gray-600">hello@get-sales.com</p>
                                 </div>
                             </div>
 
@@ -75,17 +75,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Office</h3>
-                                    <p className="text-gray-600">Roseti 2052, 4to J (1425), CABA, Buenos Aires, Argentina</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4">
-                                <div className="rounded-full bg-whatsapp/10 p-3">
-                                    <MessageSquare className="h-6 w-6 text-whatsapp" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold">WhatsApp</h3>
-                                    <p className="text-gray-600">+34 666 632 755</p>
+                                    <p className="text-gray-600">Puebla (MX), Buenos Aires (AR) y Barcelona (ES)</p>
                                 </div>
                             </div>
                         </div>

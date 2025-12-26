@@ -9,6 +9,7 @@ import Testimonials from '@/components/Testimonials';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import { Head } from '@inertiajs/react';
+import Partnerships from '@/components/Partnerships';
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ export default function Home() {
                         <Features />
                         <HowItWorks />
                         <Testimonials />
+                        <Partnerships />
                         <Contact />
                         <Footer />
                     </div>

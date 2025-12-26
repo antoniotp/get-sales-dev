@@ -1,0 +1,49 @@
+
+const Partnerships = () => {
+    const partners = [
+        {
+        name: "OpenAI",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg"
+        },
+        {
+        name: "Meta",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg"
+        },
+        {
+        name: "WhatsApp Business",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+        },
+        {
+        name: "Google Cloud",
+        logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg"
+        }
+    ];
+
+    return (
+        <section className="section-padding bg-white">
+        <div className="container-custom">
+            <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Partnerships</h2>
+            <p className="text-gray-600">Tecnologías que potencian GetSales</p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center items-center gap-12 md:gap-16">
+            {partners.map((partner, index) => (
+                <div 
+                key={index} 
+                className="flex items-center justify-center grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100"
+                >
+                <img 
+                    src={partner.logo} 
+                    alt={partner.name}
+                    className="h-8 md:h-12 w-auto object-contain"
+                />
+                </div>
+            ))}
+            </div>
+        </div>
+        </section>
+    );
+};
+
+export default Partnerships;

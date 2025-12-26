@@ -1,0 +1,17 @@
+/* react-big-calendar.css */
+
+/* Capitalize and bold the toolbar labels */
+.rbc-toolbar-label {
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+/* Reduce font size of date cells*/
+.rbc-date-cell {
+    font-size: 0.75rem;
+}
+
+/* Reduce font size of event content */
+.rbc-event-content {
+    font-size: 0.75rem;
+}

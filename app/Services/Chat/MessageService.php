@@ -1,0 +1,204 @@
+<?php
+
+namespace App\Services\Chat;
+
+use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Events\MessageSent;
+use App\Events\NewWhatsAppMessage;
+use App\Jobs\ProcessAIResponse;
+use App\Models\Conversation;
+use App\Models\Message;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Symfony\Component\Mime\MimeTypes;
+
+class MessageService implements MessageServiceInterface
+{
+    public function handleIncomingMessage(
+        Conversation $conversation,
+        string $externalMessageId,
+        string $content,
+        array $metadata,
+        ?int $senderContactId = null
+    ): Message {
+        $messageData = [
+            'conversation_id' => $conversation->id,
+            'external_message_id' => $externalMessageId,
+            'type' => 'incoming',
+            'content' => $content,
+            'content_type' => 'text',
+            'sender_type' => 'contact',
+            'sender_contact_id' => $senderContactId,
+            'metadata' => $metadata,
+        ];
+
+        $newMessage = Message::create($messageData);
+
+        // Dispatch the event for real-time updates to the frontend.
+        event(new NewWhatsAppMessage($newMessage));
+
+        // If the conversation is in AI mode, dispatch a job to process the AI response.
+        if ($conversation->mode === 'ai') {
+            Log::info('Dispatching AI processing job for message', ['message_id' => $newMessage->id]);
+            ProcessAIResponse::dispatch($newMessage)->onQueue('ai-responses');
+        }
+
+        return $newMessage;
+    }
+
+    public function storeExternalOutgoingMessage(Conversation $conversation, array $messageData): Message
+    {
+        return $this->createMessage($conversation, $messageData);
+    }
+
+    public function createAndSendOutgoingMessage(Conversation $conversation, array $messageData): Message
+    {
+        $message = $this->createMessage($conversation, $messageData);
+        event(new MessageSent($message));
+
+        return $message;
+    }
+
+    private function createMessage(Conversation $conversation, array $messageData): Message
+    {
+        $message = $conversation->messages()->create([
+            'external_message_id' => $messageData['external_id'] ?? null,
+            'type' => $messageData['type'] ?? 'outgoing',
+            'content' => $messageData['content'],
+            'content_type' => $messageData['content_type'] ?? 'text',
+            'media_url' => $messageData['media_url'] ?? null,
+            'sender_type' => $messageData['sender_type'] ?? 'human',
+            'sender_user_id' => $messageData['sender_user_id'] ?? null,
+            'sender_contact_id' => $messageData['sender_contact_id'] ?? null,
+            'metadata' => $messageData['metadata'] ?? [],
+        ]);
+
+        $conversation->update(['last_message_at' => now()]);
+
+        event(new NewWhatsAppMessage($message));
+
+        return $message;
+    }
+
+    public function createPendingMediaMessage(
+        Conversation $conversation,
+        string $externalMessageId,
+        string $content,
+        string $type,
+        string $senderType,
+        array $metadata,
+        ?int $senderContactId = null
+    ): Message {
+        return Message::create([
+            'conversation_id' => $conversation->id,
+            'external_message_id' => $externalMessageId,
+            'type' => $type,
+            'content' => $content,
+            'content_type' => 'pending',
+            'sender_type' => $senderType,
+            'sender_contact_id' => $senderContactId,
+            'metadata' => $metadata,
+        ]);
+    }
+
+    public function attachMediaToPendingMessage(
+        string $externalMessageId,
+        string $fileData,
+        string $mimeType,
+        string $contentType,
+        int $chatbotId
+    ): Message {
+        $message = Message::where('external_message_id', $externalMessageId)->firstOrFail();
+
+        $media = $this->storeMediaFile($fileData, $mimeType, $chatbotId);
+
+        $message->updateQuietly([
+            'media_url' => $media['fileUrl'],
+            'content_type' => $contentType,
+        ]);
+
+        event(new NewWhatsAppMessage($message));
+
+        Log::info('Successfully processed and stored media for message.', ['message_id' => $message->id, 'path' => $media['filePath']]);
+
+        return $message;
+    }
+
+    private function storeMediaFile(string $fileData, string $mimeType, int $chatbotId): array
+    {
+        $mimeType = $this->normalizeMimeType($mimeType);
+        $extension = MimeTypes::getDefault()->getExtensions($mimeType)[0] ?? 'bin';
+
+        $fileName = Str::uuid().'.'.$extension;
+        $filePath = 'media/'.$chatbotId.'/'.$fileName;
+
+        Storage::disk('public')->put($filePath, $fileData);
+
+        return [
+            'filePath' => $filePath,
+            'fileUrl' => Storage::url($filePath),
+        ];
+    }
+
+    public function updateStatusFromWebhook(string $externalMessageId, int $ackStatus): ?Message
+    {
+        $message = Message::where('external_message_id', $externalMessageId)->first();
+
+        if (! $message) {
+            Log::warning('Received message_ack for an unknown external_message_id', ['external_id' => $externalMessageId]);
+
+            return null;
+        }
+
+        $updated = false;
+
+        switch ($ackStatus) {
+            case 2: // DELIVERED
+                if (is_null($message->delivered_at)) {
+                    $message->delivered_at = now();
+                    $updated = true;
+                }
+                break;
+
+            case 3: // READ
+                if (is_null($message->read_at)) {
+                    // If it's read, it must also be delivered.
+                    if (is_null($message->delivered_at)) {
+                        $message->delivered_at = now();
+                    }
+                    $message->read_at = now();
+                    $updated = true;
+                }
+                break;
+
+                // case -1:
+                //     if (is_null($message->failed_at)) {
+                //         $message->failed_at = now();
+                //         $message->error_message = 'Received failure ACK from channel.';
+                //         $updated = true;
+                //     }
+                //     break;
+        }
+
+        if ($updated) {
+            $message->save();
+            event(new NewWhatsAppMessage($message));
+            Log::info('Message status updated from ACK.', ['message_id' => $message->id, 'ack' => $ackStatus]);
+        }
+
+        return $message;
+    }
+
+    private function normalizeMimeType(?string $mimeType): ?string
+    {
+        if (! $mimeType) {
+            return null;
+        }
+
+        // Split by ";" to delete params (codecs, bitrate, charset, etc.)
+        $base = explode(';', $mimeType)[0];
+
+        return strtolower(trim($base));
+    }
+}

@@ -1,0 +1,14 @@
+{
+  "menu": {
+    "home": "Inicio",
+    "features": "Funciones",
+    "how_it_works": "Cómo funciona",
+    "testimonials": "Testimonios",
+    "contact": "Contacto"
+  },
+  "actions": {
+    "dashboard": "Dashboard",
+    "login": "Iniciar sesión",
+    "register": "Registrarse"
+  }
+}

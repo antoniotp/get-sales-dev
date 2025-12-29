@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link, usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
+import { useTranslation } from "react-i18next";
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { auth } = usePage<SharedData>().props;
+  const { t } = useTranslation("navigation");
 
   return (
     <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 shadow-sm">
@@ -17,11 +19,11 @@ const Navigation = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="/#home" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Inicio</a>
-          <a href="/#features" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Funciones</a>
-          <a href="/#how-it-works" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Cómo Funciona</a>
-          <a href="/#testimonials" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Testimonios</a>
-          <a href="/#contact" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Contacto</a>
+          <a href="/#home" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.home")}</a>
+          <a href="/#features" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.features")}</a>
+          <a href="/#how-it-works" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.how_it_works")}</a>
+          <a href="/#testimonials" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.testimonials")}</a>
+          <a href="/#contact" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.contact")}</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -29,19 +31,19 @@ const Navigation = () => {
                 <Link
                     href={route('dashboard')}
                 >
-                    <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4">Dashboard</Button>
+                    <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4">{t("actions.dashboard")}</Button>
                 </Link>
             ) : (
                 <>
                     <Link
                         href={route('login')}
                     >
-                        <Button variant="outline" className="px-4 border-brandRed text-brandRed hover:bg-brandRed/10">Iniciar Sesión</Button>
+                        <Button variant="outline" className="px-4 border-brandRed text-brandRed hover:bg-brandRed/10">{t("actions.login")}</Button>
                     </Link>
                     <Link
                         href={route('register')}
                     >
-                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4">Registrarse</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4">{t("actions.register")}</Button>
                     </Link>
                 </>
             )}
@@ -67,54 +69,54 @@ const Navigation = () => {
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Home
+              {t("menu.home")}
             </a>
             <a
               href="#features"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Features
+              {t("menu.features")}
             </a>
             <a
               href="#how-it-works"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              How It Works
+              {t("menu.how_it_works")}
             </a>
             <a
               href="#testimonials"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Testimonials
+              {t("menu.testimonials")}
             </a>
             <a
               href="#contact"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              Contact
+              {t("menu.contact")}
             </a>
             <div className="flex flex-col gap-2 pt-4">
                 {auth.user ? (
                     <Link
                         href={route('dashboard')}
                     >
-                        <Button className="bg-brandRed hover:bg-brandRed/90 w-full">Dashboard</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 w-full">{t("actions.dashboard")}</Button>
                     </Link>
                 ) : (
                     <>
                         <Link
                             href={route('login')}
                         >
-                            <Button variant="outline" className="w-full">Login</Button>
+                            <Button variant="outline" className="w-full">{t("actions.login")}</Button>
                         </Link>
                         <Link
                             href={route('register')}
                         >
-                            <Button className="bg-brandRed hover:bg-brandRed/90 w-full">Register</Button>
+                            <Button className="bg-brandRed hover:bg-brandRed/90 w-full">{t("actions.register")}</Button>
                         </Link>
                     </>
                 )}

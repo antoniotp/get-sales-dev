@@ -1,0 +1,14 @@
+{
+  "menu": {
+    "home": "Home",
+    "features": "Features",
+    "how_it_works": "How it works",
+    "testimonials": "Testimonials",
+    "contact": "Contact"
+  },
+  "actions": {
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "register": "Register"
+  }
+}

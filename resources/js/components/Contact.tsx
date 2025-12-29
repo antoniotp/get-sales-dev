@@ -42,7 +42,7 @@ const Contact = () => {
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
                     <div>
                         <h2 className="mb-6 text-3xl font-bold md:text-4xl dark:text-gray-950">
-                            Ready to <span className="text-brandBlue">boost your sales</span>?
+                            Ready to <span className="text-brandRed">boost your sales</span>?
                         </h2>
                         <p className="mb-8 text-lg text-gray-600">
                             Contact us today for a free demonstration of how GetAlert can transform your business.
@@ -60,8 +60,8 @@ const Contact = () => {
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="rounded-full bg-brandBlue/10 p-3">
-                                    <Mail className="h-6 w-6 text-brandBlue" />
+                                <div className="rounded-full bg-brandRed/10 p-3">
+                                    <Mail className="h-6 w-6 text-brandRed" />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Email</h3>
@@ -70,8 +70,8 @@ const Contact = () => {
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="rounded-full bg-brandBlue/10 p-3">
-                                    <MapPin className="h-6 w-6 text-brandBlue" />
+                                <div className="rounded-full bg-brandRed/10 p-3">
+                                    <MapPin className="h-6 w-6 text-brandRed" />
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Office</h3>
@@ -130,7 +130,7 @@ const Contact = () => {
                                 />
                             </div>
 
-                            <Button type="submit" className="w-full bg-brandBlue py-6 hover:bg-brandBlue/90">
+                            <Button type="submit" className="w-full bg-brandRed py-6 hover:bg-brandRed/90">
                                 Send message
                             </Button>
                         </form>

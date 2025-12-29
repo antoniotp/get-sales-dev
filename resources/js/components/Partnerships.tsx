@@ -3,19 +3,19 @@ const Partnerships = () => {
     const partners = [
         {
         name: "OpenAI",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg"
+        logo: "/images/OpenAI_logo.svg"
         },
         {
         name: "Meta",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Meta_Platforms_Inc._logo.svg"
+        logo: "/images/Meta_logo.svg"
         },
         {
         name: "WhatsApp Business",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+        logo: "/images/WhatsApp_logo.svg"
         },
         {
         name: "Google Cloud",
-        logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg"
+        logo: "/images/Google_Cloud_logo.svg"
         }
     ];
 

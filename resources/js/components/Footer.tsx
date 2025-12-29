@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container-custom">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           <div>
-            <img src="https://0cf46a50-ecd1-461a-82a3-b86625fd2e0d.lovable.app/assets/getsales-logo-BwI4cKNa.png" alt="GetSales" className="h-8 mb-6 brightness-0 invert" />
+            <img src="/images/getsales-logo.png" alt="GetSales" className="h-8 mb-6 brightness-0 invert" />
             <p className="text-gray-400 mb-6">
               Ayudamos a los negocios a maximizar sus ventas usando WhatsApp con agentes de inteligencia artificial.
             </p>

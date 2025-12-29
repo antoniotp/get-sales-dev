@@ -63,6 +63,8 @@
 
     --color-whatsapp: #25D366;
     --color-brandBlue: #0066FF;
+
+    --color-brandRed: #E11D48;
 }
 
 /*
@@ -189,7 +191,7 @@
     }
 
     .btn-outline {
-        @apply border border-brandBlue text-brandBlue hover:bg-brandBlue/10 transition-colors py-2 px-4 rounded-md font-medium;
+        @apply border border-brandRed text-brandRed hover:bg-brandRed/10 transition-colors py-2 px-4 rounded-md font-medium;
     }
 
     .btn-whatsapp {
@@ -231,6 +233,12 @@
 
     .animate-bounce-slow {
         animation: bounce-slow 3s ease-in-out infinite;
+    }
+
+    .btn-brandRed {
+        background-color: var(--color-brandRed);
+        color: white;
+        @apply border border-brandRed hover:bg-brandRed/90 transition-colors py-2 px-4 rounded-md font-medium;
     }
 }
 

@@ -12,16 +12,16 @@ const Navigation = () => {
     <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 shadow-sm">
       <div className="container-custom py-4 px-4 flex items-center justify-between">
         <div className="flex items-center">
-            <Link href={route('home')} className={"font-heading text-xl font-bold text-brandBlue"}><img src="https://0cf46a50-ecd1-461a-82a3-b86625fd2e0d.lovable.app/assets/getsales-logo-BwI4cKNa.png" alt="GetSales" className="h-12" /></Link>
+            <Link href={route('home')} className="h-12"><img src="/images/getsales-logo.png" alt="GetSales" className="h-12" /></Link>
         </div>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="/#home" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Inicio</a>
-          <a href="/#features" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Funciones</a>
-          <a href="/#how-it-works" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Cómo Funciona</a>
-          <a href="/#testimonials" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Testimonios</a>
-          <a href="/#contact" className="text-gray-700 hover:text-brandBlue font-medium transition-colors">Contacto</a>
+          <a href="/#home" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Inicio</a>
+          <a href="/#features" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Funciones</a>
+          <a href="/#how-it-works" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Cómo Funciona</a>
+          <a href="/#testimonials" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Testimonios</a>
+          <a href="/#contact" className="text-gray-700 hover:text-brandRed font-medium transition-colors">Contacto</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -36,12 +36,12 @@ const Navigation = () => {
                     <Link
                         href={route('login')}
                     >
-                        <Button variant="outline" className="px-4 dark:text-white">Iniciar Sesión</Button>
+                        <Button variant="outline" className="px-4 border-brandRed text-brandRed hover:bg-brandRed/10">Iniciar Sesión</Button>
                     </Link>
                     <Link
                         href={route('register')}
                     >
-                        <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4 dark:text-white">Registrarse</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4">Registrarse</Button>
                     </Link>
                 </>
             )}
@@ -64,35 +64,35 @@ const Navigation = () => {
           <div className="flex flex-col space-y-4">
             <a
               href="#home"
-              className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
+              className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               Home
             </a>
             <a
               href="#features"
-              className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
+              className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               Features
             </a>
             <a
               href="#how-it-works"
-              className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
+              className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               How It Works
             </a>
             <a
               href="#testimonials"
-              className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
+              className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               Testimonials
             </a>
             <a
               href="#contact"
-              className="text-gray-700 hover:text-brandBlue font-medium transition-colors px-4 py-2"
+              className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
               Contact
@@ -102,7 +102,7 @@ const Navigation = () => {
                     <Link
                         href={route('dashboard')}
                     >
-                        <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Dashboard</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 w-full">Dashboard</Button>
                     </Link>
                 ) : (
                     <>
@@ -114,7 +114,7 @@ const Navigation = () => {
                         <Link
                             href={route('register')}
                         >
-                            <Button className="bg-brandBlue hover:bg-brandBlue/90 w-full">Register</Button>
+                            <Button className="bg-brandRed hover:bg-brandRed/90 w-full">Register</Button>
                         </Link>
                     </>
                 )}

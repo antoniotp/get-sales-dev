@@ -22,7 +22,7 @@ const Hero = () => {
                                 </p>
                                 
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <a href="#" className="btn-primary text-base py-6 px-8 flex items-center gap-2">
+                                    <a href="#" className="btn-brandRed text-base py-6 px-8 flex items-center gap-2">
                                         <span>Comienza ahora</span>
                                     </a>
                                     <a href="#contact"
@@ -53,7 +53,7 @@ const Hero = () => {
                     <div className="relative">
                         <div className="relative z-10">
                             <img
-                                src="https://0cf46a50-ecd1-461a-82a3-b86625fd2e0d.lovable.app/assets/getsales-hero-Dths50L9.png"
+                                src="/images/getsales-hero.png"
                                 alt="WhatsApp Business Agents"
                                 className="rounded-lg shadow-2xl w-full"
                             />

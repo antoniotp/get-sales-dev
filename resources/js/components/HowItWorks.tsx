@@ -58,7 +58,7 @@ const HowItWorks = () => {
           <div className="relative">
             <div className="bg-gradient-to-br from-brandRed/10 to-whatsapp/10 rounded-2xl overflow-hidden shadow-xl p-4">
               <img 
-                src="https://0cf46a50-ecd1-461a-82a3-b86625fd2e0d.lovable.app/assets/getsales-dashboard-CbQWz752.png"
+                src="/images/getsales-dashboard.png"
                 alt="GetSales Dashboard" 
                 className="rounded-xl shadow-lg"
               />

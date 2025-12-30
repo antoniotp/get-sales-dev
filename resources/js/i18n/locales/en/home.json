@@ -1,0 +1,187 @@
+{
+  "hero": {
+    "badge": "AI Agents for WhatsApp",
+    "title": {
+      "prefix": "Increase your sales using WhatsApp with",
+      "highlight": "AI agents"
+    },
+    "description": "Connect your WhatsApp Business account and let AI work for you. Increase your sales, improve customer support, and grow your business automatically.",
+    "cta": {
+      "start": "Get started",
+      "contact": "Contact us"
+    },
+    "features": {
+      "ai": "Advanced AI",
+      "whatsapp": "Native WhatsApp",
+      "sales": "Automated sales"
+    },
+    "floating_card": {
+      "title": "Automated sales",
+      "description": "AI detects opportunities and closes sales for you"
+    }
+  },
+
+  "features": {
+    "title": {
+      "prefix": "Everything you need to",
+      "highlight": "sell more"
+    },
+    "description": "We turn your WhatsApp into an Automated Sales Machine using Artificial Intelligence. More sales. Automatically.",
+    "list": [
+      {
+        "title": "AI applied to your business",
+        "description": "Your business now uses AI to connect with customers through WhatsApp and close more sales."
+      },
+      {
+        "title": "WhatsApp integration in 5 minutes",
+        "description": "Connect your WhatsApp Business account and start operating in minutes."
+      },
+      {
+        "title": "24/7 support",
+        "description": "AI is always available. Your customers receive instant responses anytime, in any language, with no errors, improving experience and loyalty."
+      },
+      {
+        "title": "Multiple simultaneous users",
+        "description": "Multiple team members can reply from the same WhatsApp account with no access limits."
+      },
+      {
+        "title": "Automated sales and smart reminders",
+        "description": "AI detects opportunities, follows up, and offers your products or services at the right moment."
+      },
+      {
+        "title": "Easy to use and scale",
+        "description": "Built to grow with you: start with one number and add more agents or channels (Messenger, Instagram, etc.) whenever you need."
+      }
+    ]
+  },
+
+  "howItWorks": {
+    "title": {
+      "prefix": "🧩 How GetSales works",
+      "highlight": "GetSales"
+    },
+    "description": "Setting up GetSales is fast and simple. In just 4 steps you’ll have intelligent agents answering and selling through WhatsApp.",
+    "steps": [
+      {
+        "number": "01",
+        "title": "Create your account",
+        "description": "Sign up on GetSales and complete your profile with basic information about your business."
+      },
+      {
+        "number": "02",
+        "title": "Connect your WhatsApp Business",
+        "description": "Link your number through our guided process. You’ll be ready to operate in minutes."
+      },
+      {
+        "number": "03",
+        "title": "Configure your preferences",
+        "description": "Define your products, prices, messages, and automation rules. Customize the experience to match your brand."
+      },
+      {
+        "number": "04",
+        "title": "Activate your agents",
+        "description": "Turn on your AI agents and start receiving sales automatically."
+      }
+    ],
+    "benefits": [
+      "No complex installations or technical knowledge required",
+      "Technical support included throughout the entire process",
+      "Free initial training to maximize your results"
+    ]
+  },
+
+  "testimonials": {
+    "title": {
+      "prefix": "What our",
+      "highlight": "clients say"
+    },
+    "description": "Companies from different industries have transformed their sales strategy with GetSales.",
+    "cta": {
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "mobileHint": "Swipe to see more testimonials"
+    },
+    "items": [
+      {
+        "id": 1,
+        "name": "Diego Álvarez",
+        "role": "CEO",
+        "company": "Empresa Presente",
+        "quote": "Before, our communications were chaotic: multiple people using the same WhatsApp and many mistakes. With GetSales, we created users, assigned each conversation to its owner, and now everything is centralized and under control. Automations also allow us to contact guests without manual reminders. It was a turning point. And the support team is always incredibly fast.",
+        "rating": 5,
+        "industry": "#Hospitality"
+      },
+      {
+        "id": 2,
+        "name": "Patricio Gómez Pawelek",
+        "role": "CEO & Founder",
+        "company": "Jobomas",
+        "quote": "Managing hundreds of daily conversations with companies and candidates in multiple languages was unsustainable. It required a lot of staff and still wasn’t enough. With GetSales, we now handle 99% of our communications with AI, automatically follow up on leads, and boost sales. We use it for both support and sales. It’s fantastic.",
+        "rating": 5,
+        "industry": "#Recruitment"
+      },
+      {
+        "id": 3,
+        "name": "Inés Huergo",
+        "role": "Director",
+        "company": "Laboratorios Nobis",
+        "quote": "We didn’t really manage customer relationships: people contacted us, we sold, and that was it. With GetSales, we professionalized all communication. The AI handles most interactions and we can focus on what really matters: the product. It works extremely well.",
+        "rating": 5,
+        "industry": "#Pharmaceutical"
+      },
+      {
+        "id": 4,
+        "name": "Marina Snitcofsky",
+        "role": "Veterinarian & Researcher",
+        "company": "",
+        "quote": "Managing appointments and sending reminders one by one took a huge amount of time. Now GetSales automatically handles reminders and appointment organization. We can focus on better patient care, with more peace of mind and fewer administrative tasks.",
+        "rating": 5,
+        "industry": "#Veterinary"
+      }
+    ]
+  },
+
+  "partnerships": {
+    "title": "Partnerships",
+    "description": "Technologies powering GetSales"
+  },
+
+  "contact": {
+    "title": "Ready to <highlight>boost your sales</highlight>?",
+    "description": "Contact us today for a free demonstration of how GetAlert can transform your business.",
+
+    "channels": {
+      "office": {
+        "label": "Office",
+        "value": "Puebla (MX), Buenos Aires (AR) and Barcelona (ES)"
+      }
+    },
+
+    "form": {
+      "title": "Send us a message",
+      "fields": {
+        "name": {
+          "label": "Full name",
+          "placeholder": "Enter your name"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "example@email.com"
+        },
+        "phone": {
+          "label": "Phone",
+          "placeholder": "+34 600 000 000"
+        },
+        "message": {
+          "label": "Message",
+          "placeholder": "How can we help you?"
+        }
+      },
+      "submit": "Send message",
+      "toast": {
+        "title": "Message sent",
+        "description": "We will contact you soon."
+      }
+    }
+  }
+}

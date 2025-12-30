@@ -22,9 +22,11 @@ interface PushSubscriptionState {
 }
 
 export const usePushNotifications = () => {
+    const isPushSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
     const [state, setState] = useState<PushSubscriptionState>({
-        isSupported: 'serviceWorker' in navigator && 'PushManager' in window,
-        permissionStatus: Notification.permission,
+        isSupported: isPushSupported,
+        permissionStatus: isPushSupported ? Notification.permission : 'denied',
         isSubscribed: false,
         error: null,
         loading: true,
@@ -89,7 +91,7 @@ export const usePushNotifications = () => {
                     applicationServerKey: convertedVapidKey,
                 });
 
-                // Send subscription to your backend
+                // Send subscription to backend
                 await axios.post(route('notifications.subscriptions.store'), subscription.toJSON());
 
                 setState((prev) => ({ ...prev, isSubscribed: true, loading: false }));

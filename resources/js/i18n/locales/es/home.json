@@ -1,0 +1,187 @@
+{
+  "hero": {
+    "badge": "Agentes de IA para WhatsApp",
+    "title": {
+      "prefix": "Aumenta tus ventas usando WhatsApp con",
+      "highlight": "agentes de IA"
+    },
+    "description": "Conecta tu cuenta de WhatsApp Business y deja que la IA trabaje por ti. Aumenta tus ventas, mejora tu atención a clientes y haz crecer tu negocio en automático.",
+    "cta": {
+      "start": "Comienza ahora",
+      "contact": "Contáctanos"
+    },
+    "features": {
+      "ai": "IA avanzada",
+      "whatsapp": "WhatsApp nativo",
+      "sales": "Ventas automáticas"
+    },
+    "floating_card": {
+      "title": "Ventas en automático",
+      "description": "La IA detecta oportunidades y cierra ventas por ti"
+    }
+  },
+
+  "features": {
+    "title": {
+      "prefix": "Todo lo que necesitas para",
+      "highlight": "vender más"
+    },
+    "description": "Convertimos tu WhatsApp en una Máquina Automatizada de Ventas usando Inteligencia Artificial. Más ventas. En automático.",
+    "list": [
+      {
+        "title": "IA aplicada a tu negocio",
+        "description": "Tu negocio ahora usará IA para conectar con clientes a través de WhatsApp y cerrar más ventas."
+      },
+      {
+        "title": "Integración con WhatsApp en 5 minutos",
+        "description": "Conectas tu cuenta de WhatsApp Business y comienzas a operar en minutos."
+      },
+      {
+        "title": "Atención 24/7",
+        "description": "La IA está siempre disponible. Tus clientes recibirán respuesta en cualquier momento del día, en cualquier idioma, sin errores, y mejorando su experiencia y fidelidad."
+      },
+      {
+        "title": "Múltiples usuarios simultáneos",
+        "description": "Varios miembros de tu equipo pueden responder desde la misma cuenta de WhatsApp, sin límites de acceso."
+      },
+      {
+        "title": "Ventas automáticas y recordatorios inteligentes",
+        "description": "La IA detecta oportunidades, hace seguimiento y ofrece tus productos o servicios en el momento justo."
+      },
+      {
+        "title": "Fácil de usar y escalar",
+        "description": "Diseñado para crecer contigo: empieza con un número y agrega más agentes o canales (Messenger, Instagram, etc.) cuando lo necesites."
+      }
+    ]
+  },
+
+  "howItWorks": {
+    "title": {
+      "prefix": "🧩 Cómo funciona",
+      "highlight": "GetSales"
+    },
+    "description": "Configurar GetSales es rápido y sencillo. En sólo 4 pasos tendrás agentes inteligentes atendiendo y vendiendo por WhatsApp.",
+    "steps": [
+      {
+        "number": "01",
+        "title": "Registra tu cuenta",
+        "description": "Crea tu cuenta en GetSales y completa tu perfil con la información básica de tu negocio."
+      },
+      {
+        "number": "02",
+        "title": "Conecta tu WhatsApp Business",
+        "description": "Vincula tu número siguiendo nuestro proceso guiado. Estarás listo para operar en minutos."
+      },
+      {
+        "number": "03",
+        "title": "Configura tus preferencias",
+        "description": "Define tus productos, precios, mensajes y reglas de atención. Personaliza la experiencia según tu marca."
+      },
+      {
+        "number": "04",
+        "title": "Activa tus agentes",
+        "description": "Enciende tus agentes de IA y empieza a recibir ventas de forma automática."
+      }
+    ],
+    "benefits": [
+      "Sin instalaciones complejas ni conocimientos técnicos",
+      "Soporte técnico incluido durante todo el proceso",
+      "Capacitación inicial gratuita para maximizar tus resultados"
+    ]
+  },
+
+  "testimonials": {
+    "title": {
+      "prefix": "Testimonios de nuestros",
+      "highlight": "clientes"
+    },
+    "description": "Empresas de distintos sectores han transformado su estrategia de ventas con GetSales.",
+    "cta": {
+      "showMore": "Ver más",
+      "showLess": "Ver menos",
+      "mobileHint": "Desliza para ver más testimonios"
+    },
+    "items": [
+      {
+        "id": 1,
+        "name": "Diego Álvarez",
+        "role": "CEO",
+        "company": "Empresa Presente",
+        "quote": "Antes teníamos un caos en las comunicaciones: varias personas usando el mismo WhatsApp y muchos errores. Con GetSales creamos usuarios, asignamos cada conversación a su responsable y hoy tenemos todo centralizado y bajo control. Además, las automatizaciones nos permiten contactar a los huéspedes sin recordatorios manuales. Fue un antes y un después. Y el soporte técnico responde siempre rapidísimo.",
+        "rating": 5,
+        "industry": "#Hotelería"
+      },
+      {
+        "id": 2,
+        "name": "Patricio Gómez Pawelek",
+        "role": "CEO & Founder",
+        "company": "Jobomas",
+        "quote": "Gestionar cientos de conversaciones diarias con empresas y candidatos en distintos idiomas era insostenible. Requería mucho personal y aun así no dábamos abasto. Con GetSales hoy atendemos el 99 % de nuestras comunicaciones con IA, hacemos seguimiento automático de leads y potenciamos las ventas. Lo usamos tanto para soporte como para ventas. Es fantástico.",
+        "rating": 5,
+        "industry": "#Reclutamiento"
+      },
+      {
+        "id": 3,
+        "name": "Inés Huergo",
+        "role": "Directora",
+        "company": "Laboratorios Nobis",
+        "quote": "No teníamos una gestión real de clientes: nos contactaban, vendíamos y ahí terminaba todo. Con GetSales profesionalizamos toda la comunicación. La IA atiende la mayoría de los contactos y nosotros podemos enfocarnos en el producto, que es lo más importante. Funciona muy bien.",
+        "rating": 5,
+        "industry": "#Farmacéutica"
+      },
+      {
+        "id": 4,
+        "name": "Marina Snitcofsky",
+        "role": "Doctora en Veterinaria e Investigadora",
+        "company": "",
+        "quote": "Gestionar citas y enviar recordatorios uno por uno nos consumía muchísimo tiempo. Hoy GetSales se encarga automáticamente de los recordatorios y la organización de las citas. Nosotros podemos enfocarnos en atender mejor a los pacientes, con más tranquilidad y menos tareas administrativas.",
+        "rating": 5,
+        "industry": "#Veterinaria"
+      }
+    ]
+  },
+
+  "partnerships": {
+    "title": "Partnerships",
+    "description": "Tecnologías que potencian GetSales"
+  },
+
+  "contact": {
+    "title": "¿Listo para <highlight>aumentar tus ventas</highlight>?",
+    "description": "Contáctanos para mostrarte más a detalle cómo GetSales puede ayudarte a escalar tu negocio.",
+
+    "channels": {
+      "office": {
+        "label": "Oficina",
+        "value": "Puebla (MX), Buenos Aires (AR) y Barcelona (ES)"
+      }
+    },
+
+    "form": {
+      "title": "Envíanos un mensaje",
+      "fields": {
+        "name": {
+          "label": "Nombre completo",
+          "placeholder": "Escribe tu nombre"
+        },
+        "email": {
+          "label": "Email",
+          "placeholder": "ejemplo@email.com"
+        },
+        "phone": {
+          "label": "Teléfono",
+          "placeholder": "+34 600 000 000"
+        },
+        "message": {
+          "label": "Mensaje",
+          "placeholder": "¿Cómo podemos ayudarte?"
+        }
+      },
+      "submit": "Enviar mensaje",
+      "toast": {
+        "title": "Mensaje enviado",
+        "description": "Nos pondremos en contacto contigo pronto."
+      }
+    }
+  }
+}

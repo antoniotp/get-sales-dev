@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Bell, X } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Button } from '@/components/ui/button';
@@ -15,35 +15,14 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationDropdown } from './NotificationDropdown';
 
-// Key for local storage to track when the prompt was last dismissed
-const LAST_DISMISSED_KEY = 'notification_prompt_dismissed_at';
-const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
-
 export const NotificationBell = () => {
     const { isSupported, permissionStatus, isSubscribed, subscribe, loading, error } = usePushNotifications();
     const [showPrompt, setShowPrompt] = useState(false);
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
 
-    useEffect(() => {
-        // Only show prompt if supported, not yet subscribed, and permission is 'default' (not granted/denied)
-        if (isSupported && !isSubscribed && permissionStatus === 'default' && !loading) {
-            const lastDismissed = localStorage.getItem(LAST_DISMISSED_KEY);
-            if (!lastDismissed || (Date.now() - parseInt(lastDismissed, 10) > DISMISS_DURATION_MS)) {
-                setShowPrompt(true);
-            }
-        } else {
-            setShowPrompt(false);
-        }
-    }, [isSupported, isSubscribed, permissionStatus, loading]);
-
     const handleSubscribe = async () => {
         await subscribe();
-        // Prompt will be hidden by useEffect if subscription is successful or permission is denied
-    };
-
-    const handleDismiss = () => {
-        localStorage.setItem(LAST_DISMISSED_KEY, Date.now().toString());
-        setShowPrompt(false);
+        setShowPrompt(false); // Close the dialog after action
     };
 
     return (
@@ -95,7 +74,7 @@ export const NotificationBell = () => {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel onClick={handleDismiss}>Not for now</AlertDialogCancel>
+                        <AlertDialogCancel>Not for now</AlertDialogCancel>
                         <AlertDialogAction onClick={handleSubscribe} disabled={loading}>
                             {loading ? 'Enabling...' : 'Yes, please!'}
                         </AlertDialogAction>

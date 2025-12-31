@@ -34,48 +34,61 @@ export const usePushNotifications = () => {
 
     const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
-    // Check current subscription status on mount
+    // Register service worker and check for existing subscription on mount
     useEffect(() => {
-        if (!state.isSupported) {
+        if (!isPushSupported) {
+            console.log('Push notifications are not supported by this browser.');
             setState((prev) => ({ ...prev, loading: false }));
             return;
         }
 
-        const checkSubscription = async () => {
+        const registerAndCheckSubscription = async () => {
             try {
-                const registration = await navigator.serviceWorker.ready;
+                console.log('Registering service worker...');
+                const registration = await navigator.serviceWorker.register('/service-worker.js');
+                console.log('ServiceWorker registration successful.');
+
+                await navigator.serviceWorker.ready;
+                console.log('Service worker is ready, checking subscription...');
+
                 const subscription = await registration.pushManager.getSubscription();
                 setState((prev) => ({
                     ...prev,
                     isSubscribed: !!subscription,
                     loading: false,
                 }));
+                console.log('Subscription check complete. Is subscribed:', !!subscription);
             } catch (err) {
-                console.error('Error checking subscription:', err);
-                setState((prev) => ({ ...prev, error: 'Failed to check subscription status.', loading: false }));
+                console.error('Error during service worker registration or subscription check:', err);
+                let errorMessage = 'Failed to initialize push notifications.';
+                if (err instanceof Error) errorMessage = err.message;
+                setState((prev) => ({ ...prev, error: errorMessage, loading: false }));
             }
         };
 
-        checkSubscription();
-    }, [state.isSupported]);
+        registerAndCheckSubscription();
+    }, [isPushSupported]);
 
     // Function to subscribe to push notifications
     const subscribe = useCallback(async () => {
         if (!state.isSupported || state.permissionStatus === 'denied' || state.loading) {
+            console.log('Subscribe conditions not met:', { isSupported: state.isSupported, permissionStatus: state.permissionStatus, loading: state.loading });
             return;
         }
-
+        console.log('Attempting to subscribe...');
         setState((prev) => ({ ...prev, loading: true, error: null }));
 
         try {
             const permission = await Notification.requestPermission();
             setState((prev) => ({ ...prev, permissionStatus: permission }));
+            console.log('Permission requested. Result:', permission);
 
             if (permission === 'granted') {
                 const registration = await navigator.serviceWorker.ready;
                 const existingSubscription = await registration.pushManager.getSubscription();
 
                 if (existingSubscription) {
+                    console.log('Already subscribed with existing subscription.');
                     setState((prev) => ({ ...prev, isSubscribed: true, loading: false }));
                     return;
                 }
@@ -90,26 +103,34 @@ export const usePushNotifications = () => {
                     userVisibleOnly: true,
                     applicationServerKey: convertedVapidKey,
                 });
-
+                console.log('Service Worker subscribed. Sending to backend...');
                 // Send subscription to backend
                 await axios.post(route('notifications.subscriptions.store'), subscription.toJSON());
 
                 setState((prev) => ({ ...prev, isSubscribed: true, loading: false }));
+                console.log('Subscription successful!');
             } else {
-                setState((prev) => ({ ...prev, error: 'Notification permission denied.', loading: false }));
+                console.log('Permission not granted. Status:', permission);
+                setState((prev) => ({ ...prev, error: 'Notification permission denied or dismissed.', loading: false }));
             }
         } catch (err) {
             console.error('Error subscribing to push notifications:', err);
-            setState((prev) => ({ ...prev, error: 'Failed to subscribe to notifications.', loading: false }));
+            let errorMessage = 'Failed to subscribe to notifications.';
+            if (err instanceof Error) errorMessage = err.message;
+            else if (axios.isAxiosError(err) && err.response) errorMessage = err.response.data.message || err.message;
+            else if (typeof err === 'string') errorMessage = err;
+
+            setState((prev) => ({ ...prev, error: errorMessage, loading: false }));
         }
     }, [state.isSupported, state.permissionStatus, state.loading, vapidPublicKey]);
 
     // Function to unsubscribe from push notifications
     const unsubscribe = useCallback(async () => {
         if (!state.isSupported || state.loading) {
+            console.log('Unsubscribe conditions not met:', { isSupported: state.isSupported, loading: state.loading });
             return;
         }
-
+        console.log('Attempting to unsubscribe...');
         setState((prev) => ({ ...prev, loading: true, error: null }));
 
         try {
@@ -118,15 +139,23 @@ export const usePushNotifications = () => {
 
             if (subscription) {
                 await subscription.unsubscribe();
+                console.log('Service Worker unsubscribed. Notifying backend...');
                 await axios.delete(route('notifications.subscriptions.destroy'), { data: subscription.toJSON() });
 
                 setState((prev) => ({ ...prev, isSubscribed: false, loading: false }));
+                console.log('Unsubscription successful!');
             } else {
+                console.log('Already unsubscribed or no active subscription.');
                 setState((prev) => ({ ...prev, loading: false })); // Already unsubscribed
             }
         } catch (err) {
             console.error('Error unsubscribing from push notifications:', err);
-            setState((prev) => ({ ...prev, error: 'Failed to unsubscribe from notifications.', loading: false }));
+            let errorMessage = 'Failed to unsubscribe from notifications.';
+            if (err instanceof Error) errorMessage = err.message;
+            else if (axios.isAxiosError(err) && err.response) errorMessage = err.response.data.message || err.message;
+            else if (typeof err === 'string') errorMessage = err;
+
+            setState((prev) => ({ ...prev, error: errorMessage, loading: false }));
         }
     }, [state.isSupported, state.loading]);
 

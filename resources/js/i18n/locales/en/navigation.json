@@ -1,14 +1,54 @@
 {
-  "menu": {
-    "home": "Home",
-    "features": "Features",
-    "how_it_works": "How it works",
-    "testimonials": "Testimonials",
-    "contact": "Contact"
+  "header": {
+    "menu": {
+      "home": "Home",
+      "features": "Features",
+      "how_it_works": "How it works",
+      "testimonials": "Testimonials",
+      "contact": "Contact"
+    },
+    "actions": {
+      "dashboard": "Dashboard",
+      "login": "Login",
+      "register": "Register"
+    }
   },
-  "actions": {
-    "dashboard": "Dashboard",
-    "login": "Login",
-    "register": "Register"
+
+  "footer": {
+    "description": "We help businesses maximize their sales using WhatsApp with artificial intelligence agents.",
+
+    "links": {
+      "title": "Useful Links",
+      "items": {
+        "home": "Home",
+        "features": "Features",
+        "howItWorks": "How it works",
+        "testimonials": "Testimonials",
+        "contact": "Contact"
+      }
+    },
+
+    "legal": {
+      "title": "Legal",
+      "items": {
+        "terms": "Terms and conditions",
+        "privacy": "Privacy policy",
+        "cookies": "Cookie policy",
+        "faq": "FAQ"
+      }
+    },
+
+    "newsletter": {
+      "title": "Newsletter",
+      "description": "Subscribe to receive news and updates.",
+      "placeholder": "Your email",
+      "button": "Send"
+    },
+
+    "copyright": "© 2025 GetAlert. All rights reserved.",
+
+    "whatsapp": {
+      "label": "Prefer to talk directly?"
+    }
   }
 }

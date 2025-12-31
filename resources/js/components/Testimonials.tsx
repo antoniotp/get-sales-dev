@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -9,67 +9,42 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
+
+type Testimonial = {
+  id: number;
+  name: string;
+  role: string;
+  company: string;
+  quote: string;
+  rating: number;
+  industry: string;
+};
 
 const Testimonials = () => {
+  const { t } = useTranslation("home");
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
-  const testimonials = [
-    {
-      id: 1,
-      name: "Diego Álvarez",
-      role: "CEO",
-      company: "Empresa Presente",
-      quote: "Antes teníamos un caos en las comunicaciones: varias personas usando el mismo WhatsApp y muchos errores. Con GetSales creamos usuarios, asignamos cada conversación a su responsable y hoy tenemos todo centralizado y bajo control. Además, las automatizaciones nos permiten contactar a los huéspedes sin recordatorios manuales. Fue un antes y un después. Y el soporte técnico responde siempre rapidísimo.",
-      rating: 5,
-      industry: "#Hotelería"
-    },
-    {
-      id: 2,
-      name: "Patricio Gómez Pawelek",
-      role: "CEO & Founder",
-      company: "Jobomas",
-      quote: "Gestionar cientos de conversaciones diarias con empresas y candidatos en distintos idiomas era insostenible. Requería mucho personal y aun así no dábamos abasto. Con GetSales hoy atendemos el 99 % de nuestras comunicaciones con IA, hacemos seguimiento automático de leads y potenciamos las ventas. Lo usamos tanto para soporte como para ventas. Es fantástico.",
-      rating: 5,
-      industry: "#Reclutamiento"
-    },
-    {
-      id: 3,
-      name: "Inés Huergo",
-      role: "Directora",
-      company: "Laboratorios Nobis",
-      quote: "No teníamos una gestión real de clientes: nos contactaban, vendíamos y ahí terminaba todo. Con GetSales profesionalizamos toda la comunicación. La IA atiende la mayoría de los contactos y nosotros podemos enfocarnos en el producto, que es lo más importante. Funciona muy bien.",
-      rating: 5,
-      industry: "#Farmacéutica"
-    },
-    {
-      id: 4,
-      name: "Marina Snitcofsky",
-      role: "Doctora en Veterinaria e Investigadora",
-      company: "",
-      quote: "Gestionar citas y enviar recordatorios uno por uno nos consumía muchísimo tiempo. Hoy GetSales se encarga automáticamente de los recordatorios y la organización de las citas. Nosotros podemos enfocarnos en atender mejor a los pacientes, con más tranquilidad y menos tareas administrativas.",
-      rating: 5,
-      industry: "#Veterinaria"
-    }
-  ];
+  const testimonials = t("testimonials.items", {
+    returnObjects: true
+  }) as Testimonial[];
 
   const toggleExpand = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const truncateText = (text: string, maxLength: number = 150) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
-  };
+  const truncateText = (text: string, maxLength = 120) =>
+    text.length <= maxLength ? text : text.substring(0, maxLength) + "...";
 
   return (
     <section id="testimonios" className="section-padding bg-gray-50">
       <div className="container-custom">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Testimonios de nuestros <span className="text-brandRed">clientes</span>
+            {t("testimonials.title.prefix")} <span className="text-brandRed">{t("testimonials.title.highlight")}</span>
           </h2>
           <p className="text-lg text-gray-600">
-            Empresas de distintos sectores han transformado su estrategia de ventas con GetSales.
+            {t("testimonials.description")}
           </p>
         </div>
 
@@ -99,7 +74,7 @@ const Testimonials = () => {
                       <p className="text-gray-600 text-sm italic leading-relaxed">
                         "{expandedId === testimonial.id 
                           ? testimonial.quote 
-                          : truncateText(testimonial.quote, 120)}"
+                          : truncateText(testimonial.quote)}"
                       </p>
                       {testimonial.quote.length > 120 && (
                         <Button 
@@ -107,7 +82,9 @@ const Testimonials = () => {
                           className="text-brandRed p-0 h-auto mt-2 text-sm"
                           onClick={() => toggleExpand(testimonial.id)}
                         >
-                          {expandedId === testimonial.id ? "Ver menos" : "Ver más"}
+                          {expandedId === testimonial.id
+                            ? t("testimonials.cta.showLess")
+                            : t("testimonials.cta.showMore")}
                         </Button>
                       )}
                     </div>
@@ -133,7 +110,7 @@ const Testimonials = () => {
         </Carousel>
 
         <div className="flex justify-center gap-2 mt-6 md:hidden">
-          <p className="text-sm text-gray-500">Desliza para ver más testimonios</p>
+          <p className="text-sm text-gray-500">{t("testimonials.cta.mobileHint")}</p>
         </div>
       </div>
     </section>

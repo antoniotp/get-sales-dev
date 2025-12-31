@@ -19,11 +19,11 @@ const Navigation = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="/#home" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.home")}</a>
-          <a href="/#features" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.features")}</a>
-          <a href="/#how-it-works" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.how_it_works")}</a>
-          <a href="/#testimonials" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.testimonials")}</a>
-          <a href="/#contact" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("menu.contact")}</a>
+          <a href="/#home" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.home")}</a>
+          <a href="/#features" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.features")}</a>
+          <a href="/#how-it-works" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.how_it_works")}</a>
+          <a href="/#testimonials" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.testimonials")}</a>
+          <a href="/#contact" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.contact")}</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -31,19 +31,19 @@ const Navigation = () => {
                 <Link
                     href={route('dashboard')}
                 >
-                    <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4">{t("actions.dashboard")}</Button>
+                    <Button className="bg-brandBlue hover:bg-brandBlue/90 px-4">{t("header.actions.dashboard")}</Button>
                 </Link>
             ) : (
                 <>
                     <Link
                         href={route('login')}
                     >
-                        <Button variant="outline" className="px-4 border-brandRed text-brandRed hover:bg-brandRed/10">{t("actions.login")}</Button>
+                        <Button variant="outline" className="px-4 border-brandRed text-brandRed hover:bg-brandRed/10">{t("header.actions.login")}</Button>
                     </Link>
                     <Link
                         href={route('register')}
                     >
-                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4">{t("actions.register")}</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4">{t("header.actions.register")}</Button>
                     </Link>
                 </>
             )}
@@ -69,54 +69,54 @@ const Navigation = () => {
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              {t("menu.home")}
+              {t("header.menu.home")}
             </a>
             <a
               href="#features"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              {t("menu.features")}
+              {t("header.menu.features")}
             </a>
             <a
               href="#how-it-works"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              {t("menu.how_it_works")}
+              {t("header.menu.how_it_works")}
             </a>
             <a
               href="#testimonials"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              {t("menu.testimonials")}
+              {t("header.menu.testimonials")}
             </a>
             <a
               href="#contact"
               className="text-gray-700 hover:text-brandRed font-medium transition-colors px-4 py-2"
               onClick={() => setIsMenuOpen(false)}
             >
-              {t("menu.contact")}
+              {t("header.menu.contact")}
             </a>
             <div className="flex flex-col gap-2 pt-4">
                 {auth.user ? (
                     <Link
                         href={route('dashboard')}
                     >
-                        <Button className="bg-brandRed hover:bg-brandRed/90 w-full">{t("actions.dashboard")}</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 w-full">{t("header.actions.dashboard")}</Button>
                     </Link>
                 ) : (
                     <>
                         <Link
                             href={route('login')}
                         >
-                            <Button variant="outline" className="w-full">{t("actions.login")}</Button>
+                            <Button variant="outline" className="w-full">{t("header.actions.login")}</Button>
                         </Link>
                         <Link
                             href={route('register')}
                         >
-                            <Button className="bg-brandRed hover:bg-brandRed/90 w-full">{t("actions.register")}</Button>
+                            <Button className="bg-brandRed hover:bg-brandRed/90 w-full">{t("header.actions.register")}</Button>
                         </Link>
                     </>
                 )}

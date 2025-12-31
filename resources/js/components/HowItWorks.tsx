@@ -1,30 +1,24 @@
 
 import { CheckCircle2, Lightbulb, Target } from "lucide-react";
-import dashboardImage from "@/assets/getsales-dashboard.png";
+import { useTranslation } from "react-i18next";
+
+type HowItWorksStep = {
+  number: string;
+  title: string;
+  description: string;
+};
 
 const HowItWorks = () => {
-  const steps = [
-    {
-      number: "01",
-      title: "Registra tu cuenta",
-      description: "Crea tu cuenta en GetSales y completa tu perfil con la información básica de tu negocio."
-    },
-    {
-      number: "02",
-      title: "Conecta tu WhatsApp Business",
-      description: "Vincula tu número siguiendo nuestro proceso guiado. Estarás listo para operar en minutos."
-    },
-    {
-      number: "03",
-      title: "Configura tus preferencias",
-      description: "Define tus productos, precios, mensajes y reglas de atención. Personaliza la experiencia según tu marca."
-    },
-    {
-      number: "04",
-      title: "Activa tus agentes",
-      description: "Enciende tus agentes de IA y empieza a recibir ventas de forma automática."
-    }
-  ];
+  const { t } = useTranslation("home");
+
+  const steps = t("howItWorks.steps", {
+    returnObjects: true
+  }) as HowItWorksStep[];
+
+  const benefits = t("howItWorks.benefits", {
+    returnObjects: true
+  }) as string[];
+
 
   return (
     <section id="como-funciona" className="section-padding">
@@ -32,10 +26,10 @@ const HowItWorks = () => {
         {/* Header - Full width */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            🧩 Cómo funciona <span className="text-brandRed">GetSales</span>
+            {t("howItWorks.title.prefix")} <span className="text-brandRed">{t("howItWorks.title.highlight")}</span>
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Configurar GetSales es rápido y sencillo. En sólo 4 pasos tendrás agentes inteligentes atendiendo y vendiendo por WhatsApp.
+            {t("howItWorks.description")}
           </p>
         </div>
 
@@ -73,15 +67,15 @@ const HowItWorks = () => {
         <div className="flex flex-wrap justify-center gap-8">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="text-whatsapp mt-1 shrink-0" />
-            <p>Sin instalaciones complejas ni conocimientos técnicos</p>
+            <p>{benefits[0]}</p>
           </div>
           <div className="flex items-start gap-3">
             <Lightbulb className="text-brandRed mt-1 shrink-0" />
-            <p>Soporte técnico incluido durante todo el proceso</p>
+            <p>{benefits[1]}</p>
           </div>
           <div className="flex items-start gap-3">
             <Target className="text-brandRed mt-1 shrink-0" />
-            <p>Capacitación inicial gratuita para maximizar tus resultados</p>
+            <p>{benefits[2]}</p>
           </div>
         </div>
       </div>

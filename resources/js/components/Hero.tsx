@@ -1,7 +1,9 @@
-import { MessageSquare, Users, LineChart, Bot, Zap } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { MessageSquare, Bot, Zap } from 'lucide-react';
+import { useTranslation } from "react-i18next";
 
 const Hero = () => {
+    const { t } = useTranslation("home");
+
     return (
         <section id="home" className="pt-32 pb-20 md:pt-40 md:pb-32 px-4">
             <div className="container-custom">
@@ -12,22 +14,22 @@ const Hero = () => {
                                 <div>
                                 <div className="bg-brandRed/10 text-brandRed inline-flex items-center px-4 py-2 rounded-full mb-4">
                                     <Bot size={16} className="mr-2" />
-                                    <span className="text-sm font-medium">Agentes de IA para WhatsApp</span>
+                                    <span className="text-sm font-medium">{t("hero.badge")}</span>
                                 </div>
                                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4">
-                                    Aumenta tus ventas usando Whatsapp con <span className="text-brandRed">agentes de IA</span>
+                                    {t("hero.title.prefix")} <span className="text-brandRed">{t("hero.title.highlight")}</span>
                                 </h1>
                                 <p className="text-lg text-gray-600 mb-8">
-                                    Conecta tu cuenta de WhatsApp Business y deja que la IA trabaje por ti. Aumenta tus ventas, mejora tu atención a clientes y haz crecer tu negocio en automático.
+                                    {t("hero.description")}
                                 </p>
                                 
                                 <div className="flex flex-col sm:flex-row gap-4">
                                     <a href="#" className="btn-brandRed text-base py-6 px-8 flex items-center gap-2">
-                                        <span>Comienza ahora</span>
+                                        <span>{t("hero.cta.start")}</span>
                                     </a>
                                     <a href="#contact"
                                     className="btn-outline text-center py-6 px-8 inline-flex items-center justify-center gap-2">
-                                        <span>Contáctanos</span>
+                                        <span>{t("hero.cta.contact")}</span>
                                     </a>
                                 </div>
                                 </div>
@@ -35,15 +37,15 @@ const Hero = () => {
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4">
                                 <div className="flex items-center gap-2">
                                     <Bot className="text-brandRed" />
-                                    <span className="text-sm font-medium">IA avanzada</span>
+                                    <span className="text-sm font-medium">{t("hero.features.ai")}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <MessageSquare className="text-whatsapp" />
-                                    <span className="text-sm font-medium">WhatsApp nativo</span>
+                                    <span className="text-sm font-medium">{t("hero.features.whatsapp")}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Zap className="text-brandRed" />
-                                    <span className="text-sm font-medium">Ventas automáticas</span>
+                                    <span className="text-sm font-medium">{t("hero.features.sales")}</span>
                                 </div>
                                 </div>
                             </div>
@@ -66,8 +68,8 @@ const Hero = () => {
                                     <MessageSquare size={20} className="text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-sm dark:text-gray-900">Ventas en automático</h3>
-                                    <p className="text-xs text-gray-500 mt-1">La IA detecta oportunidades y cierra ventas por ti</p>
+                                    <h3 className="font-medium text-sm dark:text-gray-900">{t("hero.floating_card.title")}</h3>
+                                    <p className="text-xs text-gray-500 mt-1">{t("hero.floating_card.description")}</p>
                                 </div>
                             </div>
                         </div>

@@ -3,20 +3,22 @@
 namespace App\Http\Controllers\Notification;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Notification\NotificationResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NotificationController extends Controller
 {
     /**
      * Get the user's recent notifications.
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $user = $request->user();
         $notifications = $user->notifications()->paginate(15);
 
-        return response()->json($notifications);
+        return NotificationResource::collection($notifications);
     }
 
     /**

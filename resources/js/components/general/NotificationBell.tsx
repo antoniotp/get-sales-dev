@@ -12,6 +12,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { NotificationDropdown } from './NotificationDropdown';
 
 // Key for local storage to track when the prompt was last dismissed
 const LAST_DISMISSED_KEY = 'notification_prompt_dismissed_at';
@@ -20,6 +22,7 @@ const DISMISS_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 export const NotificationBell = () => {
     const { isSupported, permissionStatus, isSubscribed, subscribe, loading, error } = usePushNotifications();
     const [showPrompt, setShowPrompt] = useState(false);
+    const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
 
     useEffect(() => {
         // Only show prompt if supported, not yet subscribed, and permission is 'default' (not granted/denied)
@@ -45,40 +48,47 @@ export const NotificationBell = () => {
 
     return (
         <>
-            <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                    if (!isSupported) {
-                        console.log('Push notifications not supported by this browser.');
-                        return;
-                    }
+            <Popover open={showNotificationDropdown} onOpenChange={setShowNotificationDropdown}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                            if (!isSupported) {
+                                console.log('Push notifications not supported by this browser.');
+                                return;
+                            }
 
-                    if (isSubscribed) {
-                        // TODO: Open notification center (for now, just log)
-                        console.log('Already subscribed.');
-                    } else if (permissionStatus === 'denied') {
-                        // User has explicitly denied. Cannot subscribe unless they change browser settings.
-                        console.log('Notifications denied by user. Please change browser settings.');
-                    } else if (permissionStatus === 'default') {
-                        // Permission is 'default', meaning we can ask the user.
-                        setShowPrompt(true);
-                    }
-                }}
-                className="relative"
-                disabled={!isSupported} // Disable if push is not supported
-            >
-                <Bell className="h-5 w-5" />
-                {/* {!isSubscribed && permissionStatus === 'default' && isSupported && (
-                    <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
-                )} */}
-            </Button>
+                            if (isSubscribed) {
+                                // Toggle dropdown visibility if already subscribed
+                                setShowNotificationDropdown((prev) => !prev);
+                            } else if (permissionStatus === 'denied') {
+                                // User has explicitly denied. Cannot subscribe unless they change browser settings.
+                                console.log('Notifications denied by user. Please change browser settings.');
+                            } else if (permissionStatus === 'default') {
+                                // Permission is 'default', meaning we can ask the user.
+                                setShowPrompt(true);
+                            }
+                        }}
+                        className="relative"
+                        disabled={!isSupported} // Disable if push is not supported
+                    >
+                        <Bell className="h-5 w-5" />
+                        {/* TODO: Add a dot/indicator for unread notifications */}
+                        {/* TODO: Add an option to clear/remove all notifications */}
+                        {/* TODO: Add an option to remove one notification */}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-0" align="end">
+                    <NotificationDropdown onClose={() => setShowNotificationDropdown(false)} />
+                </PopoverContent>
+            </Popover>
+
 
             {/* AlertDialog for the subscription prompt */}
             <AlertDialog open={showPrompt} onOpenChange={setShowPrompt}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        {/*<AlertDialogTitle>¿Quieres recibir notificaciones?</AlertDialogTitle>*/}
                         <AlertDialogTitle>Do you want to receive notifications?</AlertDialogTitle>
                         <AlertDialogDescription>
                             We'll send you notifications when you receive new messages, even when the app isn't open.

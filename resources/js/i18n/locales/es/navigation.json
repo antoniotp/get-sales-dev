@@ -3,13 +3,13 @@
     "menu": {
       "home": "Inicio",
       "features": "Funciones",
-      "how_it_works": "Cómo funciona",
+      "how_it_works": "Cómo Funciona",
       "testimonials": "Testimonios",
       "contact": "Contacto"
     },
     "actions": {
       "dashboard": "Dashboard",
-      "login": "Iniciar sesión",
+      "login": "Iniciar Sesión",
       "register": "Registrarse"
     }
   },

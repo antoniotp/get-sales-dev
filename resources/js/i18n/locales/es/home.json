@@ -60,7 +60,7 @@
       "prefix": "🧩 Cómo funciona",
       "highlight": "GetSales"
     },
-    "description": "Configurar GetSales es rápido y sencillo. En solo 4 pasos tendrás agentes inteligentes atendiendo y vendiendo por WhatsApp.",
+    "description": "Configurar GetSales es rápido y sencillo. En sólo 4 pasos tendrás agentes inteligentes atendiendo y vendiendo por WhatsApp.",
     "steps": [
       {
         "number": "01",
@@ -147,8 +147,8 @@
   },
 
   "contact": {
-    "title": "¿Listo para <highlight>impulsar tus ventas</highlight>?",
-    "description": "Contáctanos hoy para una demostración gratuita de cómo GetAlert puede transformar tu negocio.",
+    "title": "¿Listo para <highlight>aumentar tus ventas</highlight>?",
+    "description": "Contáctanos para mostrarte más a detalle cómo GetSales puede ayudarte a escalar tu negocio.",
 
     "channels": {
       "office": {
@@ -162,7 +162,7 @@
       "fields": {
         "name": {
           "label": "Nombre completo",
-          "placeholder": "Ingresa tu nombre"
+          "placeholder": "Escribe tu nombre"
         },
         "email": {
           "label": "Email",

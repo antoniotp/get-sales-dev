@@ -28,7 +28,7 @@ const Features = () => {
             </h2>
             <Rocket className="h-8 w-8 text-brandRed" />
           </div>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-700">
             {t("features.description")}
           </p>
         </div>

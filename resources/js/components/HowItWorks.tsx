@@ -28,7 +28,7 @@ const HowItWorks = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             {t("howItWorks.title.prefix")} <span className="text-brandRed">{t("howItWorks.title.highlight")}</span>
           </h2>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <p className="text-lg text-gray-900 max-w-3xl mx-auto">
             {t("howItWorks.description")}
           </p>
         </div>
@@ -43,7 +43,7 @@ const HowItWorks = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                  <p className="text-gray-600">{step.description}</p>
+                  <p className="text-gray-900">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -67,15 +67,15 @@ const HowItWorks = () => {
         <div className="flex flex-wrap justify-center gap-8">
           <div className="flex items-start gap-3">
             <CheckCircle2 className="text-whatsapp mt-1 shrink-0" />
-            <p>{benefits[0]}</p>
+            <p className="font-medium">{benefits[0]}</p>
           </div>
           <div className="flex items-start gap-3">
             <Lightbulb className="text-brandRed mt-1 shrink-0" />
-            <p>{benefits[1]}</p>
+            <p className="font-medium">{benefits[1]}</p>
           </div>
           <div className="flex items-start gap-3">
             <Target className="text-brandRed mt-1 shrink-0" />
-            <p>{benefits[2]}</p>
+            <p className="font-medium">{benefits[2]}</p>
           </div>
         </div>
       </div>

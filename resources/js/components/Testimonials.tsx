@@ -43,7 +43,7 @@ const Testimonials = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             {t("testimonials.title.prefix")} <span className="text-brandRed">{t("testimonials.title.highlight")}</span>
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-900">
             {t("testimonials.description")}
           </p>
         </div>
@@ -59,7 +59,7 @@ const Testimonials = () => {
             {testimonials.map((testimonial) => (
               <CarouselItem key={testimonial.id} className="pl-4 md:basis-1/3 basis-full">
                 <Card className="border-none shadow-lg h-full">
-                  <CardContent className="p-6">
+                  <CardContent>
                     <div className="flex items-center gap-1 mb-4">
                       {[...Array(5)].map((_, i) => (
                         <Star 
@@ -71,7 +71,7 @@ const Testimonials = () => {
                     </div>
                     
                     <div className="mb-4">
-                      <p className="text-gray-600 text-sm italic leading-relaxed">
+                      <p className="text-gray-900 text-sm italic leading-relaxed">
                         "{expandedId === testimonial.id 
                           ? testimonial.quote 
                           : truncateText(testimonial.quote)}"
@@ -92,7 +92,7 @@ const Testimonials = () => {
                     <div className="flex flex-col gap-2">
                       <div>
                         <h4 className="font-bold text-base">{testimonial.name}</h4>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-900">
                           {testimonial.role}{testimonial.company && `, ${testimonial.company}`}
                         </p>
                       </div>

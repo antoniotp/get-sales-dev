@@ -49,7 +49,7 @@ const Contact = () => {
                                 components={{ highlight: <span className="text-brandRed" /> }}
                             />
                         </h2>
-                        <p className="mb-8 text-lg text-gray-600">
+                        <p className="mb-8 text-lg text-gray-900">
                             {t("contact.description")}
                         </p>
 
@@ -60,7 +60,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">WhatsApp</h3>
-                                    <p className="text-gray-600">+34 666 632 755</p>
+                                    <p className="text-gray-900">+34 666 632 755</p>
                                 </div>
                             </div>
 
@@ -70,7 +70,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">Email</h3>
-                                    <p className="text-gray-600">hello@get-sales.com</p>
+                                    <p className="text-gray-900">hello@get-sales.com</p>
                                 </div>
                             </div>
 
@@ -80,7 +80,7 @@ const Contact = () => {
                                 </div>
                                 <div>
                                     <h3 className="text-lg font-bold">{t("contact.channels.office.label")}</h3>
-                                    <p className="text-gray-600">{t("contact.channels.office.value")}</p>
+                                    <p className="text-gray-900">{t("contact.channels.office.value")}</p>
                                 </div>
                             </div>
                         </div>
@@ -131,11 +131,11 @@ const Contact = () => {
                                     placeholder={t("contact.form.fields.message.placeholder")}
                                     rows={4}
                                     required
-                                    className="dark:bg-white dark:text-gray-950"
+                                    className="dark:bg-white dark:text-gray-950 h-25"
                                 />
                             </div>
 
-                            <Button type="submit" className="w-full bg-brandRed py-6 hover:bg-brandRed/90">
+                            <Button type="submit" className="w-full bg-brandRed py-6 hover:bg-brandRed/90 font-bold">
                                 {t("contact.form.submit")}
                             </Button>
                         </form>

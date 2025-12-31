@@ -16,7 +16,7 @@ const Hero = () => {
                                     <Bot size={16} className="mr-2" />
                                     <span className="text-sm font-medium">{t("hero.badge")}</span>
                                 </div>
-                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+                                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-none mb-4">
                                     {t("hero.title.prefix")} <span className="text-brandRed">{t("hero.title.highlight")}</span>
                                 </h1>
                                 <p className="text-lg text-gray-600 mb-8">
@@ -24,11 +24,11 @@ const Hero = () => {
                                 </p>
                                 
                                 <div className="flex flex-col sm:flex-row gap-4">
-                                    <a href="#" className="btn-brandRed text-base py-6 px-8 flex items-center gap-2">
+                                    <a href="#" className="btn-brandRed text-base py-3 px-7 flex items-center gap-2 font-bold">
                                         <span>{t("hero.cta.start")}</span>
                                     </a>
                                     <a href="#contact"
-                                    className="btn-outline text-center py-6 px-8 inline-flex items-center justify-center gap-2">
+                                    className="btn-outline text-center py-3 px-7 inline-flex items-center justify-center gap-2 font-bold">
                                         <span>{t("hero.cta.contact")}</span>
                                     </a>
                                 </div>
@@ -52,7 +52,7 @@ const Hero = () => {
                         </div>
                     </div>
 
-                    <div className="relative">
+                    <div className="relative mt-8">
                         <div className="relative z-10">
                             <img
                                 src="/images/getsales-hero.png"

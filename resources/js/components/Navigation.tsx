@@ -11,7 +11,7 @@ const Navigation = () => {
   const { t } = useTranslation("navigation");
 
   return (
-    <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 shadow-sm">
+    <nav className="fixed w-full bg-white/90 backdrop-blur-sm z-50 shadow-xs">
       <div className="container-custom py-4 px-4 flex items-center justify-between">
         <div className="flex items-center">
             <Link href={route('home')} className="h-12"><img src="/images/getsales-logo.png" alt="GetSales" className="h-12" /></Link>
@@ -19,11 +19,11 @@ const Navigation = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
-          <a href="/#home" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.home")}</a>
-          <a href="/#features" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.features")}</a>
-          <a href="/#how-it-works" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.how_it_works")}</a>
-          <a href="/#testimonials" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.testimonials")}</a>
-          <a href="/#contact" className="text-gray-700 hover:text-brandRed font-medium transition-colors">{t("header.menu.contact")}</a>
+          <a href="/#home" className="text-gray-800 hover:text-brandRed font-medium transition-colors">{t("header.menu.home")}</a>
+          <a href="/#features" className="text-gray-800 hover:text-brandRed font-medium transition-colors">{t("header.menu.features")}</a>
+          <a href="/#how-it-works" className="text-gray-800 hover:text-brandRed font-medium transition-colors">{t("header.menu.how_it_works")}</a>
+          <a href="/#testimonials" className="text-gray-800 hover:text-brandRed font-medium transition-colors">{t("header.menu.testimonials")}</a>
+          <a href="/#contact" className="text-gray-800 hover:text-brandRed font-medium transition-colors">{t("header.menu.contact")}</a>
         </div>
 
         <div className="hidden md:flex items-center gap-4">
@@ -38,12 +38,12 @@ const Navigation = () => {
                     <Link
                         href={route('login')}
                     >
-                        <Button variant="outline" className="px-4 border-brandRed text-brandRed hover:bg-brandRed/10">{t("header.actions.login")}</Button>
+                        <Button variant="outline" className="px-4 py-5 font-bold border-brandRed text-brandRed hover:bg-brandRed/10">{t("header.actions.login")}</Button>
                     </Link>
                     <Link
                         href={route('register')}
                     >
-                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4">{t("header.actions.register")}</Button>
+                        <Button className="bg-brandRed hover:bg-brandRed/90 px-4 py-5 font-bold">{t("header.actions.register")}</Button>
                     </Link>
                 </>
             )}

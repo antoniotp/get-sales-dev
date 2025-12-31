@@ -77,7 +77,7 @@ const Footer = () => {
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Your email"
+                placeholder={t("footer.newsletter.placeholder")}
                 className="bg-gray-800 rounded-md px-4 py-2 text-white flex-grow focus:outline-none focus:ring-2 focus:ring-brandBlue"
               />
               <Button className="bg-brandRed hover:bg-brandRed/90">

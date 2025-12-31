@@ -28,7 +28,7 @@ const Partnerships = () => {
         <div className="container-custom">
             <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">{t("partnerships.title")}</h2>
-            <p className="text-gray-600">{t("partnerships.description")}</p>
+            <p className="text-gray-900">{t("partnerships.description")}</p>
             </div>
             
             <div className="flex flex-wrap justify-center items-center gap-12 md:gap-16">

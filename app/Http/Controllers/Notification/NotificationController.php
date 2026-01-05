@@ -45,4 +45,24 @@ class NotificationController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Delete all read notifications for the user.
+     */
+    public function clearRead(Request $request): JsonResponse
+    {
+        $request->user()->readNotifications()->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Delete all notifications for the user.
+     */
+    public function clearAll(Request $request): JsonResponse
+    {
+        $request->user()->notifications()->delete();
+
+        return response()->json(['success' => true]);
+    }
 }

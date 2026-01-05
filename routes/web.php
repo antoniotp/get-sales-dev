@@ -111,6 +111,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
     Route::post('/notifications/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::delete('/notifications/read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read');
+    Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 });
 
 require __DIR__.'/settings.php';

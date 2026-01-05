@@ -105,6 +105,58 @@ class NotificationCenterTest extends TestCase
         $this->assertNull($notification->fresh()->read_at); // The notification should remain unread
     }
 
+    #[Test]
+    public function it_clears_read_notifications(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        $message1 = $this->createDummyMessage($user->organizationUsers->first()->organization_id);
+        $message2 = $this->createDummyMessage($user->organizationUsers->first()->organization_id);
+
+        $user->notify(new NewMessagePushNotification($message1)); // Unread
+        $user->notify(new NewMessagePushNotification($message2)); // Read
+
+        $user->notifications()->first()->markAsRead();
+
+        $this->assertEquals(1, $user->readNotifications->count());
+        $this->assertEquals(1, $user->unreadNotifications->count());
+
+        // --- Act ---
+        $response = $this->deleteJson(route('notifications.clear-read'));
+
+        // --- Assert ---
+        $response->assertOk();
+        $this->assertEquals(0, $user->fresh()->readNotifications->count());
+        $this->assertEquals(1, $user->fresh()->notifications->count()); // Only unread should remain
+    }
+
+    #[Test]
+    public function it_clears_all_notifications(): void
+    {
+        // --- Arrange ---
+        $user = User::find(1);
+        $this->actingAs($user);
+
+        $message1 = $this->createDummyMessage($user->organizationUsers->first()->organization_id);
+        $message2 = $this->createDummyMessage($user->organizationUsers->first()->organization_id);
+
+        $user->notify(new NewMessagePushNotification($message1)); // Unread
+        $user->notify(new NewMessagePushNotification($message2)); // Read
+
+        $user->notifications()->first()->markAsRead(); // Mark one as read
+
+        $this->assertEquals(2, $user->notifications->count());
+
+        // --- Act ---
+        $response = $this->deleteJson(route('notifications.clear-all'));
+
+        // --- Assert ---
+        $response->assertOk();
+        $this->assertEquals(0, $user->fresh()->notifications->count()); // All should be deleted
+    }
+
     /**
      * Helper to create a valid Message object for testing notifications.
      */

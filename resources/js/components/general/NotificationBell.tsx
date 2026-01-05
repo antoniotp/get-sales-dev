@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, X } from 'lucide-react';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Button } from '@/components/ui/button';
@@ -14,15 +14,51 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { NotificationDropdown } from './NotificationDropdown';
+import axios from 'axios';
+import { usePage } from '@inertiajs/react';
+import { PageProps } from '@/types';
 
 export const NotificationBell = () => {
     const { isSupported, permissionStatus, isSubscribed, subscribe, loading, error } = usePushNotifications();
     const [showPrompt, setShowPrompt] = useState(false);
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const { props } = usePage<PageProps>();
+    const { auth } = props;
+
+    const originalDocumentTitle = useRef(document.title); // Store original title
+
+    const fetchUnreadCount = useCallback(async () => {
+        if (!auth?.user) return;
+        try {
+            const response = await axios.get(route('notifications.status'));
+            setUnreadCount(response.data.unread_count);
+        } catch (err) {
+            console.error('Failed to fetch unread notification count:', err);
+        }
+    }, [auth?.user]);
+
+    useEffect(() => {
+        fetchUnreadCount();
+
+        if (!showNotificationDropdown) {
+            fetchUnreadCount();
+        }
+    }, [showNotificationDropdown, auth?.user, fetchUnreadCount]);
+
+    // Effect for updating document title
+    useEffect(() => {
+        if (unreadCount > 0) {
+            document.title = `(${unreadCount}) ${originalDocumentTitle.current}`;
+        } else {
+            document.title = originalDocumentTitle.current;
+        }
+    }, [unreadCount]);
 
     const handleSubscribe = async () => {
         await subscribe();
-        setShowPrompt(false); // Close the dialog after action
+        setShowPrompt(false);
+        fetchUnreadCount();
     };
 
     return (
@@ -53,13 +89,15 @@ export const NotificationBell = () => {
                         disabled={!isSupported} // Disable if push is not supported
                     >
                         <Bell className="h-5 w-5" />
-                        {/* TODO: Add a dot/indicator for unread notifications */}
-                        {/* TODO: Add an option to clear/remove all notifications */}
-                        {/* TODO: Add an option to remove one notification */}
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-0" align="end">
-                    <NotificationDropdown onClose={() => setShowNotificationDropdown(false)} />
+                    <NotificationDropdown onClose={() => setShowNotificationDropdown(false)} onUpdateUnreadCount={setUnreadCount} />
                 </PopoverContent>
             </Popover>
 
@@ -82,7 +120,6 @@ export const NotificationBell = () => {
                 </AlertDialogContent>
             </AlertDialog>
 
-            {/* Optional: Error Toast/Alert */}
             {error && (
                 <div className="fixed bottom-4 right-4 bg-red-500 text-white p-3 rounded-md shadow-lg flex items-center gap-2">
                     <span>Error: {error}</span>

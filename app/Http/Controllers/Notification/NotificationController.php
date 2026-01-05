@@ -65,4 +65,14 @@ class NotificationController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /**
+     * Get the current status of user notifications (e.g., unread count).
+     */
+    public function status(Request $request): JsonResponse
+    {
+        $unreadCount = $request->user()->unreadNotifications()->count();
+
+        return response()->json(['unread_count' => $unreadCount]);
+    }
 }

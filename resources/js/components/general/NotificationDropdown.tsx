@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { AlertCircle, BellOff, Loader2 } from 'lucide-react';
+import { AlertCircle, BellOff, Loader2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow, parseISO } from 'date-fns';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface Notification {
     id: string;
@@ -19,37 +20,44 @@ interface Notification {
 
 interface NotificationDropdownProps {
     onClose: () => void;
+    onUpdateUnreadCount: (count: number) => void;
 }
 
-export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => {
+export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: NotificationDropdownProps) => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
             const response = await axios.get(route('notifications.index'));
-            setNotifications(response.data.data);
+            const fetchedNotifications: Notification[] = response.data.data;
+            setNotifications(fetchedNotifications);
+            onUpdateUnreadCount(fetchedNotifications.filter(n => !n.read_at).length);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
             setError('Failed to load notifications.');
         } finally {
             setLoading(false);
         }
-    };
+    }, [onUpdateUnreadCount]);
 
     useEffect(() => {
         fetchNotifications();
-    }, []);
+    }, [fetchNotifications]);
 
     const markAsRead = async (notificationId: string) => {
         try {
             await axios.post(route('notifications.mark-as-read', notificationId));
-            setNotifications((prev) =>
-                prev.map((notif) => (notif.id === notificationId ? { ...notif, read_at: new Date().toISOString() } : notif))
-            );
+            setNotifications((prev) => {
+                const updatedNotifs = prev.map((notif) =>
+                    notif.id === notificationId ? { ...notif, read_at: new Date().toISOString() } : notif
+                );
+                onUpdateUnreadCount(updatedNotifs.filter(n => !n.read_at).length);
+                return updatedNotifs;
+            });
         } catch (err) {
             console.error('Failed to mark notification as read:', err);
             setError('Failed to mark notification as read.');
@@ -62,9 +70,37 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
             setNotifications((prev) =>
                 prev.map((notif) => (notif.read_at === null ? { ...notif, read_at: new Date().toISOString() } : notif))
             );
+            onUpdateUnreadCount(0); // All marked as read
         } catch (err) {
             console.error('Failed to mark all notifications as read:', err);
             setError('Failed to mark all notifications as read.');
+        }
+    };
+
+    const handleClearRead = async () => {
+        try {
+            await axios.delete(route('notifications.clear-read'));
+            setNotifications((prev) => {
+                const updatedNotifs = prev.filter((notif) => !notif.read_at);
+                onUpdateUnreadCount(updatedNotifs.filter(n => !n.read_at).length);
+                return updatedNotifs;
+            });
+        } catch (err) {
+            console.error('Failed to clear read notifications:', err);
+            setError('Failed to clear read notifications.');
+        }
+    };
+
+
+
+    const handleClearAll = async () => {
+        try {
+            await axios.delete(route('notifications.clear-all'));
+            setNotifications([]); // Clear all local notifications
+            onUpdateUnreadCount(0); // All cleared
+        } catch (err) {
+            console.error('Failed to clear all notifications:', err);
+            setError('Failed to clear all notifications.');
         }
     };
 
@@ -72,10 +108,25 @@ export const NotificationDropdown = ({ onClose }: NotificationDropdownProps) => 
         <div>
             <div className="flex items-center justify-between p-4">
                 <h4 className="font-medium text-sm">Notifications</h4>
-                {notifications.some((n) => !n.read_at) && (
-                    <Button variant="link" size="sm" onClick={markAllAsRead}>
-                        Mark all as read
-                    </Button>
+                {notifications.length > 0 && ( // Only show menu if there are notifications
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={markAllAsRead} disabled={!notifications.some((n) => !n.read_at)}>
+                                Mark all as read
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleClearRead} disabled={!notifications.some((n) => n.read_at)}>
+                                Clear read notifications
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleClearAll} disabled={notifications.length === 0}>
+                                Clear all notifications
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 )}
             </div>
             <Separator />

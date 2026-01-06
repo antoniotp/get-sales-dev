@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Notification;
 
 use App\Contracts\Services\Notification\PushSubscriptionServiceInterface;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Notification\DeletePushSubscriptionRequest;
 use App\Http\Requests\Notification\StorePushSubscriptionRequest;
 use Illuminate\Http\JsonResponse;

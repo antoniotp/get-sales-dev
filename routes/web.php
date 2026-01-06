@@ -12,12 +12,13 @@ use App\Http\Controllers\ChatbotChannel\ChatbotChannelSettingController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
+use App\Http\Controllers\Notification\NotificationController;
+use App\Http\Controllers\Notification\PushSubscriptionController;
 use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
 use App\Http\Controllers\Public\PublicFormController;
-use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Webhooks\TextMeBotWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
 use App\Http\Controllers\Webhooks\WhatsAppWebController;
@@ -107,6 +108,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Notifications
     Route::post('/notifications/subscriptions', [PushSubscriptionController::class, 'store'])->name('notifications.subscriptions.store');
     Route::delete('/notifications/subscriptions', [PushSubscriptionController::class, 'destroy'])->name('notifications.subscriptions.destroy');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-as-read');
+    Route::post('/notifications/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::get('/notifications/status', [NotificationController::class, 'status'])->name('notifications.status');
+    Route::delete('/notifications/read', [NotificationController::class, 'clearRead'])->name('notifications.clear-read');
+    Route::delete('/notifications', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 });
 
 require __DIR__.'/settings.php';

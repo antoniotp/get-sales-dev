@@ -9,11 +9,12 @@ use Revolution\Google\Sheets\Facades\Sheets;
 class ExportMessagesToGSheet extends Command
 {
     private const BATCH_SIZE = 10;
-    private const GOOGLE_SHEET_ID = '17uWPQU9CITs4u6TKmoN1PH81rRFT76if0_AOkxJgUKc';
 
     protected $signature = 'export:messages
                             {chatbot_id : ID del chatbot}
-                            {channel_id : ID del channel}';
+                            {channel_id : ID del channel}
+                            {sheet_id : ID del documento de Google}
+                            {sheet_name : Nombre de la hoja}';
 
     protected $description = 'Export filtered messages by chatbot and channel to Google Sheets';
 
@@ -21,9 +22,26 @@ class ExportMessagesToGSheet extends Command
     {
         $chatbotId = $this->argument('chatbot_id');
         $channelId = $this->argument('channel_id');
+        $sheetId   = $this->argument('sheet_id');
+        $sheetName = $this->argument('sheet_name');
 
-        $this->info('Fetching messages in batches...');
+        $this->info('Fetching last exported message ID from Google Sheet...');
 
+        // Leer los datos actuales de la hoja
+        $existingRows = Sheets::spreadsheet($sheetId)
+            ->sheet($sheetName)
+            ->get();
+
+        // El primer row son headers, buscamos el último ID en la primera columna
+        $lastMessageId = 0;
+        if ($existingRows->count() > 1) {
+            $lastRow = $existingRows->last();
+            $lastMessageId = (int) $lastRow[0]; // primera columna = message_id
+        }
+
+        $this->info("Último message_id exportado: {$lastMessageId}");
+
+        // Obtener rango de IDs en BD
         $idRange = DB::table('messages as m')
             ->join('conversations as c', 'c.id', '=', 'm.conversation_id')
             ->join('chatbot_channels as cc', 'cc.id', '=', 'c.chatbot_channel_id')
@@ -37,23 +55,31 @@ class ExportMessagesToGSheet extends Command
             return Command::SUCCESS;
         }
 
-        $currentFromId = (int) $idRange->min_id;
+        $currentFromId = max($lastMessageId + 1, (int) $idRange->min_id);
         $maxId = (int) $idRange->max_id;
 
-        $this->info("Processing messages from ID {$currentFromId} to {$maxId}");
+        if ($currentFromId > $maxId) {
+            $this->info('No new messages to export.');
+            return Command::SUCCESS;
+        }
 
-        // Headers
+        $this->info("Processing new messages from ID {$currentFromId} to {$maxId}");
+
+        // Headers solo si la hoja está vacía
         $rowsToInsert = [];
-        $rowsToInsert[] = [
-            'Id Organización',
-            'ID Agente (chatbot)',
-            'Id conversación',
-            'id_channel o nombre (ej Whatsapp)',
-            'nombre_usuario',
-            'mensaje_usuario',
-            'respuesta_IA/agente (si responde una persona)',
-            'timestamp'
-        ];
+        if ($existingRows->count() <= 1) {
+            $rowsToInsert[] = [
+                'Id Message',
+                'Id Organización',
+                'Id Agente (chatbot)',
+                'Id conversación',
+                'id_channel o nombre (ej Whatsapp)',
+                'nombre_usuario',
+                'mensaje_usuario',
+                'respuesta_IA/agente (si responde una persona)',
+                'timestamp'
+            ];
+        }
 
         while ($currentFromId <= $maxId) {
             $currentToId = $currentFromId + self::BATCH_SIZE - 1;
@@ -69,6 +95,7 @@ class ExportMessagesToGSheet extends Command
                 ->whereBetween('m.id', [$currentFromId, $currentToId])
                 ->orderBy('m.id')
                 ->select([
+                    'm.id as message_id',
                     'cc.channel_id as organization_id',
                     'cc.chatbot_id as chatbot_id',
                     'm.conversation_id',
@@ -82,13 +109,14 @@ class ExportMessagesToGSheet extends Command
 
             foreach ($rows as $row) {
                 $rowsToInsert[] = [
+                    $row->message_id,
                     $row->organization_id,
                     $row->chatbot_id,
                     $row->conversation_id,
                     $row->channel_name,
                     $row->user_name ?? '',
                     $row->type === 'incoming' ? $row->content : '',
-                    $row->type === 'outcoming' ? $row->content : '',
+                    $row->type === 'outgoing' ? $row->content : '',
                     $row->created_at,
                 ];
             }
@@ -101,14 +129,10 @@ class ExportMessagesToGSheet extends Command
         | Insert into Google Sheet
         |--------------------------------------------------------------------------
         */
-        $this->info('Writing data to Google Sheet...');
+        $this->info('Appending new data to Google Sheet...');
 
-        Sheets::spreadsheet(self::GOOGLE_SHEET_ID)
-            ->sheet('Hoja 1') // nombre de la pestaña
-            ->clear();        // limpia antes de escribir
-
-        Sheets::spreadsheet(self::GOOGLE_SHEET_ID)
-            ->sheet('Hoja 1')
+        Sheets::spreadsheet($sheetId)
+            ->sheet($sheetName)
             ->append($rowsToInsert);
 
         $this->info('Data exported successfully to Google Sheets.');

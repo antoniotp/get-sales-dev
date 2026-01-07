@@ -13,6 +13,7 @@
         "laravel/tinker": "^2.10.1",
         "propaganistas/laravel-phone": "^6.0",
         "pusher/pusher-php-server": "^7.2",
+        "revolution/laravel-google-sheets": "^7.1",
         "tightenco/ziggy": "^2.4"
     },
     "require-dev": {

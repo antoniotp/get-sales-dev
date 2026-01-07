@@ -57,6 +57,11 @@ self.addEventListener('push', (event) => {
             badge: '/favicon.ico',
             data: data,
         };
+
+        // Also, broadcast a message to any open client tabs.
+        const channel = new BroadcastChannel('notifications');
+        channel.postMessage({ type: 'NEW_NOTIFICATION' });
+
         return self.registration.showNotification(title, options);
     });
 

@@ -46,6 +46,26 @@ export const NotificationBell = () => {
         }
     }, [showNotificationDropdown, auth?.user, fetchUnreadCount]);
 
+    // Listen for broadcasts from the service worker to refresh count in real-time
+    useEffect(() => {
+        if ('BroadcastChannel' in window) {
+            const channel = new BroadcastChannel('notifications');
+            const handleMessage = (event: MessageEvent) => {
+                if (event.data?.type === 'NEW_NOTIFICATION') {
+                    console.log('New notification broadcast received, fetching count.');
+                    fetchUnreadCount();
+                }
+            };
+            channel.addEventListener('message', handleMessage);
+
+            // Cleanup function to close the channel when the component unmounts
+            return () => {
+                channel.removeEventListener('message', handleMessage);
+                channel.close();
+            };
+        }
+    }, [fetchUnreadCount]);
+
     // Effect for updating document title
     useEffect(() => {
         if (unreadCount > 0) {

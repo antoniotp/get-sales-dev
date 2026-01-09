@@ -9,3 +9,13 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('appointments:send-reminders')->everyMinute();
+
+Schedule::command('export:messages', [
+    2,
+    1,
+    '1pQxgpUojIEVvaekjQTsM_y0qRs1y64U7w29TGZaqnFo',
+    'Hoja 1',
+])
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground();

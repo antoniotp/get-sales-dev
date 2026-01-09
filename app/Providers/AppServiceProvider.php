@@ -18,6 +18,7 @@ use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsappWebWebhookServiceInterface;
 use App\Services\AI\ChatGPTService;
@@ -36,6 +37,7 @@ use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\Util\PhoneService;
 use App\Services\WhatsApp\FacebookService;
 use App\Services\WhatsApp\WhatsAppService;
+use App\Services\WhatsApp\WhatsAppWebhookHandlerService;
 use App\Services\WhatsApp\WhatsAppWebService;
 use App\Services\WhatsApp\WhatsappWebWebhookService;
 use App\Services\WhatsApp\WwebjsUrlManager;
@@ -59,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
             return new WwebjsUrlManager($defaultUrl);
         });
 
+        $this->app->bind(WhatsAppWebhookHandlerServiceInterface::class, WhatsAppWebhookHandlerService::class);
         $this->app->bind(WhatsAppServiceInterface::class, WhatsAppService::class);
         $this->app->bind(AIServiceInterface::class, function ($app) {
             return new ChatGPTService(

@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use App\Models\Channel;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
@@ -11,17 +12,18 @@ use App\Models\MessageTemplate;
 use App\Models\MessageTemplateCategory;
 use Illuminate\Support\Facades\Log;
 
-class WebhookHandlerService
+class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInterface
 {
     private ?Channel $whatsAppChannel;
+
     private ?ChatbotChannel $chatbotChannel = null;
+
     private ?Conversation $conversation = null;
 
     public function __construct(
         private readonly ConversationServiceInterface $conversationService,
         private readonly MessageServiceInterface $messageService
-    )
-    {
+    ) {
         $this->whatsAppChannel = Channel::where('slug', 'whatsapp')->first();
     }
 
@@ -37,20 +39,20 @@ class WebhookHandlerService
     /**
      * Process the incoming webhook payload.
      *
-     * @param array<string, mixed> $payload
+     * @param  array<string, mixed>  $payload
      */
     public function process(array $payload): void
     {
-        if ( isset($payload['verification_key']) && $payload['verification_key'] === 'FghGj4#kdls&gdhpdFDaks' ) {
+        if (isset($payload['verification_key']) && $payload['verification_key'] === 'FghGj4#kdls&gdhpdFDaks') {
             $verification_result = $payload['verification_result'];
-            $payload = json_decode( $payload['original_payload'], true );
-            Log::info( 'Reassigned forwarded payload to original payload' );
-            if ( $verification_result !== 'no_code' ) {
-                Log::info( 'Verification result: ' . $verification_result );
-                $payload['entry'][0]['changes'][0]['value']['messages'][0]['text']['body'] .= ' RESULT: ' . $verification_result;
+            $payload = json_decode($payload['original_payload'], true);
+            Log::info('Reassigned forwarded payload to original payload');
+            if ($verification_result !== 'no_code') {
+                Log::info('Verification result: '.$verification_result);
+                $payload['entry'][0]['changes'][0]['value']['messages'][0]['text']['body'] .= ' RESULT: '.$verification_result;
             }
         }
-        if (!isset($payload['entry'][0]['changes'][0]['value'])) {
+        if (! isset($payload['entry'][0]['changes'][0]['value'])) {
             return;
         }
 
@@ -69,24 +71,26 @@ class WebhookHandlerService
     /**
      * Handle message webhook events.
      *
-     * @param array<string, mixed> $value
+     * @param  array<string, mixed>  $value
      */
     private function handleMessageWebhook(array $value): void
     {
-        if (!isset($value['messages'][0])) {
+        if (! isset($value['messages'][0])) {
             return;
         }
 
         $message = $value['messages'][0];
 
         // Identify the channel and the conversation before process the message
-        if (!$this->identifyChatbotChannel($value['metadata']['phone_number_id'])) {
-            Log::error('WhatsApp channel not found for phone number ID: ' . $value['metadata']['phone_number_id']);
+        if (! $this->identifyChatbotChannel($value['metadata']['phone_number_id'])) {
+            Log::error('WhatsApp channel not found for phone number ID: '.$value['metadata']['phone_number_id']);
+
             return;
         }
 
-        if (!$this->getOrCreateContactAndConversation($value, $message)) {
+        if (! $this->getOrCreateContactAndConversation($value, $message)) {
             Log::error('Could not create or update conversation for message', ['message' => $message]);
+
             return;
         }
 
@@ -101,7 +105,7 @@ class WebhookHandlerService
     /**
      * Handle message template status update webhook events.
      *
-     * @param array<string, mixed> $value
+     * @param  array<string, mixed>  $value
      */
     private function handleTemplateStatusUpdate(array $value): void
     {
@@ -112,19 +116,21 @@ class WebhookHandlerService
             $newStatus = strtolower($value['event'] ?? ''); // Convert APPROVED to approved
             $rejectedReason = $value['reason'] !== 'NONE' ? $value['reason'] : null;
 
-            if (!$templateId || !$newStatus) {
+            if (! $templateId || ! $newStatus) {
                 Log::warning('Incomplete template status update payload', $value);
+
                 return;
             }
 
             $template = MessageTemplate::where('external_template_id', $templateId)->first();
 
-            if (!$template) {
+            if (! $template) {
                 Log::warning('Template not found for status update', [
                     'external_template_id' => $templateId,
                     'template_name' => $templateName,
-                    'language' => $templateLanguage
+                    'language' => $templateLanguage,
                 ]);
+
                 return;
             }
 
@@ -148,16 +154,16 @@ class WebhookHandlerService
                 'template_name' => $templateName,
                 'old_status' => $template->getOriginal('status'),
                 'new_status' => $newStatus,
-                'rejected_reason' => $rejectedReason
+                'rejected_reason' => $rejectedReason,
             ]);
 
             // Dispatch event for real-time updates
-    //            event(new WhatsAppTemplateStatusUpdate($template, $newStatus, $rejectedReason));
+            //            event(new WhatsAppTemplateStatusUpdate($template, $newStatus, $rejectedReason));
 
         } catch (\Exception $e) {
             Log::error('Error handling template status update', [
                 'error' => $e->getMessage(),
-                'payload' => $value
+                'payload' => $value,
             ]);
         }
     }
@@ -165,7 +171,7 @@ class WebhookHandlerService
     /**
      * Handle template category update webhook events.
      *
-     * @param array<string, mixed> $value
+     * @param  array<string, mixed>  $value
      */
     private function handleTemplateCategoryUpdate(array $value): void
     {
@@ -175,20 +181,22 @@ class WebhookHandlerService
             $templateLanguage = $value['message_template_language'] ?? null;
             $whatsappCategory = $value['new_category'] ?? null;
 
-            if (!$templateId || !$whatsappCategory) {
+            if (! $templateId || ! $whatsappCategory) {
                 Log::warning('Incomplete template category update payload', $value);
+
                 return;
             }
 
             $template = MessageTemplate::where('external_template_id', $templateId)->first();
 
-            if (!$template) {
+            if (! $template) {
                 Log::warning('Template not found for category update', [
                     'external_template_id' => $templateId,
                     'template_name' => $templateName,
                     'language' => $templateLanguage,
-                    'new_category' => $whatsappCategory
+                    'new_category' => $whatsappCategory,
                 ]);
+
                 return;
             }
 
@@ -199,12 +207,13 @@ class WebhookHandlerService
                 ->active()
                 ->first();
 
-            if (!$category) {
+            if (! $category) {
                 Log::warning('Internal category not found for WhatsApp category', [
                     'whatsapp_category' => $whatsappCategory,
                     'internal_category_slug' => $internalCategorySlug,
-                    'template_id' => $template->id
+                    'template_id' => $template->id,
                 ]);
+
                 return;
             }
 
@@ -218,16 +227,16 @@ class WebhookHandlerService
                 'old_category_id' => $oldCategoryId,
                 'new_category_id' => $category->id,
                 'whatsapp_category' => $whatsappCategory,
-                'internal_category_slug' => $internalCategorySlug
+                'internal_category_slug' => $internalCategorySlug,
             ]);
 
             // Dispatch event for real-time updates
-    //            event(new WhatsAppTemplateCategoryUpdate($template, $category, $whatsappCategory));
+            //            event(new WhatsAppTemplateCategoryUpdate($template, $category, $whatsappCategory));
 
         } catch (\Exception $e) {
             Log::error('Error handling template category update', [
                 'error' => $e->getMessage(),
-                'payload' => $value
+                'payload' => $value,
             ]);
         }
     }
@@ -247,8 +256,8 @@ class WebhookHandlerService
     /**
      * Get or create the contact, contact channel, and conversation.
      *
-     * @param array<string, mixed> $value
-     * @param array<string, mixed> $message
+     * @param  array<string, mixed>  $value
+     * @param  array<string, mixed>  $message
      */
     private function getOrCreateContactAndConversation(array $value, array $message): bool
     {
@@ -267,8 +276,9 @@ class WebhookHandlerService
         } catch (\Exception $e) {
             Log::error('Error in ConversationService from WebhookHandlerService', [
                 'error' => $e->getMessage(),
-                'message' => $message
+                'message' => $message,
             ]);
+
             return false;
         }
     }
@@ -276,7 +286,7 @@ class WebhookHandlerService
     /**
      * Handle a text message type.
      *
-     * @param array<string, mixed> $message
+     * @param  array<string, mixed>  $message
      */
     private function handleTextMessage(array $message): void
     {
@@ -293,7 +303,7 @@ class WebhookHandlerService
         } catch (\Exception $e) {
             Log::error('Error in MessageService from WebhookHandlerService', [
                 'error' => $e->getMessage(),
-                'message' => $message
+                'message' => $message,
             ]);
         }
     }
@@ -301,27 +311,27 @@ class WebhookHandlerService
     /**
      * Handle image message type.
      *
-     * @param array<string, mixed> $message
+     * @param  array<string, mixed>  $message
      */
     private function handleImageMessage(array $message): void
     {
-        // Implementar lógica para imágenes
+        // TODO: Implement image message handling
     }
 
     /**
      * Handle document message type.
      *
-     * @param array<string, mixed> $message
+     * @param  array<string, mixed>  $message
      */
     private function handleDocumentMessage(array $message): void
     {
-        // Implementar lógica para documentos
+        // TODO: Implement document message handling
     }
 
     /**
      * Handle unsupported message types.
      *
-     * @param array<string, mixed> $message
+     * @param  array<string, mixed>  $message
      */
     private function handleUnsupportedMessage(array $message): void
     {

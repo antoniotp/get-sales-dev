@@ -5,8 +5,10 @@ namespace App\Services\WhatsApp;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\DataTransferObjects\Chat\MessageSendResult;
 use App\Exceptions\MessageSendException;
+use App\Models\ChatbotChannel;
 use App\Models\Message;
 use App\Models\MessageTemplate;
+use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -54,7 +56,7 @@ class WhatsAppService implements WhatsAppServiceInterface
 
             return new MessageSendResult($externalId);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('WhatsApp message sending failed for channel '.$channel->id.': '.$e->getMessage());
             // Re-throw as a specific exception for the listener to catch
             throw new MessageSendException($e->getMessage(), $e->getCode(), $e);
@@ -67,7 +69,7 @@ class WhatsAppService implements WhatsAppServiceInterface
             $channel = $template->chatbotChannel;
 
             if ($channel->channel->slug !== 'whatsapp' || ! $channel->status) {
-                throw new \Exception('Invalid or inactive WhatsApp channel');
+                throw new Exception('Invalid or inactive WhatsApp channel');
             }
 
             $credentials = $channel->credentials;
@@ -136,7 +138,7 @@ class WhatsAppService implements WhatsAppServiceInterface
             ]);
 
             if (! $response->successful()) {
-                throw new \Exception('Failed to submit WhatsApp template: '.$response->body());
+                throw new Exception('Failed to submit WhatsApp template: '.$response->body());
             }
 
             Log::info('WhatsApp template submitted successfully');
@@ -153,9 +155,89 @@ class WhatsAppService implements WhatsAppServiceInterface
             $channel->update(['last_activity_at' => now()]);
 
             return $responseData;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('WhatsApp template submission failed for template '.$template->id.': '.$e->getMessage());
             throw $e;
+        }
+    }
+
+    public function getMediaInfo(string $mediaId, ChatbotChannel $channel): ?array
+    {
+        try {
+            $accessToken = $channel->credentials['phone_number_access_token'] ?? null;
+            if (! $accessToken) {
+                Log::error('WhatsApp access token not found for channel: '.$channel->id);
+
+                return null;
+            }
+
+            // The URL for media info is typically directly from graph.facebook.com, not the webhook_url
+            $mediaApiUrl = $channel->webhook_url.$mediaId;
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->get($mediaApiUrl);
+
+            if (! $response->successful()) {
+                Log::error('Failed to get media info from WhatsApp API', [
+                    'media_id' => $mediaId,
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (isset($data['url']) && isset($data['mime_type'])) {
+                return [
+                    'url' => $data['url'],
+                    'mime_type' => $data['mime_type'],
+                ];
+            }
+
+            Log::warning('Unexpected response format for media info', ['data' => $data]);
+
+            return null;
+
+        } catch (Exception $e) {
+            Log::error('Error getting media info from WhatsApp API: '.$e->getMessage(), ['media_id' => $mediaId]);
+
+            return null;
+        }
+    }
+
+    public function downloadMedia(string $mediaUrl, ChatbotChannel $channel): ?string
+    {
+        try {
+            $accessToken = $channel->credentials['phone_number_access_token'] ?? null;
+            if (! $accessToken) {
+                Log::error('WhatsApp access token not found for channel: '.$channel->id);
+
+                return null;
+            }
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->get($mediaUrl);
+
+            if (! $response->successful()) {
+                Log::error('Failed to download media from WhatsApp API', [
+                    'media_url' => $mediaUrl,
+                    'status' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+
+                return null;
+            }
+
+            return $response->body();
+
+        } catch (Exception $e) {
+            Log::error('Error downloading media from WhatsApp API: '.$e->getMessage(), ['media_url' => $mediaUrl]);
+
+            return null;
         }
     }
 
@@ -174,7 +256,7 @@ class WhatsAppService implements WhatsAppServiceInterface
             return $baseUrl.'/'.$credentials['whatsapp_business_account_id'];
         }
 
-        throw new \Exception('Invalid operation type: '.$operationType);
+        throw new Exception('Invalid operation type: '.$operationType);
     }
 
     /**

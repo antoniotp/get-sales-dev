@@ -4,6 +4,7 @@ namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use App\Models\Channel;
 use App\Models\ChatbotChannel;
@@ -22,7 +23,8 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
 
     public function __construct(
         private readonly ConversationServiceInterface $conversationService,
-        private readonly MessageServiceInterface $messageService
+        private readonly MessageServiceInterface $messageService,
+        private readonly WhatsAppServiceInterface $whatsAppService
     ) {
         $this->whatsAppChannel = Channel::where('slug', 'whatsapp')->first();
     }
@@ -315,7 +317,64 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
      */
     private function handleImageMessage(array $message): void
     {
-        // TODO: Implement image message handling
+        try {
+            $mediaId = $message['image']['id'] ?? null;
+            $caption = $message['image']['caption'] ?? '';
+            $externalMessageId = $message['id'];
+
+            if (! $mediaId) {
+                Log::warning('Image message received without media ID', ['message' => $message]);
+
+                return;
+            }
+
+            // 1. Create a pending message in the database
+            $pendingMessage = $this->messageService->createPendingMediaMessage(
+                conversation: $this->conversation,
+                externalMessageId: $externalMessageId,
+                content: $caption,
+                type: 'incoming',
+                senderType: 'contact',
+                metadata: [
+                    'timestamp' => $message['timestamp'],
+                    'from' => $message['from'],
+                ]
+            );
+
+            // 2. Get media info (URL and mime type) from WhatsApp API
+            $mediaInfo = $this->whatsAppService->getMediaInfo($mediaId, $this->chatbotChannel);
+
+            if (! $mediaInfo) {
+                Log::error('Could not retrieve media info for message', ['media_id' => $mediaId, 'message_id' => $externalMessageId]);
+
+                // TODO: Handle case where media info cannot be retrieved
+                return;
+            }
+
+            // 3. Download the actual media file
+            $fileData = $this->whatsAppService->downloadMedia($mediaInfo['url'], $this->chatbotChannel);
+
+            if (! $fileData) {
+                Log::error('Could not download media file', ['media_url' => $mediaInfo['url'], 'message_id' => $externalMessageId]);
+
+                // TODO: Handle case where media file cannot be downloaded
+                return;
+            }
+
+            // 4. Attach media to the pending message
+            $this->messageService->attachMediaToPendingMessage(
+                externalMessageId: $externalMessageId,
+                fileData: $fileData,
+                mimeType: $mediaInfo['mime_type'],
+                contentType: 'image',
+                chatbotId: $this->chatbotChannel->chatbot->id
+            );
+
+            Log::info('Successfully processed incoming image message', ['message_id' => $externalMessageId]);
+
+        } catch (\Exception $e) {
+            Log::error('Error processing incoming image message: '.$e->getMessage(), ['message' => $message]);
+        }
     }
 
     /**

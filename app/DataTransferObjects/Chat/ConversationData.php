@@ -37,7 +37,7 @@ class ConversationData implements Arrayable
             name: $conversationName,
             phone: $conversation->contact_phone ?? '',
             avatar: $conversation->contact_avatar ?? mb_substr($conversationName, 0, 1),
-            lastMessage: $conversation->latestMessage?->first()?->content ?? '',
+            lastMessage: $conversation->latestMessage?->content ?? '',
             lastMessageTime: $conversation->last_message_at?->toIso8601String(),
             mode: $conversation->mode ?? 'ai',
             unreadCount: $conversation->messages()

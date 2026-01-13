@@ -110,7 +110,8 @@ class ProcessAIResponse implements ShouldQueue
     private function getConversationHistory(): array
     {
         return $this->message->conversation
-            ->latestMessage()
+            ->messages()
+            ->latest()
             ->limit(100)
             ->get()
             ->map(function ($message) {

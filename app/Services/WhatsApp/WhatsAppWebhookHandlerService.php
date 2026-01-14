@@ -64,10 +64,75 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
         // Handle different webhook types
         match ($field) {
             'messages' => $this->handleMessageWebhook($value),
+            'smb_message_echoes' => $this->handleMessageEchoes($value),
             'message_template_status_update' => $this->handleTemplateStatusUpdate($value),
             'template_category_update' => $this->handleTemplateCategoryUpdate($value),
             default => Log::info('Unhandled webhook field type', ['field' => $field, 'value' => $value]),
         };
+    }
+
+    /**
+     * Handle message echoes from other devices connected to the same WABA.
+     *
+     * @param  array<string, mixed>  $value
+     */
+    private function handleMessageEchoes(array $value): void
+    {
+        if (! isset($value['message_echoes'][0])) {
+            Log::warning('Received smb_message_echoes field but no message_echoes data found.', ['value' => $value]);
+
+            return;
+        }
+
+        $echo = $value['message_echoes'][0];
+
+        if (! $this->identifyChatbotChannel($value['metadata']['phone_number_id'])) {
+            Log::error('WhatsApp channel not found for message echo', [
+                'phone_number_id' => $value['metadata']['phone_number_id'],
+            ]);
+
+            return;
+        }
+
+        // The 'from' in an echo is our number, the 'to' is the contact.
+        // For finding/creating conversations, the contact is the identifier.
+        $conversation = $this->conversationService->findOrCreate(
+            chatbotChannel: $this->chatbotChannel,
+            channelIdentifier: $echo['to'],
+            contactName: '', // We don't get contact name in echoes
+            channelId: $this->whatsAppChannel->id
+        );
+
+        $externalId = $echo['id'];
+        $content = $echo['text']['body'] ?? '';
+
+        // De-duplication logic: Check if we just sent a message with this content
+        $existingMessage = $this->messageService->findRecentOutgoingMessageWithoutExternalId($conversation->id, $content);
+
+        if ($existingMessage) {
+            // This is an echo for a message we sent from our app. Update it.
+            $existingMessage->update(['external_message_id' => $externalId]);
+            Log::info('Updated existing outgoing message with external ID from echo.', [
+                'message_id' => $existingMessage->id,
+                'external_id' => $externalId,
+            ]);
+        } else {
+            // This message was sent from another device (e.g., mobile). Create it.
+            Log::info('No existing message found. Creating new outgoing message from echo.', [
+                'external_id' => $externalId,
+            ]);
+
+            $this->messageService->storeExternalOutgoingMessage($conversation, [
+                'external_id' => $externalId,
+                'content' => $content,
+                'content_type' => $echo['type'] ?? 'text',
+                'sender_type' => 'human', // It was sent by a person on a device
+                'metadata' => [
+                    'from_echo' => true,
+                    'timestamp' => $echo['timestamp'],
+                ],
+            ]);
+        }
     }
 
     /**

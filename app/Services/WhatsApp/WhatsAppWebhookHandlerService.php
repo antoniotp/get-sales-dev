@@ -71,16 +71,29 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
     }
 
     /**
-     * Handle message webhook events.
+     * Handle message webhook events. This method acts as a router.
+     * It checks if the payload is a new message or a status update.
      *
      * @param  array<string, mixed>  $value
      */
     private function handleMessageWebhook(array $value): void
     {
-        if (! isset($value['messages'][0])) {
-            return;
+        if (isset($value['messages'][0])) {
+            $this->processIncomingMessage($value);
+        } elseif (isset($value['statuses'][0])) {
+            $this->processStatusUpdate($value);
+        } else {
+            Log::info('Unhandled "messages" field value', ['value' => $value]);
         }
+    }
 
+    /**
+     * Process a new incoming message from the webhook.
+     *
+     * @param  array<string, mixed>  $value
+     */
+    private function processIncomingMessage(array $value): void
+    {
         $message = $value['messages'][0];
 
         // Identify the channel and the conversation before process the message
@@ -103,6 +116,35 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
             'document' => $this->handleDocumentMessage($message),
             default => $this->handleUnsupportedMessage($message),
         };
+    }
+
+    /**
+     * Process a message status update from the webhook.
+     *
+     * @param  array<string, mixed>  $value
+     */
+    private function processStatusUpdate(array $value): void
+    {
+        $status = $value['statuses'][0];
+        $externalMessageId = $status['id'];
+        $statusString = $status['status'];
+
+        $ackStatus = match ($statusString) {
+            'sent' => 1,
+            'delivered' => 2,
+            'read' => 3,
+            default => 0,
+        };
+
+        if ($ackStatus > 0) {
+            Log::info('Processing status update from WABA webhook', [
+                'external_id' => $externalMessageId,
+                'status' => $statusString,
+            ]);
+            $this->messageService->updateStatusFromWebhook($externalMessageId, $ackStatus);
+        } else {
+            Log::warning('Unknown status update type from WABA webhook', ['status' => $status]);
+        }
     }
 
     /**

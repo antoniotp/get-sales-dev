@@ -99,6 +99,7 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
         match ($message['type']) {
             'text' => $this->handleTextMessage($message),
             'image' => $this->handleImageMessage($message),
+            'audio' => $this->handleAudioMessage($message),
             'document' => $this->handleDocumentMessage($message),
             default => $this->handleUnsupportedMessage($message),
         };
@@ -374,6 +375,73 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
 
         } catch (\Exception $e) {
             Log::error('Error processing incoming image message: '.$e->getMessage(), ['message' => $message]);
+        }
+    }
+
+    /**
+     * Handle audio message type.
+     *
+     * @param  array<string, mixed>  $message
+     */
+    private function handleAudioMessage(array $message): void
+    {
+        try {
+            $mediaId = $message['audio']['id'] ?? null;
+            $externalMessageId = $message['id'];
+
+            if (! $mediaId) {
+                Log::warning('Audio message received without media ID', ['message' => $message]);
+
+                return;
+            }
+
+            // 1. Create a pending message in the database
+            $this->messageService->createPendingMediaMessage(
+                conversation: $this->conversation,
+                externalMessageId: $externalMessageId,
+                content: '', // Audio messages don't have captions
+                type: 'incoming',
+                senderType: 'contact',
+                metadata: [
+                    'timestamp' => $message['timestamp'],
+                    'from' => $message['from'],
+                    'voice' => $message['audio']['voice'] ?? false,
+                ]
+            );
+
+            // 2. Get media info (URL and mime type) from WhatsApp API
+            $mediaInfo = $this->whatsAppService->getMediaInfo($mediaId, $this->chatbotChannel);
+
+            if (! $mediaInfo) {
+                Log::error('Could not retrieve media info for audio message', ['media_id' => $mediaId, 'message_id' => $externalMessageId]);
+
+                // TODO: Handle case where media info cannot be retrieved
+                return;
+            }
+
+            // 3. Download the actual media file
+            $fileData = $this->whatsAppService->downloadMedia($mediaInfo['url'], $this->chatbotChannel);
+
+            if (! $fileData) {
+                Log::error('Could not download media file for audio message', ['media_url' => $mediaInfo['url'], 'message_id' => $externalMessageId]);
+
+                // TODO: Handle case where media file cannot be downloaded
+                return;
+            }
+
+            // 4. Attach media to the pending message
+            $this->messageService->attachMediaToPendingMessage(
+                externalMessageId: $externalMessageId,
+                fileData: $fileData,
+                mimeType: $mediaInfo['mime_type'],
+                contentType: 'audio',
+                chatbotId: $this->chatbotChannel->chatbot->id
+            );
+
+            Log::info('Successfully processed incoming audio message', ['message_id' => $externalMessageId]);
+
+        } catch (\Exception $e) {
+            Log::error('Error processing incoming audio message: '.$e->getMessage(), ['message' => $message]);
         }
     }
 

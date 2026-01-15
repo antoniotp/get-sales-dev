@@ -11,6 +11,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class WhatsAppDeliveredWebhookTest extends TestCase
@@ -29,6 +30,8 @@ class WhatsAppDeliveredWebhookTest extends TestCase
     {
         parent::setUp();
         $this->seed(DatabaseSeeder::class);
+
+        Event::fake();
 
         $this->chatbot = Chatbot::find(1);
         $channel = Channel::where('slug', 'whatsapp')->firstOrFail();

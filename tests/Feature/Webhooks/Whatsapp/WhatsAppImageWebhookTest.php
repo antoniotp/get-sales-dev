@@ -10,6 +10,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
 use Tests\TestCase;
@@ -29,6 +30,8 @@ class WhatsAppImageWebhookTest extends TestCase
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
+
+        Event::fake();
 
         $this->chatbot = Chatbot::find(1);
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Webhooks;
+namespace Tests\Feature\Webhooks\Whatsapp;
 
 use App\Models\Channel;
 use App\Models\Chatbot;
@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class WhatsAppTextWebhookTest extends TestCase
@@ -26,6 +27,8 @@ class WhatsAppTextWebhookTest extends TestCase
         parent::setUp();
 
         $this->seed(DatabaseSeeder::class);
+
+        Event::fake();
 
         $this->chatbot = Chatbot::find(1);
 

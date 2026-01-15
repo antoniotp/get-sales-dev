@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Webhooks;
 
+use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Response;
 use App\Http\Requests\Webhooks\WhatsAppVerificationRequest;
-use App\Services\WhatsApp\WebhookHandlerService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class WhatsAppController extends Controller
 {
     public function __construct(
-        protected WebhookHandlerService $webhookHandler
+        protected WhatsAppWebhookHandlerServiceInterface $whatsAppWebhookHandler
     ) {}
 
     /**
@@ -33,16 +33,16 @@ class WhatsAppController extends Controller
     {
         $payload = $request->all();
 
-        Log::info('WhatsApp Webhook Payload:', $payload);
+        Log::info('WhatsApp Webhook Payload: '."\n".json_encode($payload));
 
         try {
-            $this->webhookHandler->process( $payload );
+            $this->whatsAppWebhookHandler->process($payload);
 
             return response()->noContent();
         } catch (\Exception $e) {
             Log::error('WhatsApp Webhook Error', [
                 'error' => $e->getMessage(),
-                'payload' => $request->all()
+                'payload' => $request->all(),
             ]);
 
             return response()->noContent(Response::HTTP_ACCEPTED);

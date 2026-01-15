@@ -194,6 +194,18 @@ class MessageService implements MessageServiceInterface
         return $message;
     }
 
+    public function findRecentOutgoingMessageWithoutExternalId(int $conversationId, string $content): ?Message
+    {
+        return Message::where('conversation_id', $conversationId)
+            ->where('type', 'outgoing')
+            ->where('sender_type', '!=', 'contact')
+            ->whereNull('external_message_id')
+            ->where('content', $content)
+            ->where('created_at', '>=', now()->subSeconds(30))
+            ->orderBy('created_at', 'desc')
+            ->first();
+    }
+
     private function normalizeMimeType(?string $mimeType): ?string
     {
         if (! $mimeType) {

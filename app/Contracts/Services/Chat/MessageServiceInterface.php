@@ -56,4 +56,14 @@ interface MessageServiceInterface
         string $externalMessageId,
         int $ackStatus
     ): ?Message;
+
+    /**
+     * Finds a recent outgoing message that matches the content and does not have an external ID yet.
+     * This is used to prevent creating duplicate messages from echo events.
+     *
+     * @param int $conversationId The ID of the conversation to search within.
+     * @param string $content The text content of the message to match.
+     * @return Message|null The found message instance, or null if not found.
+     */
+    public function findRecentOutgoingMessageWithoutExternalId(int $conversationId, string $content): ?Message;
 }

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Controllers\Webhooks;
 
+use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use App\Services\WhatsApp\WebhookHandlerService;
-use Mockery;
 use Illuminate\Support\Facades\Config;
+use Mockery;
+use Tests\TestCase;
 
 class WhatsAppControllerTest extends TestCase
 {
@@ -24,10 +24,10 @@ class WhatsAppControllerTest extends TestCase
     {
         $challenge = 'random_challenge_string';
 
-        $response = $this->get('/webhook/whatsapp?' . http_build_query([
+        $response = $this->get('/webhook/whatsapp?'.http_build_query([
             'hub_mode' => 'subscribe',
             'hub_verify_token' => 'test-token',
-            'hub_challenge' => $challenge
+            'hub_challenge' => $challenge,
         ]));
 
         $response->assertStatus(200);
@@ -36,10 +36,10 @@ class WhatsAppControllerTest extends TestCase
 
     public function test_webhook_verification_fails_with_invalid_token(): void
     {
-        $response = $this->get('/webhook/whatsapp?' . http_build_query([
+        $response = $this->get('/webhook/whatsapp?'.http_build_query([
             'hub_mode' => 'subscribe',
             'hub_verify_token' => 'wrong-token',
-            'hub_challenge' => 'challenge'
+            'hub_challenge' => 'challenge',
         ]));
 
         $response->assertStatus(403);
@@ -47,9 +47,9 @@ class WhatsAppControllerTest extends TestCase
 
     public function test_webhook_handles_valid_message_payload(): void
     {
-        $webhookHandler = Mockery::mock(WebhookHandlerService::class);
+        $webhookHandler = Mockery::mock(WhatsAppWebhookHandlerServiceInterface::class);
         $webhookHandler->shouldReceive('process')->once();
-        $this->app->instance(WebhookHandlerService::class, $webhookHandler);
+        $this->app->instance(WhatsAppWebhookHandlerServiceInterface::class, $webhookHandler);
 
         $payload = [
             'entry' => [
@@ -61,14 +61,14 @@ class WhatsAppControllerTest extends TestCase
                                     [
                                         'type' => 'text',
                                         'from' => '1234567890',
-                                        'text' => ['body' => 'Test message']
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                                        'text' => ['body' => 'Test message'],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         $response = $this->postJson('/webhook/whatsapp', $payload);
@@ -78,7 +78,7 @@ class WhatsAppControllerTest extends TestCase
     public function test_webhook_handles_invalid_payload_gracefully(): void
     {
         $response = $this->postJson('/webhook/whatsapp', [
-            'invalid' => 'payload'
+            'invalid' => 'payload',
         ]);
 
         $response->assertStatus(204);

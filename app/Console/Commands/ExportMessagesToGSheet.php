@@ -22,7 +22,7 @@ class ExportMessagesToGSheet extends Command
     {
         $chatbotId = $this->argument('chatbot_id');
         $channelId = $this->argument('channel_id');
-        $sheetId   = $this->argument('sheet_id');
+        $sheetId = $this->argument('sheet_id');
         $sheetName = $this->argument('sheet_name');
 
         $this->info('Fetching messages in batches...');
@@ -47,8 +47,9 @@ class ExportMessagesToGSheet extends Command
             ->selectRaw('MIN(m.id) as min_id, MAX(m.id) as max_id')
             ->first();
 
-        if (!$idRange || !$idRange->min_id) {
+        if (! $idRange || ! $idRange->min_id) {
             $this->warn('No messages found.');
+
             return Command::SUCCESS;
         }
 
@@ -57,6 +58,7 @@ class ExportMessagesToGSheet extends Command
 
         if ($currentFromId > $maxId) {
             $this->info('No new messages to export.');
+
             return Command::SUCCESS;
         }
 
@@ -73,7 +75,8 @@ class ExportMessagesToGSheet extends Command
                 'nombre_usuario',
                 'mensaje_usuario',
                 'respuesta_IA/agente (si responde una persona)',
-                'timestamp'
+                'timestamp',
+                'teléfono_usuario',
             ];
         }
 
@@ -97,6 +100,7 @@ class ExportMessagesToGSheet extends Command
                     'm.conversation_id',
                     'ch.name as channel_name',
                     'c.contact_name as user_name',
+                    'c.contact_phone as phone_number',
                     'm.type',
                     'm.content',
                     'm.created_at',
@@ -114,6 +118,7 @@ class ExportMessagesToGSheet extends Command
                     $row->type === 'incoming' ? $row->content : '',
                     $row->type === 'outgoing' ? $row->content : '',
                     $row->created_at,
+                    $row->phone_number ?? '',
                 ];
             }
 

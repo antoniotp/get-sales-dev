@@ -102,7 +102,8 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
             },
         });
 
-        const { setValue, reset } = form;
+        const { setValue, reset, watch } = form;
+        const appointmentAt = watch('appointment_at');
 
         // Reset form state when the modal is closed or opened
         useEffect(() => {
@@ -142,6 +143,17 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
                 }
             }
         }, [selectedChannelId, chatbotChannels]);
+
+        // update end_at when appointment_at changes
+        useEffect(() => {
+            if (appointmentAt) {
+                const startDate = new Date(appointmentAt);
+                if (!isNaN(startDate.getTime())) {
+                    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // add 1 hour
+                    setValue('end_at', toLocalISOString(endDate), { shouldValidate: true });
+                }
+            }
+        }, [appointmentAt, setValue]);
 
 
         // Debounced search for contacts
@@ -224,7 +236,7 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
                                                 <FormItem>
                                                     <FormLabel>Phone Number</FormLabel>
                                                     <FormControl>
-                                                        <PhoneInput country={defaultCountry} value={field.value} onChange={field.onChange} inputClass="!w-full" />
+                                                        <PhoneInput country={defaultCountry} value={field.value} onChange={field.onChange} inputClass="!w-full" enableLongNumbers={true} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>

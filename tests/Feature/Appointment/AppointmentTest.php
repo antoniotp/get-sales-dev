@@ -5,6 +5,7 @@ namespace Tests\Feature\Appointment;
 use App\Models\Appointment;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
+use App\Services\Util\PhoneNumberNormalizer;
 use App\Models\Contact;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -241,14 +242,17 @@ class AppointmentTest extends TestCase
         $response->assertCreated();
 
         // Assert a new contact was created
+        $normalizer = new PhoneNumberNormalizer();
+        $normalizedPhoneNumber = $normalizer->normalize($newPhoneNumber);
+
         $this->assertDatabaseHas('contacts', [
             'organization_id' => $chatbot->organization_id,
-            'phone_number' => $newPhoneNumber,
+            'phone_number' => $normalizedPhoneNumber,
             'first_name' => 'John',
             'last_name' => 'New',
         ]);
 
-        $newContact = Contact::where('phone_number', $newPhoneNumber)->first();
+        $newContact = Contact::where('phone_number', $normalizedPhoneNumber)->first();
         $this->assertNotNull($newContact);
 
         // Assert the appointment was created for the new contact

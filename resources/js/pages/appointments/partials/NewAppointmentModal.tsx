@@ -236,7 +236,7 @@ export const NewAppointmentModal = forwardRef<HTMLDivElement, Props>(
                                                 <FormItem>
                                                     <FormLabel>Phone Number</FormLabel>
                                                     <FormControl>
-                                                        <PhoneInput country={defaultCountry} value={field.value} onChange={field.onChange} inputClass="!w-full" />
+                                                        <PhoneInput country={defaultCountry} value={field.value} onChange={field.onChange} inputClass="!w-full" enableLongNumbers={true} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>

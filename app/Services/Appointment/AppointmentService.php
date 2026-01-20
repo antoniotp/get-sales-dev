@@ -3,6 +3,7 @@
 namespace App\Services\Appointment;
 
 use App\Contracts\Services\Appointment\AppointmentServiceInterface;
+use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Models\Appointment;
 use App\Models\Chatbot;
 use App\Models\Contact;
@@ -11,6 +12,8 @@ use Illuminate\Support\Carbon;
 
 class AppointmentService implements AppointmentServiceInterface
 {
+    public function __construct(private readonly PhoneNumberNormalizerInterface $normalizer) {}
+
     /**
      * Schedules a new appointment for a given chatbot.
      * Finds or creates a contact if necessary, then creates the appointment.
@@ -50,10 +53,11 @@ class AppointmentService implements AppointmentServiceInterface
 
         // Find or create contact
         if (! $contactId) {
+            $normalizedPhoneNumber = $this->normalizer->normalize($phoneNumber);
             $contact = Contact::firstOrCreate(
                 [
                     'organization_id' => $chatbot->organization_id,
-                    'phone_number' => $phoneNumber,
+                    'phone_number' => $normalizedPhoneNumber,
                 ],
                 [
                     'first_name' => $firstName,

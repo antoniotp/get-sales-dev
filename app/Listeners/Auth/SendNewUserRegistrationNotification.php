@@ -26,13 +26,19 @@ class SendNewUserRegistrationNotification implements ShouldQueue
      */
     public function handle(Registered $event): void
     {
-        $recipients = collect(config('notifications.new_user_registration.recipients'))
-            ->filter()
-            ->all();
+        // Only send the notification if the user registration also created a new organization.
+        // users registered via invitation are not yet attached to an organization.
+        $isNewOrgRegistration = $event->user->organizations()->exists();
 
-        if (! empty($recipients)) {
-            Log::debug('Sending new user registration notification to: '.implode(', ', $recipients));
-            Mail::to($recipients)->send(new NewUserRegistered($event->user));
+        if ($isNewOrgRegistration) {
+            $recipients = collect(config('notifications.new_user_registration.recipients'))
+                ->filter()
+                ->all();
+
+            if (! empty($recipients)) {
+                Log::debug('Sending new user registration notification to: '.implode(', ', $recipients));
+                Mail::to($recipients)->send(new NewUserRegistered($event->user));
+            }
         }
     }
 }

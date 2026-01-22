@@ -3,6 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Mail\Auth\NewUserRegistered;
+use App\Models\Organization;
+use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
@@ -81,5 +83,48 @@ class NewUserRegistrationNotificationTest extends TestCase
 
         // Assert no mailable was sent
         Mail::assertNothingSent();
+    }
+
+    /**
+     * Test that an email notification is NOT sent if the user accepts an invitation.
+     */
+    #[Test]
+    public function email_notification_is_not_sent_when_user_accepts_invitation(): void
+    {
+        Mail::fake();
+
+        // Set test recipients in config
+        config()->set('notifications.new_user_registration.recipients', ['test1@example.com', 'test2@example.com']);
+
+        // Create an organization and an invitation
+        $organization = Organization::find(1);
+        $invitation = $organization->invitations()->create([
+            'email' => 'invited@example.com',
+            'token' => 'test_token',
+            'role_id' => 2, // admin
+            'expires_at' => now()->addDays(1),
+            'created_by' => 1,
+        ]);
+
+        $response = $this->post('/register', [
+            'name' => 'Invited User',
+            'email' => 'invited@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+            'token' => $invitation->token, // Accept the invitation
+        ]);
+
+        $response->assertRedirect('/dashboard');
+
+        // Assert that the mailable was NOT sent
+        Mail::assertNotSent(NewUserRegistered::class);
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'invited@example.com',
+        ]);
+        $this->assertDatabaseHas('organization_users', [
+            'user_id' => User::where('email', 'invited@example.com')->first()->id,
+            'organization_id' => $organization->id,
+        ]);
     }
 }

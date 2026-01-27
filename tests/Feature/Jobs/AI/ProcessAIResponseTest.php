@@ -68,6 +68,44 @@ class ProcessAIResponseTest extends TestCase
         $job->handle($aiServiceMock, $messageServiceMock, $phoneServiceMock);
     }
 
+    #[Test]
+    public function job_sends_message_on_ai_service_success(): void
+    {
+        // Arrange
+        $user = User::find(1);
+        $message = $this->createDummyMessage($user->organizationUsers->first()->organization_id);
+        $this->assertNotNull($message, 'No text message found. Check DatabaseSeeder.');
+
+        $aiResponse = 'This is a successful AI response generated.';
+
+        // Mock the services for this specific test
+        $aiServiceMock = $this->mock(AIServiceInterface::class);
+        $messageServiceMock = $this->mock(MessageServiceInterface::class);
+        $phoneServiceMock = $this->mock(PhoneServiceInterface::class);
+
+        $aiServiceMock->shouldReceive('generateResponse')
+            ->once()
+            ->andReturn($aiResponse);
+
+        $phoneServiceMock->shouldReceive('getCountryFromPhoneNumber')->andReturn('US');
+
+        $messageServiceMock->shouldReceive('createAndSendOutgoingMessage')
+            ->once()
+            ->withArgs(function ($conversation, $messageData) use ($message, $aiResponse) {
+                return $conversation->id === $message->conversation->id &&
+                       $messageData['content'] === $aiResponse &&
+                       $messageData['content_type'] === 'text' &&
+                       $messageData['sender_type'] === 'ai';
+            });
+
+        // Act
+        $job = new ProcessAIResponse($message);
+        $job->handle($aiServiceMock, $messageServiceMock, $phoneServiceMock);
+
+        // Assert
+        Log::shouldNotHaveReceived('error'); // Ensure no errors were logged
+    }
+
     /**
      * Helper to create a valid Message object for testing.
      */

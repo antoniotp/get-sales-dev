@@ -13,8 +13,8 @@ class ChatGPTService implements AIServiceInterface
         private readonly string $model = 'gpt-5-nano'
     ) {
         $this->apiKey = config('services.openai.api_key');
-        Log::info('ChatGPT Service Initialized');
-        Log::info('Model: ' . $this->model);
+        Log::debug('ChatGPT Service Initialized');
+        Log::debug('Model: '.$this->model);
     }
 
     public function generateResponse(string $prompt, array $history): string
@@ -23,9 +23,9 @@ class ChatGPTService implements AIServiceInterface
             $messages = $this->formatMessages($prompt, $history);
 
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Authorization' => 'Bearer '.$this->apiKey,
                 'Content-Type' => 'application/json',
-            ])->post('https://api.openai.com/v1/chat/completions', [
+            ])->timeout(60)->post('https://api.openai.com/v1/chat/completions', [
                 'model' => $this->model,
                 'messages' => $messages,
             ]);
@@ -33,34 +33,34 @@ class ChatGPTService implements AIServiceInterface
             if ($response->failed()) {
                 Log::error('ChatGPT API error', [
                     'status' => $response->status(),
-                    'body' => $response->json()
+                    'body' => $response->json(),
                 ]);
-                return "I'm sorry, I couldn't generate a response right now.";
+                $response->throw();
             }
 
             return $response->json('choices.0.message.content');
 
         } catch (\Exception $e) {
             Log::error('ChatGPT Service error', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-            return "I'm sorry, an error occurred while processing your message.";
+            throw $e;
         }
     }
 
     /**
      * Format messages for the ChatGPT API
      *
-     * @param string $prompt
-     * @param array<array{role: string, content: string}> $history
+     * @param  array<array{role: string, content: string}>  $history
      * @return array<array{role: string, content: string}>
      */
     private function formatMessages(string $prompt, array $history): array
     {
         $messages = [
-            ['role' => 'system', 'content' => $prompt]
+            ['role' => 'system', 'content' => $prompt],
         ];
         $history = array_reverse($history);
+
         return array_merge($messages, $history);
     }
 }

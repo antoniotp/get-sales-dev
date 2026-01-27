@@ -12,6 +12,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ProcessAIResponse implements ShouldQueue
 {
@@ -91,10 +92,21 @@ class ProcessAIResponse implements ShouldQueue
 
             // If we've tried 3 times and still failing, we should notify someone
             if ($this->attempts() === 3) {
-                // Here you could implement a notification to administrators
-                Log::critical('AI response processing failed after 3 attempts', [
+                $recipients = array_filter(config('notifications.ai_processing_failure.recipients'));
+
+                $subject = 'CRITICAL: AI Response Processing Failed for Conversation '.$this->message->conversation_id;
+                $body = "AI response processing for message ID {$this->message->id} and conversation ID {$this->message->conversation_id} has failed after {$this->attempts()} attempts.\n\n";
+                $body .= "Error: {$e->getMessage()}\n";
+                $body .= 'Please investigate the logs for more details.';
+
+                Mail::raw($body, function ($message) use ($recipients, $subject) {
+                    $message->to($recipients)->subject($subject);
+                });
+
+                Log::critical('AI response processing failed after 3 attempts and notification sent', [
                     'message_id' => $this->message->id,
                     'conversation_id' => $this->message->conversation_id,
+                    'recipients' => $recipients,
                 ]);
             }
 

@@ -6,6 +6,7 @@ use App\Contracts\Services\AI\AIServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Jobs\ProcessAIResponse;
+use App\Mail\Notification\DeveloperNotification;
 use App\Models\Chatbot;
 use App\Models\Contact;
 use App\Models\ContactChannel;
@@ -17,6 +18,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -104,6 +106,37 @@ class ProcessAIResponseTest extends TestCase
 
         // Assert
         Log::shouldNotHaveReceived('error'); // Ensure no errors were logged
+    }
+
+    #[Test]
+    public function job_sends_notification_on_permanent_failure(): void
+    {
+        // Arrange
+        Mail::fake();
+        $user = User::find(1);
+        $message = $this->createDummyMessage($user->organizationUsers->first()->organization_id);
+        $this->assertNotNull($message, 'No text message found. Check DatabaseSeeder.');
+
+        $exception = new RequestException(new Response(new \GuzzleHttp\Psr7\Response(500)));
+        $recipients = array_filter(config('notifications.ai_processing_failure.recipients'));
+
+        if (empty($recipients)) {
+            $this->fail('No developer notification recipients configured for the test.');
+        }
+
+        // Act
+        $job = new ProcessAIResponse($message);
+        $job->failed($exception);
+
+        // Assert
+        Mail::assertSent(DeveloperNotification::class, function ($mail) use ($recipients) {
+            $emailRecipients = collect($mail->to)->map(fn ($address) => $address['address'])->all();
+            sort($recipients);
+            sort($emailRecipients);
+            $recipientsMatch = $recipients === $emailRecipients;
+
+            return $recipientsMatch;
+        });
     }
 
     /**

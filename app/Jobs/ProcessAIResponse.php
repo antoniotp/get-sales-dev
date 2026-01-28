@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Contracts\Services\AI\AIServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Util\PhoneServiceInterface;
+use App\Mail\Notification\DeveloperNotification;
 use App\Models\Message;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -12,6 +13,7 @@ use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ProcessAIResponse implements ShouldQueue
 {
@@ -89,17 +91,37 @@ class ProcessAIResponse implements ShouldQueue
                 'attempt' => $this->attempts(),
             ]);
 
-            // If we've tried 3 times and still failing, we should notify someone
-            if ($this->attempts() === 3) {
-                // Here you could implement a notification to administrators
-                Log::critical('AI response processing failed after 3 attempts', [
-                    'message_id' => $this->message->id,
-                    'conversation_id' => $this->message->conversation_id,
-                ]);
-            }
-
             throw $e; // This will trigger a retry if attempts are remaining
         }
+    }
+
+    /**
+     * Handle a job failure.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        $recipients = array_filter(config('notifications.ai_processing_failure.recipients'));
+        if (empty($recipients)) {
+            Log::critical('AI response processing permanently failed, but no recipients configured.', [
+                'message_id' => $this->message->id,
+                'conversation_id' => $this->message->conversation_id,
+            ]);
+
+            return;
+        }
+
+        $subject = 'CRITICAL: AI Response Processing Failed for Conversation '.$this->message->conversation_id;
+        $body = "AI response processing for message ID {$this->message->id} and conversation ID {$this->message->conversation_id} has failed after all attempts.\n\n";
+        $body .= "Error: {$exception->getMessage()}\n";
+        $body .= 'Please investigate the logs for more details.';
+
+        Mail::to($recipients)->send(new DeveloperNotification($subject, $body));
+
+        Log::critical('AI response processing permanently failed and notification sent', [
+            'message_id' => $this->message->id,
+            'conversation_id' => $this->message->conversation_id,
+            'recipients' => $recipients,
+        ]);
     }
 
     /**

@@ -34,6 +34,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
 import {useEffect, useMemo, useState} from 'react';
+import MessagePreview from '@/components/message_templates/MessagePreview';
 
 interface Category {
     id: number;
@@ -250,7 +251,7 @@ export default function TemplateForm({ categories, template }: Props) {
             <Head title={`${template ? 'Edit' : 'Create'} Message Template`} />
             <MessageTemplateLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
-                    <div className="w-full overflow-auto pb-12">
+                    <div className="w-full lg:w-1/2 overflow-auto pb-12 pr-4">
                         <h2 className="text-2xl font-bold">{template ? 'Update Template' : 'Create Template'}</h2>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -280,8 +281,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                         />
 
                                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                            {' '}
-                                            {/* Use md:grid-cols-2 for responsiveness */}
                                             <FormField
                                                 control={form.control}
                                                 name="category_id"
@@ -292,8 +291,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                             onValueChange={(value) => field.onChange(Number(value))}
                                                             defaultValue={field.value ? field.value.toString() : ''}
                                                         >
-                                                            {' '}
-                                                            {/* Ensure defaultValue handles 0 or null */}
                                                             <FormControl>
                                                                 <SelectTrigger>
                                                                     <SelectValue placeholder="Select a category" />
@@ -405,7 +402,8 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         <FormDescription>
                                                             {form.watch('header_type') === 'text'
                                                                 ? 'Enter the text for your header. Variables are not allowed in text headers.'
-                                                                : 'Provide the public URL for your image (JPG/PNG), video (MP4), or document (PDF).'}
+                                                                : 'Provide the public URL for your image (JPG/PNG), video (MP4), or document (PDF).'
+                                                            }
                                                         </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
@@ -545,6 +543,10 @@ export default function TemplateForm({ categories, template }: Props) {
                                 </div>
                             </form>
                         </Form>
+                    </div>
+                    <div className="hidden lg:block w-full lg:w-1/2 overflow-auto pb-12 pl-4">
+                        <h2 className="text-2xl font-bold">Message Preview</h2>
+                        <MessagePreview templateData={form.watch()} />
                     </div>
                 </div>
             </MessageTemplateLayout>

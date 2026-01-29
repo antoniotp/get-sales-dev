@@ -10,33 +10,34 @@ use Inertia\Inertia;
 
 class ChatbotSwitcherController extends Controller
 {
-    public function __construct( private Organization $organization)
-    {
-    }
+    public function __construct(private Organization $organization) {}
 
-    public function list( ChatbotServiceInterface $chatbotService )
+    public function list(ChatbotServiceInterface $chatbotService)
     {
-        $chatbots = $chatbotService->getChatbotsByOrganization( $this->organization, 1, true );
-        return response()->json( [
+        $chatbots = $chatbotService->getChatbotsByOrganization($this->organization, 1, true);
+
+        return response()->json([
             'success' => true,
-            'switcherChatbots' => $chatbots
-        ] );
+            'switcherChatbots' => $chatbots,
+        ]);
     }
 
-    public function switch( ChatbotServiceInterface $chatbotService, Request $request )
+    public function switch(ChatbotServiceInterface $chatbotService, Request $request)
     {
         $request->validate([
             'new_chatbot_id' => ['required', 'exists:chatbots,id'],
         ]);
 
-        $success = $chatbotService->canSwitchToChatbot( $request->new_chatbot_id, $this->organization, auth()->user() );
+        $success = $chatbotService->canSwitchToChatbot($request->new_chatbot_id, $this->organization, auth()->user());
 
-        if (!$success) {
+        if (! $success) {
             return response()->json([
-                'message' => 'You do not have access to this chatbot.'
+                'message' => 'You do not have access to this chatbot.',
             ], 403);
         }
 
-        return Inertia::location(route('chats', [ 'chatbot' => $request->new_chatbot_id ]));
+        session(['chatbot_id' => $request->new_chatbot_id]);
+
+        return Inertia::location(route('chats', ['chatbot' => $request->new_chatbot_id]));
     }
 }

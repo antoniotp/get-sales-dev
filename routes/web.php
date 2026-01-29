@@ -68,8 +68,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/chats/{conversation}/mode', [ChatController::class, 'updateConversationMode'])->name('chats.mode.update');
     Route::put('/chats/{conversation}/assignment', [ChatAssignmentController::class, 'update'])->name('chats.assignment.update');
     Route::get('/chatbots/{chatbot}/message_templates', [MessageTemplateController::class, 'index'])->name('message-templates.index');
-    Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->name('message-templates.create');
-    Route::post('/message_templates', [MessageTemplateController::class, 'store'])->name('message-templates.store');
+    Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->middleware('ensure.chatbot')->name('message-templates.create');
+    Route::post('/message_templates', [MessageTemplateController::class, 'store'])->middleware('ensure.chatbot')->name('message-templates.store');
     Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');

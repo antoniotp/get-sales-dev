@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureChatbotIsSelected;
 use App\Http\Middleware\EnsureCurrentOrganization;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -16,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'ensure.chatbot' => EnsureChatbotIsSelected::class,
+        ]);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [

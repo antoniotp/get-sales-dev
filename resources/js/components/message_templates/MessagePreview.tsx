@@ -68,8 +68,16 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
     const renderBody = () => {
         let processedBody = body_content;
         variables_schema?.forEach(variable => {
-            const regex = new RegExp(variable.placeholder.replace(/\{\{/g, '\\{\\{').replace(/\}\}/g, '\\}\\}'), 'g');
-            processedBody = processedBody.replace(regex, `<span class="bg-yellow-200 px-1 rounded text-gray-800">${variable.example || variable.placeholder}</span>`);
+            const varNumberMatch = variable.placeholder.match(/\{\{(\d+)}}/);
+            const varNumber = varNumberMatch ? varNumberMatch[1] : null;
+
+            if (varNumber) {
+                const regex = new RegExp(`\\{\\{${varNumber}\\}}`, 'g');
+                processedBody = processedBody.replace(regex, `${variable.example || variable.placeholder}`);
+            } else {
+                const regex = new RegExp(variable.placeholder.replace(/\{\{/g, '\\{\\{').replace(/}}/g, '\\}\\}'), 'g');
+                processedBody = processedBody.replace(regex, `${variable.example || variable.placeholder}`);
+            }
         });
         return (
             <LinkifyText

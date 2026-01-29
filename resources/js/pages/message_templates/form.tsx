@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
-import type { BreadcrumbItem } from '@/types'
+import { BreadcrumbItem, PageProps } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-import { Head, useForm as useInertiaForm } from '@inertiajs/react';
+import { Head, useForm as useInertiaForm, usePage } from '@inertiajs/react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -33,18 +33,7 @@ import {
 } from '@/components/ui/radio-group'
 import { Separator } from '@/components/ui/separator'
 import { Label } from '@/components/ui/label'
-import {useEffect, useState} from 'react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Message templates management',
-        href: route('message-templates.index'),
-    },
-    {
-        title: 'Create template',
-        href: route( 'message-templates.create' ),
-    },
-];
+import {useEffect, useMemo, useState} from 'react';
 
 interface Category {
     id: number;
@@ -96,6 +85,19 @@ const formSchema = z.object({
 type TemplateFormValues = z.infer<typeof formSchema>;
 
 export default function TemplateForm({ categories, template }: Props) {
+    const { props } = usePage<PageProps>();
+
+    const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
+        {
+            title: 'Message templates management',
+            href: route('message-templates.index', props.chatbot.id),
+        },
+        {
+            title: 'Create template',
+            href: route('message-templates.create'),
+        },
+    ], [props.chatbot]);
+
     const {
         data: inertiaData,
         setData: setInertiaData,

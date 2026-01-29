@@ -7,37 +7,29 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { FormEventHandler } from 'react';
-import { PageProps } from '@/types';
+import { PageProps as GlobalPageProps } from '@/types';
 
-const timezones = {
-    'America': [
-        'America/New_York',
-        'America/Chicago',
-        'America/Denver',
-        'America/Los_Angeles',
-        'America/Sao_Paulo',
-        'America/Buenos_Aires',
-    ],
-    'Mexico': [
-        'America/Mexico_City',
-        'America/Cancun',
-        'America/Tijuana',
-    ],
-    'Europe': [
-        'Europe/London',
-        'Europe/Paris',
-        'Europe/Berlin',
-        'Europe/Madrid',
-        'Europe/Rome',
-        'Europe/Moscow',
-    ],
-};
+interface Timezone {
+    label: string;
+    value: string;
+    continent: string;
+    offset: number;
+}
+
+interface Timezones {
+    [continent: string]: Timezone[];
+}
+
+interface PageProps extends GlobalPageProps{
+    timezones: Timezones;
+}
 
 const locales = ['EN', 'ES', 'FR', 'IT', 'PT'];
 
 export default function OrganizationForm() {
     const {props} = usePage<PageProps>();
     const organization = props.organization.current;
+    const timezones: Timezones = props.timezones;
     const isEditMode = organization !== null;
 
     const { data, setData, post, put, errors, processing } = useForm({
@@ -117,7 +109,7 @@ export default function OrganizationForm() {
                                                     <div key={group}>
                                                         <p className="text-xs text-muted-foreground px-2 py-1.5 font-semibold">{group}</p>
                                                         {zones.map((zone) => (
-                                                            <SelectItem key={zone} value={zone}>{zone}</SelectItem>
+                                                            <SelectItem key={zone.value} value={zone.value}>{zone.label}</SelectItem>
                                                         ))}
                                                     </div>
                                                 ))}

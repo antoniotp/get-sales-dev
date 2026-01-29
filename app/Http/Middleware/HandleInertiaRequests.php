@@ -69,6 +69,7 @@ class HandleInertiaRequests extends Middleware
 
             if ($chatbotFromSession) {
                 $chatbot = $chatbotFromSession;
+                $request->route()->setParameter('chatbot', $chatbot);
             } else {
                 // The chatbot in the session is invalid or inaccessible, so clear it
                 session()->forget('chatbot_id');

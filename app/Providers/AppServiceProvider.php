@@ -14,6 +14,7 @@ use App\Contracts\Services\Invitation\InvitationServiceInterface;
 use App\Contracts\Services\Notification\PushSubscriptionServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\PublicForm\PublicContactFormServiceInterface;
+use App\Contracts\Services\System\TimezoneServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
@@ -33,6 +34,7 @@ use App\Services\Invitation\InvitationService;
 use App\Services\Notification\PushSubscriptionService;
 use App\Services\Organization\OrganizationService;
 use App\Services\PublicForm\PublicContactFormService;
+use App\Services\System\TimezoneService;
 use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\Util\PhoneService;
 use App\Services\WhatsApp\FacebookService;
@@ -88,6 +90,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PublicContactFormServiceInterface::class, PublicContactFormService::class);
         $this->app->bind(ContactServiceInterface::class, ContactService::class);
         $this->app->bind(PushSubscriptionServiceInterface::class, PushSubscriptionService::class);
+        $this->app->bind(TimezoneServiceInterface::class, TimezoneService::class);
     }
 
     /**

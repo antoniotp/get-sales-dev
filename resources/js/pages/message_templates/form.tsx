@@ -256,11 +256,7 @@ export default function TemplateForm({ categories, template }: Props) {
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                                 {/* Basic Information */}
-                                <Card className="p-4">
-                                    <CardHeader>
-                                        <CardTitle>Basic Information</CardTitle>
-                                        <CardDescription>Define the core properties of your message template.</CardDescription>
-                                    </CardHeader>
+                                <Card className="py-4">
                                     <CardContent className="space-y-4">
                                         <FormField
                                             control={form.control}
@@ -272,8 +268,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         <Input placeholder="my_awesome_template" {...field} />
                                                     </FormControl>
                                                     <FormDescription>
-                                                        A unique name for your template (e.g., `account_update`, `order_confirmation`). Use lowercase
-                                                        letters, numbers, and underscores.
+                                                        Use lowercase letters, numbers, and underscores.
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
@@ -304,9 +299,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
-                                                        <FormDescription>
-                                                            Categorize your template (e.g., Utility, Marketing, Authentication).
-                                                        </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -330,7 +322,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                                 {/* Add more languages as needed based on Meta's supported locales */}
                                                             </SelectContent>
                                                         </Select>
-                                                        <FormDescription>The language of your template content.</FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -342,7 +333,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                 <Separator />
 
                                 {/* Content Section */}
-                                <Card className="p-4">
+                                <Card className="py-4">
                                     <CardHeader>
                                         <CardTitle>Template Content</CardTitle>
                                         <CardDescription>Craft the message that will be sent to your users.</CardDescription>
@@ -399,12 +390,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                                 {...field}
                                                             />
                                                         </FormControl>
-                                                        <FormDescription>
-                                                            {form.watch('header_type') === 'text'
-                                                                ? 'Enter the text for your header. Variables are not allowed in text headers.'
-                                                                : 'Provide the public URL for your image (JPG/PNG), video (MP4), or document (PDF).'
-                                                            }
-                                                        </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -426,11 +411,6 @@ export default function TemplateForm({ categories, template }: Props) {
                                                             onBlur={(e) => generateInputsForPlaceholders(e.target.value)}
                                                         />
                                                     </FormControl>
-                                                    <FormDescription>
-                                                        {
-                                                            'This is the main content of your message. Use `{{1}}`, `{{2}}`, etc., for dynamic content variables.'
-                                                        }
-                                                    </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -466,11 +446,8 @@ export default function TemplateForm({ categories, template }: Props) {
                                                 <FormItem>
                                                     <FormLabel>Footer Content (Optional)</FormLabel>
                                                     <FormControl>
-                                                        <Input placeholder="e.g., Regards, Your Team (max 60 characters)" {...field} />
+                                                        <Input placeholder="e.g., Regards, Your Team (max 60 characters, no variables)" {...field} />
                                                     </FormControl>
-                                                    <FormDescription>
-                                                        Optional footer text for your message. Cannot contain variables.
-                                                    </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
@@ -483,7 +460,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                 {/* Advanced Configuration (Buttons and Variables) */}
                                 <Card className="p-4">
                                     <CardHeader>
-                                        <CardTitle>Advanced Configuration</CardTitle>
+                                        <CardTitle>Advanced Configuration (Optional)</CardTitle>
                                         <CardDescription>Configure interactive buttons and define your template variables.</CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">

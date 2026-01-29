@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -19,9 +19,10 @@ class HandleInertiaRequests extends Middleware
      */
     protected $rootView = 'app';
 
-    public function __construct( private OrganizationServiceInterface $organizationService)
-    {
-    }
+    public function __construct(
+        private readonly OrganizationServiceInterface $organizationService,
+        private readonly ChatbotServiceInterface $chatbotService,
+    ) {}
 
     /**
      * Determines the current asset version.
@@ -46,8 +47,8 @@ class HandleInertiaRequests extends Middleware
         $currentOrganization = null;
         $userRoleLevel = null;
 
-        if ( $user ) {
-            $currentOrganization = $this->organizationService->getCurrentOrganization( $request, $user);
+        if ($user) {
+            $currentOrganization = $this->organizationService->getCurrentOrganization($request, $user);
             if ($currentOrganization) {
                 $role = $user->getRoleInOrganization($currentOrganization);
                 if ($role) {
@@ -57,6 +58,23 @@ class HandleInertiaRequests extends Middleware
         }
 
         $chatbot = $request->route('chatbot');
+
+        // If a chatbot is present in the URL, make sure its ID is stored in the session
+        if ($chatbot && $user && session('chatbot_id') != $chatbot->id) {
+            session(['chatbot_id' => $chatbot->id]);
+        }
+
+        if (! $chatbot && $user && session()->has('chatbot_id')) {
+            $chatbotFromSession = $this->chatbotService->findForUser(session('chatbot_id'), $user);
+
+            if ($chatbotFromSession) {
+                $chatbot = $chatbotFromSession;
+            } else {
+                // The chatbot in the session is invalid or inaccessible, so clear it
+                session()->forget('chatbot_id');
+            }
+        }
+
         $data = [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -75,23 +93,23 @@ class HandleInertiaRequests extends Middleware
             ] : null,
             'chatbot' => $chatbot,
         ];
-        $this->addFlashMessagesToData( $data );
+        $this->addFlashMessagesToData($data);
 
         return $data;
     }
 
-    private function addFlashMessagesToData( array &$data ): void
+    private function addFlashMessagesToData(array &$data): void
     {
-        if( session('success') ) {
+        if (session('success')) {
             $data['flash']['success'] = session('success');
         }
-        if( session('error') ) {
+        if (session('error')) {
             $data['flash']['error'] = session('error');
         }
-        if( session('warning') ) {
+        if (session('warning')) {
             $data['flash']['warning'] = session('warning');
         }
-        if( session('info') ) {
+        if (session('info')) {
             $data['flash']['info'] = session('info');
         }
     }

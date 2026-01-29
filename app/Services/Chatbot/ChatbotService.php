@@ -11,16 +11,15 @@ use App\Models\User;
 
 class ChatbotService implements ChatbotServiceInterface
 {
-
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getChatbotsByOrganization( Organization $organization, ?int $status = null, bool $summary = false ): array
+    public function getChatbotsByOrganization(Organization $organization, ?int $status = null, bool $summary = false): array
     {
         $query = $organization->chatbots();
 
         // Filter by status if provided
-        if ( $status ) {
+        if ($status) {
             $query->where('status', $status);
         }
 
@@ -33,25 +32,38 @@ class ChatbotService implements ChatbotServiceInterface
 
         // If summary, map to the summary DTO, otherwise use the full DTO
         if ($summary) {
-            return $chatbots->map(fn(Chatbot $chatbot) => ChatbotSummaryData::fromChatbot($chatbot)->toArray())->toArray();
+            return $chatbots->map(fn (Chatbot $chatbot) => ChatbotSummaryData::fromChatbot($chatbot)->toArray())->toArray();
         }
 
-        return $chatbots->map(fn(Chatbot $chatbot) => ChatbotData::fromChatbot($chatbot, true)->toArray())->toArray();
+        return $chatbots->map(fn (Chatbot $chatbot) => ChatbotData::fromChatbot($chatbot, true)->toArray())->toArray();
     }
 
-    public function canSwitchToChatbot( int $chatbot_id, Organization $organization, User $user ): bool
+    public function canSwitchToChatbot(int $chatbot_id, Organization $organization, User $user): bool
     {
         $chatbot = Chatbot::active()->find($chatbot_id);
 
-        if ( !$chatbot ) {
+        if (! $chatbot) {
             return false;
         }
 
-        if ( !$organization->chatbots()->where('chatbots.id', $chatbot_id)->exists() ) {
+        if (! $organization->chatbots()->where('chatbots.id', $chatbot_id)->exists()) {
             return false;
         }
 
         return true;
 
+    }
+
+    public function findForUser(int $chatbotId, User $user): ?Chatbot
+    {
+        $organization = $user->getCurrentOrganization();
+        if (! $organization) {
+            return null;
+        }
+
+        return $organization->chatbots()
+            ->where('chatbots.id', $chatbotId)
+            ->active()
+            ->first();
     }
 }

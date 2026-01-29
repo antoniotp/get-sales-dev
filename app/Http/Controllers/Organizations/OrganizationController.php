@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Organizations;
 
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
+use App\Contracts\Services\System\TimezoneServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\StoreOrganizationRequest;
 use App\Http\Requests\Organizations\UpdateOrganizationRequest;
 use App\Models\Organization;
 use App\Models\Role;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -46,33 +46,38 @@ class OrganizationController extends Controller
             'joined_at' => now(),
         ]);
 
-        $organizationService->setCurrentOrganization( $request, Auth::user(), $organization->id );
+        $organizationService->setCurrentOrganization($request, Auth::user(), $organization->id);
 
         return redirect()->route('chatbots.index')->with('success', 'Organization created successfully.');
     }
 
-    public function edit( OrganizationServiceInterface $organizationService, Request $request): Response
-    {
-        //always edits the current organization defined in the middleware HandlerInertiaRequests
-        return Inertia::render( 'organization/form', [
-            //'organization.current' is defined in HandlerInertiaRequests, and it is used to populate the form
+    public function edit(
+        TimezoneServiceInterface $timezoneService
+    ): Response {
+        $timezones = $timezoneService->getAllFormatted();
+
+        // always edits the current organization defined in the middleware HandlerInertiaRequests
+        return Inertia::render('organization/form', [
+            // 'organization.current' is defined in HandlerInertiaRequests, and it is used to populate the form
+            'timezones' => $timezones,
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
-            ]
-        ] );
+            ],
+        ]);
     }
 
-    public function update( UpdateOrganizationRequest $request, Organization $organization ): RedirectResponse
+    public function update(UpdateOrganizationRequest $request, Organization $organization): RedirectResponse
     {
         $validated = $request->validated();
         // update slug if the name was changed
-        if ( isset( $validated['name'] ) ) {
-            $validated['slug'] = Str::slug( $validated['name'] );
+        if (isset($validated['name'])) {
+            $validated['slug'] = Str::slug($validated['name']);
         }
-        $organization->update( $validated );
+        $organization->update($validated);
+
         return redirect()
-            ->route( 'organizations.edit' )
-            ->with( 'success', 'Organization updated successfully.' );
+            ->route('organizations.edit')
+            ->with('success', 'Organization updated successfully.');
     }
 }

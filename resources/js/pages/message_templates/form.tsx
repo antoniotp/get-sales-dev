@@ -5,54 +5,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Head, useForm as useInertiaForm, usePage } from '@inertiajs/react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, ControllerRenderProps } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useEffect, useMemo, ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo } from 'react';
 import { File, Image as ImageIcon, Pilcrow, Video } from "lucide-react";
 
-// --- Type Definitions ---
-interface Category {
-    id: number;
-    name: string;
-}
-
-type HeaderType = 'none' | 'text' | 'image' | 'video' | 'document';
-
-interface ButtonConfig {
-    type: 'reply' | 'url' | 'call';
-    text: string;
-    url?: string;
-    phone_number?: string;
-}
-
-interface VariableSchema {
-    placeholder: string;
-    example?: string;
-}
-
-export interface Template {
-    id?: number;
-    name: string;
-    category_id: number;
-    language: string;
-    header_type: HeaderType;
-    header_content?: string;
-    body_content: string;
-    footer_content?: string;
-    button_config?: ButtonConfig[] | null;
-    variables_schema: VariableSchema[] | null;
-}
-
-interface Props {
-    categories: Category[];
-    template: Template | null;
-}
+import {
+    TemplateFormPageProps,
+} from '@/types/message-template.d';
+import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
 
 // --- Zod Schemas ---
 const variableSchemaItem = z.object({
@@ -79,31 +45,10 @@ const formSchema = z.object({
     variables_schema: z.array(variableSchemaItem).nullable(),
 });
 
-type TemplateFormValues = z.infer<typeof formSchema>;
-
-// --- Helper Components ---
-interface HeaderTypeButtonProps {
-    field: ControllerRenderProps<TemplateFormValues, 'header_type'>;
-    value: HeaderType;
-    icon: ReactNode;
-    label: string;
-    currentType: HeaderType;
-}
-
-const HeaderTypeButton = ({ field, value, icon, label, currentType }: HeaderTypeButtonProps) => (
-    <Button
-        type="button"
-        variant="outline"
-        className={cn("flex items-center gap-2", currentType === value && "ring-2 ring-primary")}
-        onClick={() => field.onChange(value)}
-    >
-        {icon}
-        <span>{label}</span>
-    </Button>
-);
+export type TemplateFormValues = z.infer<typeof formSchema>;
 
 // --- Main Component ---
-export default function TemplateForm({ categories, template }: Props) {
+export default function TemplateForm({ categories, template }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [

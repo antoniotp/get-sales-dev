@@ -19,6 +19,7 @@ import {
     TemplateFormPageProps,
 } from '@/types/message-template.d';
 import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
+import { generateSlug } from '@/lib/utils';
 
 // --- Zod Schemas ---
 const variableSchemaItem = z.object({
@@ -34,6 +35,7 @@ const buttonConfigItem = z.object({
 });
 
 const formSchema = z.object({
+    display_name: z.string().min(1, 'Display name is required'),
     name: z.string().min(1, 'Template name is required'),
     category_id: z.number({ required_error: 'Category is required' }).min(1, 'Category is required'),
     language: z.string().min(1, 'Language is required'),
@@ -60,11 +62,13 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
         template
             ? {
                 ...template,
+                display_name: template.display_name || template.name,
                 header_content: template.header_content || '',
                 footer_content: template.footer_content || '',
                 button_config: template.button_config || null,
             }
             : {
+                display_name: '',
                 name: '',
                 category_id: 0,
                 language: 'es',
@@ -89,6 +93,16 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
         });
         return () => subscription.unsubscribe();
     }, [form, setInertiaData]);
+
+    useEffect(() => {
+        const subscription = form.watch((value, { name: fieldName }) => {
+            if (fieldName === 'display_name' && value.display_name) {
+                const slug = generateSlug(value.display_name);
+                form.setValue('name', slug, { shouldValidate: true });
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [form]);
 
     const onSubmit = () => {
         if (template?.id) {
@@ -122,11 +136,11 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                         <div className="md:col-span-1 space-y-6">
                                             <FormField
                                                 control={form.control}
-                                                name="name"
+                                                name="display_name"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Template Name</FormLabel>
-                                                        <FormControl><Input placeholder="template_name" {...field} /></FormControl>
+                                                        <FormLabel>Display Name</FormLabel>
+                                                        <FormControl><Input placeholder="My Template Name" {...field} /></FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -173,7 +187,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                         <div className="md:col-span-2 space-y-6">
                                             <div className="flex justify-between items-center">
                                                 <h3 className="text-lg font-medium">
-                                                    {form.watch('name') || 'template_name'} • {form.watch('language')}
+                                                    {form.watch('display_name') || 'Template Name'} • {form.watch('language')}
                                                 </h3>
                                                 <Button type="submit" disabled={processing}>
                                                     {processing ? 'Saving...' : 'Send To Review'}

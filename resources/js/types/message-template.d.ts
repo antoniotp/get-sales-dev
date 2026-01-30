@@ -24,6 +24,7 @@ export interface VariableSchema {
 
 export interface Template {
     id?: number;
+    display_name?: string;
     name: string;
     category_id: number;
     language: string;

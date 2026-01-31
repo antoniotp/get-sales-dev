@@ -181,7 +181,20 @@
       "toast": {
         "title": "Message sent",
         "description": "We will contact you soon."
-      }
+      },
+      "success": {
+        "title": "Message sent",
+        "description": "Thank you for contacting us. We will get back to you shortly."
+      },
+      "error": {
+        "title": "Message not sent",
+        "description": "Something went wrong while sending your message. Please try again."
+      },
+      "rate_limit": {
+        "title": "Too many attempts",
+        "description": "You have sent too many messages in a short time. Please try again later."
+      },
+      "sending": "Sending message..."
     }
   }
 }

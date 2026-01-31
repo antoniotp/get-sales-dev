@@ -18,6 +18,7 @@ use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\Organizations\OrganizationMemberController;
 use App\Http\Controllers\Organizations\OrganizationSwitchController;
+use App\Http\Controllers\Public\ContactFormController;
 use App\Http\Controllers\Public\PublicFormController;
 use App\Http\Controllers\Webhooks\TextMeBotWebhookController;
 use App\Http\Controllers\Webhooks\WhatsAppController;
@@ -31,6 +32,9 @@ Route::get('/', function () {
 Route::get('/policies', function () {
     return Inertia::render('policies');
 })->name('policies');
+Route::post('/contact', [ContactFormController::class, 'store'])
+    ->name('public.contact.store')
+    ->middleware('throttle:public-form');
 Route::get('/webhook/whatsapp', [WhatsAppController::class, 'verify'])->name('webhook.whatsapp_business.verify');
 Route::post('/webhook/whatsapp', [WhatsAppController::class, 'handle'])->name('webhook.whatsapp_business');
 Route::post('/webhook/whatsapp_web', [WhatsAppWebController::class, 'handle'])->name('webhook.whatsapp_web');

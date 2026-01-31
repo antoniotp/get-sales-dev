@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useEffect, useMemo } from 'react';
-import { File, Image as ImageIcon, Pilcrow, Video } from "lucide-react";
+import { File, Image as ImageIcon, Pilcrow, Trash2, Video } from 'lucide-react';
 
 import {
     TemplateFormPageProps,
@@ -140,7 +140,9 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Display Name</FormLabel>
-                                                        <FormControl><Input placeholder="My Template Name" {...field} /></FormControl>
+                                                        <FormControl>
+                                                            <Input placeholder="My Template Name" {...field} />
+                                                        </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -151,11 +153,20 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Template Category</FormLabel>
-                                                        <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value?.toString()}>
-                                                            <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
+                                                        <Select
+                                                            onValueChange={(value) => field.onChange(Number(value))}
+                                                            defaultValue={field.value?.toString()}
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a category" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
                                                             <SelectContent>
                                                                 {categories.map((category) => (
-                                                                    <SelectItem key={category.id} value={category.id.toString()}>{category.name}</SelectItem>
+                                                                    <SelectItem key={category.id} value={category.id.toString()}>
+                                                                        {category.name}
+                                                                    </SelectItem>
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
@@ -170,7 +181,11 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                     <FormItem>
                                                         <FormLabel>Language</FormLabel>
                                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <FormControl><SelectTrigger><SelectValue placeholder="Select language" /></SelectTrigger></FormControl>
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select language" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
                                                             <SelectContent>
                                                                 <SelectItem value="es">Spanish</SelectItem>
                                                                 <SelectItem value="en_US">English</SelectItem>
@@ -181,6 +196,20 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                     </FormItem>
                                                 )}
                                             />
+
+                                            <div className="flex flex-col gap-2">
+                                                <Button type="button" variant="outline" onClick={() => window.history.back()}>
+                                                    Cancel
+                                                </Button>
+                                                <Button type="submit" disabled={processing}>
+                                                    {processing ? 'Saving...' : 'Save'}
+                                                </Button>
+
+                                                {/*TODO: display only if is a WABA template*/}
+                                                {/*<Button type="button" className="btn-whatsapp">
+                                                    {processing ? 'Sending to Review...' : 'Send To Review'}
+                                                </Button>*/}
+                                            </div>
                                         </div>
 
                                         {/* Sub-columna Derecha del Formulario */}
@@ -189,22 +218,45 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 <h3 className="text-lg font-medium">
                                                     {form.watch('display_name') || 'Template Name'} • {form.watch('language')}
                                                 </h3>
-                                                <Button type="submit" disabled={processing}>
-                                                    {processing ? 'Saving...' : 'Send To Review'}
-                                                </Button>
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label>Header <span className="text-gray-500">(Optional)</span></Label>
+                                                <Label>
+                                                    Header <span className="text-gray-500">(Optional)</span>
+                                                </Label>
                                                 <FormField
                                                     control={form.control}
                                                     name="header_type"
                                                     render={({ field }) => (
                                                         <div className="flex flex-wrap gap-2">
-                                                            <HeaderTypeButton field={field} value="text" icon={<Pilcrow size={16} />} label="Text" currentType={watchedHeaderType} />
-                                                            <HeaderTypeButton field={field} value="image" icon={<ImageIcon size={16} />} label="Image" currentType={watchedHeaderType} />
-                                                            <HeaderTypeButton field={field} value="video" icon={<Video size={16} />} label="Video" currentType={watchedHeaderType} />
-                                                            <HeaderTypeButton field={field} value="document" icon={<File size={16} />} label="File" currentType={watchedHeaderType} />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="text"
+                                                                icon={<Pilcrow size={16} />}
+                                                                label="Text"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="image"
+                                                                icon={<ImageIcon size={16} />}
+                                                                label="Image"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="video"
+                                                                icon={<Video size={16} />}
+                                                                label="Video"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="document"
+                                                                icon={<File size={16} />}
+                                                                label="File"
+                                                                currentType={watchedHeaderType}
+                                                            />
                                                         </div>
                                                     )}
                                                 />
@@ -215,7 +267,27 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                         render={({ field }) => (
                                                             <FormItem>
                                                                 <FormControl>
-                                                                    <Input placeholder={watchedHeaderType === 'text' ? 'Enter header text...' : 'Enter media URL...'} {...field} />
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Input
+                                                                            placeholder={
+                                                                                watchedHeaderType === 'text'
+                                                                                    ? 'Enter header text...'
+                                                                                    : 'Enter media URL...'
+                                                                            }
+                                                                            {...field}
+                                                                        />
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            onClick={() => {
+                                                                                form.setValue('header_type', 'none');
+                                                                                form.setValue('header_content', '');
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
@@ -231,11 +303,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                     <FormItem>
                                                         <Label>Message</Label>
                                                         <FormControl>
-                                                            <Textarea
-                                                                placeholder="Enter message content..."
-                                                                className="min-h-[150px]"
-                                                                {...field}
-                                                            />
+                                                            <Textarea placeholder="Enter message content..." className="min-h-[150px]" {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -247,8 +315,12 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 name="footer_content"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <Label>Footer <span className="text-gray-500">(Optional)</span></Label>
-                                                        <FormControl><Input placeholder="Enter footer text..." {...field} /></FormControl>
+                                                        <Label>
+                                                            Footer <span className="text-gray-500">(Optional)</span>
+                                                        </Label>
+                                                        <FormControl>
+                                                            <Input placeholder="Enter footer text..." {...field} />
+                                                        </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}

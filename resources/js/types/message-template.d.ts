@@ -9,6 +9,7 @@ export interface Category {
 }
 
 export type HeaderType = 'none' | 'text' | 'image' | 'video' | 'document';
+export type VariableType = 'positional' | 'named';
 
 export interface ButtonConfig {
     type: 'reply' | 'url' | 'call';
@@ -19,7 +20,7 @@ export interface ButtonConfig {
 
 export interface VariableSchema {
     placeholder: string;
-    example?: string;
+    example: string;
 }
 
 export interface Template {
@@ -34,6 +35,7 @@ export interface Template {
     footer_content?: string;
     button_config?: ButtonConfig[] | null;
     variables_schema: VariableSchema[] | null;
+    variable_type?: VariableType;
 }
 
 // Prop types for components

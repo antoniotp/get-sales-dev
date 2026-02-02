@@ -12,8 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useEffect, useMemo } from 'react';
-import { File, Image as ImageIcon, Pilcrow, Trash2, Video } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { File, Image as ImageIcon, Pilcrow, Trash2, Video, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 import {
     TemplateFormPageProps,
@@ -25,7 +28,7 @@ import MessagePreview from '@/components/message_templates/MessagePreview';
 // --- Zod Schemas ---
 const variableSchemaItem = z.object({
     placeholder: z.string(),
-    example: z.string().optional(),
+    example: z.string().min(1, 'Example value is required'),
 });
 
 const buttonConfigItem = z.object({
@@ -46,13 +49,53 @@ const formSchema = z.object({
     footer_content: z.string().optional(),
     button_config: z.array(buttonConfigItem).nullable(),
     variables_schema: z.array(variableSchemaItem).nullable(),
+    variable_type: z.enum(['positional', 'named']).optional(),
 });
 
 export type TemplateFormValues = z.infer<typeof formSchema>;
 
+// --- Helper Functions ---
+const extractPlaceholders = (text: string): string[] => {
+    const regex = /\{\{(\d+|[a-zA-Z_][a-zA-Z0-9_]*)}}/g;
+    const matches = text.matchAll(regex);
+    const placeholders: string[] = [];
+    for (const match of matches) {
+        const placeholder = `{{${match[1]}}}`;
+        if (!placeholders.includes(placeholder)) {
+            placeholders.push(placeholder);
+        }
+    }
+    return placeholders;
+};
+
+const detectVariableType = (placeholders: string[]): 'positional' | 'named' | 'mixed' | null => {
+    if (placeholders.length === 0) return null;
+
+    const hasPositional = placeholders.some(p => /^\{\{\d+}}$/.test(p));
+    const hasNamed = placeholders.some(p => /^\{\{[a-zA-Z_][a-zA-Z0-9_]*}}$/.test(p));
+
+    if (hasPositional && hasNamed) return 'mixed';
+    if (hasPositional) return 'positional';
+    if (hasNamed) return 'named';
+    return null;
+};
+
+const getNextPositionalNumber = (placeholders: string[]): number => {
+    const numbers = placeholders
+        .filter(p => /^\{\{\d+}}$/.test(p))
+        .map(p => parseInt(p.replace(/[{}]/g, '')))
+        .sort((a, b) => a - b);
+
+    if (numbers.length === 0) return 1;
+    return Math.max(...numbers) + 1;
+};
+
 // --- Main Component ---
 export default function TemplateForm({ categories, template }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [namedVariableName, setNamedVariableName] = useState('');
+    const [variableTypeError, setVariableTypeError] = useState<string | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         { title: 'Message Templates', href: route('message-templates.index', props.chatbot.id) },
@@ -67,6 +110,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                 header_content: template.header_content || '',
                 footer_content: template.footer_content || '',
                 button_config: template.button_config || null,
+                variable_type: template.variable_type || 'positional',
             }
             : {
                 display_name: '',
@@ -79,6 +123,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                 footer_content: '',
                 button_config: null,
                 variables_schema: null,
+                variable_type: 'positional',
             }
     );
 
@@ -119,6 +164,143 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
     };
 
     const watchedHeaderType = form.watch('header_type');
+    const watchedBodyContent = form.watch('body_content');
+    const watchedVariableType = form.watch('variable_type');
+    const watchedVariablesSchema = form.watch('variables_schema');
+
+    // Detect placeholders
+    const detectedPlaceholders = useMemo(() => {
+        return extractPlaceholders(watchedBodyContent || '');
+    }, [watchedBodyContent]);
+
+    // Check for added variables
+    const hasVariables = (watchedVariablesSchema?.length ?? 0) > 0;
+
+    const nextPositionalNumber = useMemo(() => {
+        return getNextPositionalNumber(detectedPlaceholders);
+    }, [detectedPlaceholders]);
+
+    // Function to insert placeholder in the textarea
+    const insertPlaceholder = (placeholder: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentValue = watchedBodyContent || '';
+
+        const newValue = currentValue.substring(0, start) + placeholder + currentValue.substring(end);
+
+        form.setValue('body_content', newValue, { shouldValidate: true });
+
+        // Reset focus and position cursor after placeholder
+        setTimeout(() => {
+            textarea.focus();
+            const newCursorPos = start + placeholder.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    };
+
+    // Add new placeholder
+    const handleAddPlaceholder = () => {
+        let placeholder: string;
+
+        if (watchedVariableType === 'positional') {
+            placeholder = `{{${nextPositionalNumber}}}`;
+        } else {
+            // Named
+            const trimmedName = namedVariableName.trim();
+
+            // check format
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+                form.setError('body_content', {
+                    type: 'manual',
+                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores'
+                });
+                return;
+            }
+
+            placeholder = `{{${trimmedName}}}`;
+
+            // check duplicates
+            const currentSchema = watchedVariablesSchema || [];
+            if (currentSchema.some(v => v.placeholder === placeholder)) {
+                form.setError('body_content', {
+                    type: 'manual',
+                    message: `Variable ${placeholder} already exists`
+                });
+                return;
+            }
+        }
+
+        insertPlaceholder(placeholder);
+
+        // Add to variables_schema
+        const currentSchema = watchedVariablesSchema || [];
+        form.setValue('variables_schema', [
+            ...currentSchema,
+            { placeholder, example: '' }
+        ], { shouldValidate: true });
+
+        if (watchedVariableType === 'named') {
+            setNamedVariableName('');
+        }
+    };
+
+    const handleRemoveVariable = (placeholder: string) => {
+        // Remove var from variables_schema
+        const currentSchema = watchedVariablesSchema || [];
+        const newSchema = currentSchema.filter(v => v.placeholder !== placeholder);
+        form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+
+        // Remove var from the textarea
+        const currentBody = watchedBodyContent || '';
+        const escapedPlaceholder = placeholder.replace(/[{}]/g, '\\$&');
+        const regex = new RegExp(escapedPlaceholder, 'g');
+        const newBody = currentBody.replace(regex, '');
+        form.setValue('body_content', newBody, { shouldValidate: true });
+    };
+
+    // Sync variables on textarea blur
+    const handleBodyContentBlur = () => {
+        const placeholders = extractPlaceholders(watchedBodyContent || '');
+
+        // Detect mixed variable types
+        const detectedType = detectVariableType(placeholders);
+        if (detectedType === 'mixed') {
+            setVariableTypeError('You cannot mix Positional ({{1}}) and Named ({{name}}) variables in the same template. Please use only one type.');
+            form.setError('body_content', {
+                type: 'manual',
+                message: 'Mixed variable types detected'
+            });
+            return;
+        } else {
+            setVariableTypeError(null);
+            form.clearErrors('body_content');
+        }
+
+        const currentSchema = watchedVariablesSchema || [];
+
+        const newSchema = placeholders.map(placeholder => {
+            const existing = currentSchema.find(v => v.placeholder === placeholder);
+            return existing || { placeholder, example: '' };
+        });
+
+        const hasChanges = JSON.stringify(currentSchema.map(v => v.placeholder).sort()) !==
+                          JSON.stringify(newSchema.map(v => v.placeholder).sort());
+
+        if (hasChanges) {
+            form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+        }
+    };
+
+    const handleExampleChange = (placeholder: string, example: string) => {
+        const currentSchema = watchedVariablesSchema || [];
+        const newSchema = currentSchema.map(v =>
+            v.placeholder === placeholder ? { ...v, example } : v
+        );
+        form.setValue('variables_schema', newSchema, { shouldValidate: true });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -153,10 +335,10 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 name="category_id"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Template Category</FormLabel>
+                                                        <FormLabel>Category</FormLabel>
                                                         <Select
                                                             onValueChange={(value) => field.onChange(Number(value))}
-                                                            defaultValue={field.value?.toString()}
+                                                            value={field.value?.toString()}
                                                         >
                                                             <FormControl>
                                                                 <SelectTrigger>
@@ -181,7 +363,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Language</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
                                                             <FormControl>
                                                                 <SelectTrigger>
                                                                     <SelectValue placeholder="Select language" />
@@ -301,15 +483,141 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 control={form.control}
                                                 name="body_content"
                                                 render={({ field }) => (
-                                                    <FormItem>
+                                                    <FormItem className="mb-0">
                                                         <Label>Message</Label>
                                                         <FormControl>
-                                                            <Textarea placeholder="Enter message content..." className="min-h-[150px]" {...field} />
+                                                            <Textarea
+                                                                placeholder="Enter message content..."
+                                                                className="min-h-[150px]"
+                                                                {...field}
+                                                                ref={(e) => {
+                                                                    field.ref(e);
+                                                                    textareaRef.current = e;
+                                                                }}
+                                                                onBlur={() => {
+                                                                    field.onBlur();
+                                                                    handleBodyContentBlur();
+                                                                }}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
+                                            {/* Variables Section */}
+                                            <div className="space-y-2">
+                                                {variableTypeError && (
+                                                    <Alert variant="destructive">
+                                                        <AlertCircle className="h-4 w-4" />
+                                                        <AlertDescription>{variableTypeError}</AlertDescription>
+                                                    </Alert>
+                                                )}
+
+                                                {/* Variable Type Selector + Add Placeholder */}
+                                                <div className="flex items-center gap-3">
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div>
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name="variable_type"
+                                                                        render={({ field }) => (
+                                                                            <RadioGroup
+                                                                                onValueChange={field.onChange}
+                                                                                value={field.value}
+                                                                                className="flex items-center gap-4"
+                                                                                disabled={hasVariables}
+                                                                            >
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <RadioGroupItem value="positional" id="positional" />
+                                                                                    <Label
+                                                                                        htmlFor="positional"
+                                                                                        className="cursor-pointer font-normal"
+                                                                                    >
+                                                                                        Positional
+                                                                                    </Label>
+                                                                                </div>
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <RadioGroupItem value="named" id="named" />
+                                                                                    <Label htmlFor="named" className="cursor-pointer font-normal">
+                                                                                        Named
+                                                                                    </Label>
+                                                                                </div>
+                                                                            </RadioGroup>
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            {hasVariables && (
+                                                                <TooltipContent
+                                                                    className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                    side="bottom"
+                                                                >
+                                                                    <p>Remove all variables to change type</p>
+                                                                </TooltipContent>
+                                                            )}
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+
+                                                    {watchedVariableType === 'named' && (
+                                                        <Input
+                                                            placeholder="variable_name"
+                                                            value={namedVariableName}
+                                                            onChange={(e) => setNamedVariableName(e.target.value)}
+                                                            className="max-w-[200px]"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleAddPlaceholder();
+                                                                }
+                                                            }}
+                                                        />
+                                                    )}
+
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handleAddPlaceholder}
+                                                        disabled={watchedVariableType === 'named' && !namedVariableName.trim()}
+                                                    >
+                                                        + Add Placeholder
+                                                        {watchedVariableType === 'positional' && ` {{${nextPositionalNumber}}}`}
+                                                    </Button>
+                                                </div>
+
+                                                {/* Variables List */}
+                                                {watchedVariablesSchema && watchedVariablesSchema.length > 0 && (
+                                                    <div className="space-y-3">
+                                                        <Label className="text-sm">Detected Variables ({watchedVariablesSchema.length})</Label> *<small>All are required</small>
+                                                        <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center rounded-lg border p-3">
+                                                            {watchedVariablesSchema.map((variable, index) => (
+                                                                <>
+                                                                    <span key={`label-${index}`} className="font-mono text-sm font-medium">
+                                                                        {variable.placeholder}
+                                                                    </span>
+                                                                    <Input
+                                                                        key={`input-${index}`}
+                                                                        placeholder="Enter example value..."
+                                                                        value={variable.example}
+                                                                        onChange={(e) => handleExampleChange(variable.placeholder, e.target.value)}
+                                                                    />
+                                                                    <Button
+                                                                        key={`btn-${index}`}
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => handleRemoveVariable(variable.placeholder)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
 
                                             <FormField
                                                 control={form.control}

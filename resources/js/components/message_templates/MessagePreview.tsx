@@ -2,24 +2,11 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import LinkifyText from '@/components/chat/LinkifyText';
+import { Template } from '@/types/message-template';
 
-interface ButtonConfig {
-    type: 'reply' | 'url' | 'call';
-    text: string;
-    url?: string;
-}
 
 interface MessagePreviewProps {
-    templateData: {
-        name: string;
-        language: string;
-        header_type: 'none' | 'text' | 'image' | 'video' | 'document';
-        header_content?: string;
-        body_content: string;
-        footer_content?: string;
-        button_config?: Array<ButtonConfig>;
-        variables_schema?: Array<{ placeholder: string; example?: string }> | null;
-    };
+    templateData:  Template;
 }
 
 const MessagePreview = ({ templateData }: MessagePreviewProps) => {
@@ -38,25 +25,25 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
         switch (header_type) {
             case 'text':
                 return (
-                    <div className="font-semibold pb-2 border-b border-[#3B82F6]">
+                    <div className="font-semibold pb-2 text-[#111B21]">
                         {header_content}
                     </div>
                 );
             case 'image':
                 return (
-                    <div className="pb-2 border-b border-[#3B82F6]">
-                        <img src={header_content} alt="Header" className="max-w-full h-auto rounded-md" />
+                    <div className="pb-2 -mx-4 -mt-2 mb-2">
+                        <img src={header_content} alt="Header" className="max-w-full h-auto rounded-t-[18px]" />
                     </div>
                 );
             case 'video':
                 return (
-                    <div className="text-sm text-gray-200 pb-2 border-b border-[#3B82F6]">
+                    <div className="text-xs text-[#667781] pb-2">
                         Video: {header_content}
                     </div>
                 );
             case 'document':
                 return (
-                    <div className="text-sm text-gray-200 pb-2 border-b border-[#3B82F6]">
+                    <div className="text-xs text-[#667781] pb-2">
                         Document: {header_content}
                     </div>
                 );
@@ -82,7 +69,7 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
         return (
             <LinkifyText
                 text={processedBody}
-                className="text-sm break-words whitespace-pre-wrap [&_a]:text-[#93C5FD] [&_a]:underline"
+                className="text-xs break-words whitespace-pre-wrap text-[#111B21] [&_a]:text-[#027EB5] [&_a]:underline"
             />
         );
     };
@@ -90,7 +77,7 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
     const renderFooter = () => {
         if (!footer_content) return null;
         return (
-            <div className="pt-2 text-xs text-[#BFDBFE] border-t border-[#3B82F6]">
+            <div className="pt-1 text-xs text-[#667781]">
                 {footer_content}
             </div>
         );
@@ -99,10 +86,13 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
     const renderButtons = () => {
         if (!button_config || button_config.length === 0) return null;
         return (
-            <div className="flex flex-col gap-1 pt-2 border-t border-[#3B82F6]">
+            <div className="flex flex-col gap-0 pt-2 -mx-4 -mb-2">
                 {button_config.map((button, index) => (
-                    <Badge key={index} className="justify-center text-xs p-1 bg-[#1D4ED8] text-white hover:bg-[#1D4ED8]">
-                        {button.text} {button.type === 'url' && `(URL: ${button.url})`}
+                    <Badge
+                        key={index}
+                        className="justify-center text-xs font-medium p-3 bg-transparent text-[#027EB5] hover:bg-[#F0F2F5] border-t border-[#E9EDEF] rounded-none first:border-t last:rounded-b-[18px]"
+                    >
+                        {button.text}
                     </Badge>
                 ))}
             </div>
@@ -110,9 +100,11 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
     };
 
     return (
-        <div className="mt-4 mb-4 flex justify-end">
-            <Card className="max-w-[70%] rounded-[18px] bg-[#2563EB] text-[#F9FAFB] shadow-md px-4 py-2">
-
+        <div
+            className="mx-auto h-[550px] w-full max-w-sm bg-contain bg-center bg-no-repeat flex flex-col items-end pt-25 pr-6"
+            style={{ backgroundImage: "url('/images/chat-template.webp')" }}
+        >
+            <Card className="max-w-[80%] rounded-[18px] bg-[#D9FDD3] px-4 py-2 text-[#111B21] shadow-sm border-0">
                 {renderHeader()}
                 {renderBody()}
                 {renderFooter()}

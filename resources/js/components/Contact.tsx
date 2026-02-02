@@ -15,6 +15,7 @@ const Contact = () => {
         email: '',
         phone: '',
         message: '',
+        honeypot_field: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -52,6 +53,7 @@ const Contact = () => {
                 email: '',
                 phone: '',
                 message: '',
+                honeypot_field: '',
             });
         } catch {
             toast({
@@ -117,6 +119,16 @@ const Contact = () => {
                         <h3 className="mb-6 text-2xl font-bold">{t("contact.form.title")}</h3>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            <input
+                                type="text"
+                                name="honeypot_field"
+                                value={formData.honeypot_field}
+                                onChange={handleChange}
+                                tabIndex={-1}
+                                autoComplete="off"
+                                style={{ display: 'none' }}
+                            />
+
                             <div>
                                 <label htmlFor="name" className="mb-2 block text-sm font-medium">
                                     {t("contact.form.fields.name.label")}

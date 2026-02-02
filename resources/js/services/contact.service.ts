@@ -3,6 +3,7 @@ type ContactFormPayload = {
   email: string;
   phone?: string;
   message: string;
+  honeypot_field?: string;
   'g-recaptcha-response': string;
 };
 

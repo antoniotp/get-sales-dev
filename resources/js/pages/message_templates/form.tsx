@@ -20,6 +20,7 @@ import {
 } from '@/types/message-template.d';
 import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
 import { generateSlug } from '@/lib/utils';
+import MessagePreview from '@/components/message_templates/MessagePreview';
 
 // --- Zod Schemas ---
 const variableSchemaItem = z.object({
@@ -333,10 +334,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                             {/* Columna de Vista Previa */}
                             <div className="w-[290px] hidden lg:block">
                                 <div className="sticky top-0">
-                                    <div
-                                        className="relative w-full max-w-sm mx-auto h-[550px] bg-no-repeat bg-contain bg-center"
-                                        style={{ backgroundImage: "url('/images/chat-template.webp')" }}
-                                    ></div>
+                                    <MessagePreview templateData={form.watch()} />
                                 </div>
                             </div>
                         </form>

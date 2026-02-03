@@ -140,16 +140,6 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
         return () => subscription.unsubscribe();
     }, [form, setInertiaData]);
 
-    useEffect(() => {
-        const subscription = form.watch((value, { name: fieldName }) => {
-            if (fieldName === 'display_name' && value.display_name) {
-                const slug = generateSlug(value.display_name);
-                form.setValue('name', slug, { shouldValidate: true });
-            }
-        });
-        return () => subscription.unsubscribe();
-    }, [form]);
-
     const onSubmit = () => {
         if (template?.id) {
             put(route('message-templates.update', template.id), {
@@ -324,7 +314,15 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                     <FormItem>
                                                         <FormLabel>Display Name</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="My Template Name" {...field} />
+                                                            <Input
+                                                                placeholder="My Template Name"
+                                                                {...field}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e);
+                                                                    const slug = generateSlug(e.target.value);
+                                                                    form.setValue('name', slug, { shouldValidate: true });
+                                                                }}
+                                                            />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

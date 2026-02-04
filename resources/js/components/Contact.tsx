@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Mail, MapPin, MessageSquare } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation, Trans } from "react-i18next";
+import { sendContactForm } from '@/services/contact.service';
 
 const Contact = () => {
     const { t } = useTranslation("home");
@@ -14,27 +15,55 @@ const Contact = () => {
         email: '',
         phone: '',
         message: '',
+        honeypot_field: '',
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSubmitting(true);
 
-        toast({
-            title: 'Message sent',
-            description: 'We will contact you soon.',
-        });
+        try {
+            if (!window.grecaptcha) {
+                throw new Error('reCAPTCHA not loaded');
+            }
 
-        setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            message: '',
-        });
+            const token = await window.grecaptcha.execute(
+                import.meta.env.VITE_RECAPTCHA_SITE_KEY,
+                { action: 'contact' }
+            );
+
+            const response = await sendContactForm({
+                ...formData,
+                'g-recaptcha-response': token,
+            });
+
+            toast({
+                title: t('contact.form.success.title'),
+                description: response.message ?? t('contact.form.success.description'),
+            });
+
+            setFormData({
+                name: '',
+                email: '',
+                phone: '',
+                message: '',
+                honeypot_field: '',
+            });
+        } catch {
+            toast({
+                title: t('contact.form.error.title'),
+                description: t('contact.form.error.description'),
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -90,6 +119,16 @@ const Contact = () => {
                         <h3 className="mb-6 text-2xl font-bold">{t("contact.form.title")}</h3>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
+                            <input
+                                type="text"
+                                name="honeypot_field"
+                                value={formData.honeypot_field}
+                                onChange={handleChange}
+                                tabIndex={-1}
+                                autoComplete="off"
+                                style={{ display: 'none' }}
+                            />
+
                             <div>
                                 <label htmlFor="name" className="mb-2 block text-sm font-medium">
                                     {t("contact.form.fields.name.label")}
@@ -116,7 +155,7 @@ const Contact = () => {
                                 <label htmlFor="phone" className="mb-2 block text-sm font-medium">
                                     {t("contact.form.fields.phone.label")}
                                 </label>
-                                <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder={t("contact.form.fields.phone.placeholder")} />
+                                <Input id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder={t("contact.form.fields.phone.placeholder")} required/>
                             </div>
 
                             <div>
@@ -135,8 +174,12 @@ const Contact = () => {
                                 />
                             </div>
 
-                            <Button type="submit" className="w-full bg-brandRed py-6 hover:bg-brandRed/90 font-bold">
-                                {t("contact.form.submit")}
+                            <Button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-brandRed py-6 hover:bg-brandRed/90 font-bold"
+                                >
+                                {isSubmitting ? t('contact.form.sending') : t('contact.form.submit')}
                             </Button>
                         </form>
                     </div>

@@ -181,7 +181,20 @@
       "toast": {
         "title": "Mensaje enviado",
         "description": "Nos pondremos en contacto contigo pronto."
-      }
+      },
+      "success": {
+        "title": "Mensaje enviado",
+        "description": "Gracias por contactarnos. Te responderemos lo antes posible."
+      },
+      "error": {
+        "title": "Error al enviar el mensaje",
+        "description": "Ocurrió un problema al enviar el mensaje. Inténtalo nuevamente."
+      },
+      "rate_limit": {
+        "title": "Demasiados intentos",
+        "description": "Has enviado demasiados mensajes en poco tiempo. Intenta más tarde."
+      },
+      "sending": "Enviando mensaje..."
     }
   }
 }

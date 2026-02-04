@@ -45,6 +45,8 @@ const formSchema = z.object({
     language: z.string().min(1, 'Language is required'),
     header_type: z.enum(['none', 'text', 'image', 'video', 'document']),
     header_content: z.string().optional(),
+    header_variable: variableSchemaItem.nullable().optional(),
+    header_variable_type: z.enum(['positional', 'named']).optional(),
     body_content: z.string().min(1, 'Message content is required'),
     footer_content: z.string().optional(),
     button_config: z.array(buttonConfigItem).nullable(),
@@ -93,8 +95,10 @@ const getNextPositionalNumber = (placeholders: string[]): number => {
 // --- Main Component ---
 export default function TemplateForm({ categories, template }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
+    const headerInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [namedVariableName, setNamedVariableName] = useState('');
+    const [namedHeaderVariableName, setNamedHeaderVariableName] = useState('');
     const [variableTypeError, setVariableTypeError] = useState<string | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
@@ -108,6 +112,8 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                 ...template,
                 display_name: template.display_name || template.name,
                 header_content: template.header_content || '',
+                header_variable: template.header_variable || null,
+                header_variable_type: template.header_variable_type || 'positional',
                 footer_content: template.footer_content || '',
                 button_config: template.button_config || null,
                 variable_type: template.variable_type || 'positional',
@@ -119,6 +125,8 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                 language: 'es',
                 header_type: 'none',
                 header_content: '',
+                header_variable: null,
+                header_variable_type: 'positional',
                 body_content: '',
                 footer_content: '',
                 button_config: null,
@@ -154,10 +162,110 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
     };
 
     const watchedHeaderType = form.watch('header_type');
+    const watchedHeaderContent = form.watch('header_content');
+    const watchedHeaderVariable = form.watch('header_variable');
+    const watchedHeaderVariableType = form.watch('header_variable_type');
     const watchedBodyContent = form.watch('body_content');
     const watchedVariableType = form.watch('variable_type');
     const watchedVariablesSchema = form.watch('variables_schema');
 
+    // --- Header Variables Logic ---
+    const detectedHeaderPlaceholders = useMemo(() => {
+        return extractPlaceholders(watchedHeaderContent || '');
+    }, [watchedHeaderContent]);
+
+    const hasHeaderVariable = !!watchedHeaderVariable;
+
+    const insertHeaderPlaceholder = (placeholder: string) => {
+        const input = headerInputRef.current;
+        if (!input) return;
+
+        const start = input.selectionStart || 0;
+        const end = input.selectionEnd || 0;
+        const currentValue = watchedHeaderContent || '';
+        const newValue = currentValue.substring(0, start) + placeholder + currentValue.substring(end);
+        form.setValue('header_content', newValue, { shouldValidate: true });
+
+        setTimeout(() => {
+            input.focus();
+            const newCursorPos = start + placeholder.length;
+            input.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    };
+
+    const handleAddHeaderPlaceholder = () => {
+        if (detectedHeaderPlaceholders.length > 0) {
+            form.setError('header_content', { type: 'manual', message: 'Only one placeholder is allowed in the header.' });
+            return;
+        }
+
+        let placeholder: string;
+        if (watchedHeaderVariableType === 'positional') {
+            placeholder = '{{1}}';
+        } else {
+            const trimmedName = namedHeaderVariableName.trim();
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+                form.setError('header_content', {
+                    type: 'manual',
+                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores.'
+                });
+                return;
+            }
+            placeholder = `{{${trimmedName}}}`;
+        }
+
+        insertHeaderPlaceholder(placeholder);
+        form.setValue('header_variable', { placeholder, example: '' }, { shouldValidate: true });
+
+        if (watchedHeaderVariableType === 'named') {
+            setNamedHeaderVariableName('');
+        }
+    };
+
+    const handleRemoveHeaderVariable = () => {
+        if (!watchedHeaderVariable) return;
+
+        const { placeholder } = watchedHeaderVariable;
+        form.setValue('header_variable', null, { shouldValidate: true });
+
+        const currentHeader = watchedHeaderContent || '';
+        const escapedPlaceholder = placeholder.replace(/[{}]/g, '\\$&');
+        const regex = new RegExp(escapedPlaceholder, 'g');
+        const newHeader = currentHeader.replace(regex, '');
+        form.setValue('header_content', newHeader, { shouldValidate: true });
+        form.clearErrors('header_content');
+    };
+
+    const syncHeaderVariable = () => {
+        const placeholders = extractPlaceholders(watchedHeaderContent || '');
+
+        if (placeholders.length > 1) {
+            form.setError('header_content', { type: 'manual', message: 'Only one placeholder is allowed in the header.' });
+            return;
+        }
+
+        form.clearErrors('header_content');
+        if (variableTypeError?.includes('header')) {
+            setVariableTypeError(null);
+        }
+
+        const placeholder = placeholders[0] || null;
+        if (placeholder) {
+            if (!watchedHeaderVariable || watchedHeaderVariable.placeholder !== placeholder) {
+                form.setValue('header_variable', { placeholder, example: watchedHeaderVariable?.example || '' }, { shouldValidate: true });
+            }
+        } else if (watchedHeaderVariable) {
+            form.setValue('header_variable', null, { shouldValidate: true });
+        }
+    };
+
+    const handleHeaderExampleChange = (example: string) => {
+        if (!watchedHeaderVariable) return;
+        form.setValue('header_variable', { ...watchedHeaderVariable, example }, { shouldValidate: true });
+    };
+
+
+    // --- Body Variables Logic ---
     // Detect placeholders
     const detectedPlaceholders = useMemo(() => {
         return extractPlaceholders(watchedBodyContent || '');
@@ -456,6 +564,8 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                                                     : 'Enter media URL...'
                                                                             }
                                                                             {...field}
+                                                                            ref={headerInputRef}
+                                                                            onBlur={syncHeaderVariable}
                                                                         />
                                                                         <Button
                                                                             type="button"
@@ -464,6 +574,9 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                                             onClick={() => {
                                                                                 form.setValue('header_type', 'none');
                                                                                 form.setValue('header_content', '');
+                                                                                if (watchedHeaderVariable) {
+                                                                                    handleRemoveHeaderVariable();
+                                                                                }
                                                                             }}
                                                                         >
                                                                             <Trash2 className="h-4 w-4" />
@@ -474,6 +587,99 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                             </FormItem>
                                                         )}
                                                     />
+                                                )}
+                                                {watchedHeaderType === 'text' && (
+                                                    <div className="space-y-3 rounded-lg border p-3">
+                                                        <Label className="text-sm">Header Variable</Label>
+                                                        <div className="flex items-center gap-3">
+                                                            <TooltipProvider>
+                                                                <Tooltip delayDuration={250}>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div>
+                                                                            <FormField
+                                                                                control={form.control}
+                                                                                name="header_variable_type"
+                                                                                render={({ field }) => (
+                                                                                    <RadioGroup
+                                                                                        onValueChange={field.onChange}
+                                                                                        value={field.value}
+                                                                                        className="flex items-center gap-4"
+                                                                                        disabled={hasHeaderVariable}
+                                                                                    >
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="positional" id="h-positional" />
+                                                                                            <Label htmlFor="h-positional" className="cursor-pointer font-normal">Positional</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="named" id="h-named" />
+                                                                                            <Label htmlFor="h-named" className="cursor-pointer font-normal">Named</Label>
+                                                                                        </div>
+                                                                                    </RadioGroup>
+                                                                                )}
+                                                                            />
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    {hasHeaderVariable && (
+                                                                        <TooltipContent
+                                                                        className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                        side="bottom"
+                                                                        >
+                                                                        <p>Remove the variable to change type</p>
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+
+                                                            {watchedHeaderVariableType === 'named' && (
+                                                                <Input
+                                                                    placeholder="variable_name"
+                                                                    value={namedHeaderVariableName}
+                                                                    onChange={(e) => setNamedHeaderVariableName(e.target.value)}
+                                                                    className="max-w-[150px]"
+                                                                    disabled={hasHeaderVariable}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            handleAddHeaderPlaceholder();
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={handleAddHeaderPlaceholder}
+                                                                disabled={
+                                                                    hasHeaderVariable ||
+                                                                    (watchedHeaderVariableType === 'named' && !namedHeaderVariableName.trim())
+                                                                }
+                                                            >
+                                                                + Add Placeholder
+                                                                {watchedHeaderVariableType === 'positional' && ' {{1}}'}
+                                                            </Button>
+                                                        </div>
+                                                        {hasHeaderVariable && watchedHeaderVariable && (
+                                                            <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
+                                                                <span className="font-mono text-sm font-medium">
+                                                                    {watchedHeaderVariable.placeholder}
+                                                                </span>
+                                                                <Input
+                                                                    placeholder="Enter example value..."
+                                                                    value={watchedHeaderVariable.example}
+                                                                    onChange={(e) => handleHeaderExampleChange(e.target.value)}
+                                                                />
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={handleRemoveHeaderVariable}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
 
@@ -514,7 +720,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                 {/* Variable Type Selector + Add Placeholder */}
                                                 <div className="flex items-center gap-3">
                                                     <TooltipProvider>
-                                                        <Tooltip>
+                                                        <Tooltip delayDuration={250}>
                                                             <TooltipTrigger asChild>
                                                                 <div>
                                                                     <FormField

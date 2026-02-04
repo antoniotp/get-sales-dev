@@ -31,6 +31,8 @@ export interface Template {
     language: string;
     header_type: HeaderType;
     header_content?: string;
+    header_variable?: VariableSchema | null;
+    header_variable_type?: VariableType;
     body_content: string;
     footer_content?: string;
     button_config?: ButtonConfig[] | null;

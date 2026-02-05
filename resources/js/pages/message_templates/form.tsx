@@ -24,6 +24,7 @@ import {
 import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
 import { generateSlug } from '@/lib/utils';
 import MessagePreview from '@/components/message_templates/MessagePreview';
+import { ButtonsSection } from '@/components/message_templates/ButtonsSection';
 
 // --- Zod Schemas ---
 const variableSchemaItem = z.object({
@@ -838,6 +839,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                                     </FormItem>
                                                 )}
                                             />
+                                            <ButtonsSection control={form.control} />
                                         </div>
                                     </CardContent>
                                 </Card>

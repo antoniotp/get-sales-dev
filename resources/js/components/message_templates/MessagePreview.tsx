@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { ExternalLink, CornerDownLeft } from 'lucide-react';
 import LinkifyText from '@/components/chat/LinkifyText';
 import { Template } from '@/types/message-template';
 
@@ -100,14 +100,22 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
         if (!button_config || button_config.length === 0) return null;
         return (
             <div className="flex flex-col gap-0 pt-2 -mx-4 -mb-2">
-                {button_config.map((button, index) => (
-                    <Badge
-                        key={index}
-                        className="justify-center text-xs font-medium p-3 bg-transparent text-[#027EB5] hover:bg-[#F0F2F5] border-t border-[#E9EDEF] rounded-none first:border-t last:rounded-b-[18px]"
-                    >
-                        {button.text}
-                    </Badge>
-                ))}
+                {button_config.map((button, index) => {
+                    const isUrl = button.type === 'url';
+                    const isReply = button.type === 'reply';
+
+                    return (
+                        <button
+                            key={index}
+                            type="button"
+                            className="flex items-center justify-center gap-1.5 text-xs font-medium p-3 bg-transparent text-[#027EB5] hover:bg-[#F0F2F5] border-t border-[#E9EDEF] rounded-none first:border-t last:rounded-b-[18px] transition-colors cursor-pointer"
+                        >
+                            {isUrl && <ExternalLink className="w-3.5 h-3.5" />}
+                            {isReply && <CornerDownLeft className="w-3.5 h-3.5" />}
+                            <span>{button.text}</span>
+                        </button>
+                    );
+                })}
             </div>
         );
     };

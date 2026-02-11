@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 /**
  * @property int $id
  * @property int $chatbot_channel_id Foreign key to chatbot_channels table
- * @property string $name Template name for identification
+ * @property string $display_name Template name to display to users
+ * @property string $name Template name for identification (slug)
  * @property string|null $external_template_id ID provided by the messaging platform (WhatsApp, Meta, etc.)
  * @property int $category_id Reference to the message_template_categories table
  * @property string $language Language code (es, en, pt, etc.) - max 10 chars, default 'es'
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $footer_content Optional footer text
  * @property array|null $button_config Button configuration as JSON array
  * @property int $variables_count Number of variables in the template ({{1}}, {{2}}, etc.)
- * @property array|null $variables_schema Schema describing each variable (name, type, description) as JSON
+ * @property array|null $example_data Example data for the template variables
  * @property int $usage_count How many times this template has been used
  * @property Carbon|null $last_used_at When this template was last used
  * @property Carbon|null $approved_at When the template was approved by the platform
@@ -44,6 +45,7 @@ class MessageTemplate extends Model
     protected $fillable = [
         'chatbot_channel_id',
         'name',
+        'display_name',
         'external_template_id',
         'category_id',
         'language',
@@ -55,7 +57,7 @@ class MessageTemplate extends Model
         'footer_content',
         'button_config',
         'variables_count',
-        'variables_schema',
+        'example_data',
         'usage_count',
         'last_used_at',
         'approved_at',
@@ -64,7 +66,7 @@ class MessageTemplate extends Model
 
     protected $casts = [
         'button_config' => 'array',
-        'variables_schema' => 'array',
+        'example_data' => 'array',
         'variables_count' => 'integer',
         'usage_count' => 'integer',
         'platform_status' => 'integer',
@@ -162,7 +164,7 @@ class MessageTemplate extends Model
 
         // replace vars {{1}}, {{2}}, etc.
         foreach ($variables as $index => $value) {
-            $placeholder = '{{' . ($index + 1) . '}}';
+            $placeholder = '{{'.($index + 1).'}}';
             $content = str_replace($placeholder, $value, $content);
         }
 

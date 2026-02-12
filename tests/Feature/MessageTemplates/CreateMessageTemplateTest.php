@@ -51,8 +51,22 @@ class CreateMessageTemplateTest extends TestCase
     #[Test]
     public function it_successfully_calls_the_service_to_create_a_template()
     {
+        $mockedTemplate = MessageTemplate::factory()->make( [
+            'id'                 => 1,
+            'chatbot_id'         => $this->chatbot->id,
+            'chatbot_channel_id' => $this->channel->id,
+            'category_id'        => $this->category->id,
+            'language'           => 'en_US',
+            'header_type'        => 'none',
+            'body_content'       => 'dummy',
+            'status'             => 'pending',
+            'platform_status'    => 1,
+            'name'               => 'welcome_message',
+            'display_name'       => 'Welcome Message',
+        ] );
+
         // Mock the service to isolate the controller and request validation
-        $this->mock(MessageTemplateServiceInterface::class, function (MockInterface $mock) {
+        $this->mock(MessageTemplateServiceInterface::class, function (MockInterface $mock) use ($mockedTemplate) {
             $mock->shouldReceive('createTemplate')
                 ->once()
                 ->withArgs(function ($data, $chatbot) {
@@ -61,7 +75,7 @@ class CreateMessageTemplateTest extends TestCase
                            $data['display_name'] === 'Welcome Message' &&
                            $chatbot->id === $this->chatbot->id;
                 })
-                ->andReturn(MessageTemplate::factory()->make()); // Return a dummy object
+                ->andReturn($mockedTemplate);
         });
 
         $templateData = [
@@ -88,7 +102,7 @@ class CreateMessageTemplateTest extends TestCase
 
         $response = $this->post(route('message-templates.store', $this->chatbot->id), $templateData);
 
-        $response->assertRedirect(route('message-templates.index', $this->chatbot->id));
+        $response->assertRedirect(route('message-templates.edit', $mockedTemplate->id));
         $response->assertSessionHas('success');
         $response->assertSessionHasNoErrors();
     }

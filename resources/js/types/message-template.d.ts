@@ -17,9 +17,9 @@ export type HeaderType = 'none' | 'text' | 'image' | 'video' | 'document';
 export type VariableType = 'positional' | 'named';
 
 export interface ButtonConfig {
-    type: 'reply' | 'url' | 'call';
+    type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER' | 'COPY_CODE';
     text: string;
-    url?: string;
+    url?: string | null;
     phone_number?: string;
 }
 

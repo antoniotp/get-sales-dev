@@ -28,18 +28,18 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
     });
 
     const buttonType = buttonConfigs?.[0]?.type;
-    const isUrlType = buttonType === 'url';
-    const isReplyType = buttonType === 'reply';
+    const isUrlType = buttonType === 'URL';
+    const isReplyType = buttonType === 'QUICK_REPLY';
     const canAddMore = isReplyType && fields.length < 3;
 
-    const handleTypeChange = (newType: 'reply' | 'url') => {
+    const handleTypeChange = (newType: 'QUICK_REPLY' | 'URL') => {
         // Replace all buttons with a single new button of the selected type
         replace([{ type: newType, text: '', url: '', phone_number: '' }]);
     };
 
     const addButton = () => {
         if (canAddMore) {
-            append({ type: 'reply', text: '', url: '', phone_number: '' });
+            append({ type: 'QUICK_REPLY', text: '', url: '', phone_number: '' });
         }
     };
 
@@ -55,7 +55,7 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                         if (value === 'none') {
                             replace([]);
                         } else {
-                            handleTypeChange(value as 'reply' | 'url');
+                            handleTypeChange(value as 'QUICK_REPLY' | 'URL');
                         }
                     }}
                 >
@@ -64,8 +64,8 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="none">No buttons</SelectItem>
-                        <SelectItem value="reply">Quick Reply</SelectItem>
-                        <SelectItem value="url">URL</SelectItem>
+                        <SelectItem value="QUICK_REPLY">Quick Reply</SelectItem>
+                        <SelectItem value="URL">URL</SelectItem>
                     </SelectContent>
                 </Select>
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -146,6 +146,7 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                                                     id={`button-url-${index}`}
                                                     type="url"
                                                     placeholder="https://example.com"
+                                                    value={inputField.value ?? ""}
                                                 />
                                                 {fieldState.error && (
                                                     <p className="text-sm text-red-500">{fieldState.error.message}</p>

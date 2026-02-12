@@ -1,0 +1,80 @@
+{
+  "index": {
+    "breadcrumbs": {
+      "agents": "Agentes"
+    },
+    "head": {
+      "title": "Agentes | Lista"
+    },
+    "header": {
+      "title": "Agentes",
+      "description": "Administra tus agentes de IA y sus configuraciones",
+      "create": "Crear agente"
+    },
+    "empty": {
+      "title": "No se encontraron agentes",
+      "description": "Aún no has creado agentes. Crea tu primer agente para comenzar con conversaciones automatizadas.",
+      "button": "Crear tu primer agente"
+    },
+    "card": {
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "no_description": "Sin descripción",
+      "created": "Creado {{date}}",
+      "menu_open": "Abrir menú",
+      "delete": "Eliminar agente"
+    },
+    "dialog": {
+      "title": "Eliminar agente",
+      "description": "¿Seguro que deseas eliminar \"{{name}}\"? Esta acción no se puede deshacer. Todas las conversaciones y datos asociados se eliminarán permanentemente.",
+      "cancel": "Cancelar",
+      "deleting": "Eliminando...",
+      "confirm": "Eliminar agente",
+      "error": "Error al eliminar el agente. Intenta nuevamente."
+    }
+  },
+
+  "form": {
+    "head": {
+      "create": "Crear agente",
+      "edit": "Editar agente"
+    },
+    "titles": {
+      "create": "Crear nuevo agente",
+      "edit": "Editar agente"
+    },
+    "card": {
+      "title": "Detalles del agente",
+      "description": "Configura la información básica y el comportamiento del agente"
+    },
+    "fields": {
+      "name": "Nombre *",
+      "name_placeholder": "Ingresa el nombre del agente",
+      "description": "Descripción *",
+      "description_placeholder": "Describe qué hace este agente",
+      "visibility": "Visibilidad del chat del agente",
+      "visibility_all": "Los agentes pueden ver todas las conversaciones en este chatbot.",
+      "visibility_assigned": "Los agentes solo pueden ver conversaciones asignadas a ellos.",
+      "enable_ai": "Activar IA",
+      "ai_active": "La IA está activa",
+      "ai_inactive": "La IA está inactiva",
+      "ai_description": "Si está activado, la IA gestionará nuevas conversaciones automáticamente.",
+      "system_prompt": "System Prompt",
+      "system_prompt_placeholder": "Ingresa instrucciones del sistema para la IA (opcional)",
+      "system_prompt_description": "Instrucciones opcionales que definen cómo debe comportarse la IA",
+      "min_delay": "Retraso mínimo de respuesta (segundos)",
+      "max_delay": "Retraso máximo de respuesta (segundos)",
+      "status": "Estado",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "status_description": "Los agentes inactivos no responderán a mensajes"
+    },
+    "actions": {
+      "cancel": "Cancelar",
+      "create": "Crear agente",
+      "update": "Actualizar agente",
+      "creating": "Creando...",
+      "updating": "Actualizando..."
+    }
+  }
+}

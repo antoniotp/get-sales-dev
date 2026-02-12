@@ -101,8 +101,8 @@ const MessagePreview = ({ templateData }: MessagePreviewProps) => {
         return (
             <div className="flex flex-col gap-0 pt-2 -mx-4 -mb-2">
                 {button_config.map((button, index) => {
-                    const isUrl = button.type === 'url';
-                    const isReply = button.type === 'reply';
+                    const isUrl = button.type === 'URL';
+                    const isReply = button.type === 'QUICK_REPLY';
 
                     return (
                         <button

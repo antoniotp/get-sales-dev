@@ -34,9 +34,9 @@ const variableSchemaItem = z.object({
 });
 
 const buttonConfigItem = z.object({
-    type: z.enum(['reply', 'url', 'call']),
+    type: z.enum(['QUICK_REPLY', 'URL', 'PHONE_NUMBER', 'COPY_CODE']),
     text: z.string(),
-    url: z.string().optional(),
+    url: z.string().nullable().optional(),
     phone_number: z.string().optional(),
 });
 
@@ -157,7 +157,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
 
     const onSubmit = () => {
         if (template?.id) {
-            put(route('message-templates.update', { chatbot: props.chatbot.id, template: template.id }), {
+            put(route('message-templates.update', { template: template.id }), {
                 preserveScroll: true,
             });
         } else {

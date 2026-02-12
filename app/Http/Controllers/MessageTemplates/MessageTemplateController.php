@@ -102,10 +102,9 @@ class MessageTemplateController extends Controller
 
     public function update(UpdateMessageTemplateRequest $request, MessageTemplate $template)
     {
-        $chatbot = $template->chatbotChannel->chatbot;
         $this->messageTemplateService->updateTemplate($template, $request->validated());
 
-        return redirect()->route('message-templates.index', $chatbot->id)
+        return redirect()->route('message-templates.edit', $template->id)
             ->with('success', 'Template updated successfully.');
     }
 

@@ -1,0 +1,80 @@
+{
+  "index": {
+    "breadcrumbs": {
+      "agents": "Agents"
+    },
+    "head": {
+      "title": "Agents | List"
+    },
+    "header": {
+      "title": "Agents",
+      "description": "Manage your AI Agents and their configurations",
+      "create": "Create Agent"
+    },
+    "empty": {
+      "title": "No chatbots found",
+      "description": "You haven't created any agents yet. Create your first agent to start automated conversations.",
+      "button": "Create Your First Agent"
+    },
+    "card": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "no_description": "No description provided",
+      "created": "Created {{date}}",
+      "menu_open": "Open menu",
+      "delete": "Delete Agent"
+    },
+    "dialog": {
+      "title": "Delete Agent",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone. All conversations and data associated with this agent will be permanently removed.",
+      "cancel": "Cancel",
+      "deleting": "Deleting...",
+      "confirm": "Delete Agent",
+      "error": "Failed to delete agent. Please try again."
+    }
+  },
+
+  "form": {
+    "head": {
+      "create": "Create Agent",
+      "edit": "Edit Agent"
+    },
+    "titles": {
+      "create": "Create New Agent",
+      "edit": "Edit Agent"
+    },
+    "card": {
+      "title": "Agent Details",
+      "description": "Configure your agent's basic information and behavior"
+    },
+    "fields": {
+      "name": "Name *",
+      "name_placeholder": "Enter agent name",
+      "description": "Description *",
+      "description_placeholder": "Describe what this agent does",
+      "visibility": "Agent Chat Visibility",
+      "visibility_all": "Agents can see all conversations in this chatbot.",
+      "visibility_assigned": "Agents can only see conversations assigned to them.",
+      "enable_ai": "Enable AI",
+      "ai_active": "AI is Active",
+      "ai_inactive": "AI is Inactive",
+      "ai_description": "If enabled, the AI will handle new conversations automatically.",
+      "system_prompt": "System Prompt",
+      "system_prompt_placeholder": "Enter system instructions for the AI (optional)",
+      "system_prompt_description": "Optional instructions that define how the AI should behave",
+      "min_delay": "Min Response Delay (seconds)",
+      "max_delay": "Max Response Delay (seconds)",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "status_description": "Inactive agents won't respond to messages"
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create Agent",
+      "update": "Update Agent",
+      "creating": "Creating...",
+      "updating": "Updating..."
+    }
+  }
+}

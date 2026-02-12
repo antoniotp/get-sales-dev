@@ -40,6 +40,7 @@ const buttonConfigItem = z.object({
 });
 
 const formSchema = z.object({
+    chatbot_channel_id: z.number({ required_error: 'Channel is required' }).min(1, 'Channel is required'),
     display_name: z.string().min(1, 'Display name is required'),
     name: z.string().min(1, 'Template name is required'),
     category_id: z.number({ required_error: 'Category is required' }).min(1, 'Category is required'),
@@ -94,7 +95,7 @@ const getNextPositionalNumber = (placeholders: string[]): number => {
 };
 
 // --- Main Component ---
-export default function TemplateForm({ categories, template }: TemplateFormPageProps) {
+export default function TemplateForm({ categories, chatbotChannels, template }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
     const headerInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -111,6 +112,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
         template
             ? {
                 ...template,
+                chatbot_channel_id: template.chatbot_channel_id || 0,
                 display_name: template.display_name || template.name,
                 header_content: template.header_content || '',
                 header_variable: template.header_variable || null,
@@ -120,6 +122,7 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                 variable_type: template.variable_type || 'positional',
             }
             : {
+                chatbot_channel_id: chatbotChannels[0]?.id || 0, // Set default if available, otherwise 0 for validation
                 display_name: '',
                 name: '',
                 category_id: 0,
@@ -151,11 +154,11 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
 
     const onSubmit = () => {
         if (template?.id) {
-            put(route('message-templates.update', template.id), {
+            put(route('message-templates.update', { chatbot: props.chatbot.id, template: template.id }), {
                 preserveScroll: true,
             });
         } else {
-            post(route('message-templates.store'), {
+            post(route('message-templates.store', props.chatbot.id), {
                 preserveScroll: true,
                 onSuccess: () => form.reset(),
             });
@@ -416,6 +419,34 @@ export default function TemplateForm({ categories, template }: TemplateFormPageP
                                     <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                                         {/* Sub-columna Izquierda del Formulario */}
                                         <div className="md:col-span-1 space-y-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="chatbot_channel_id"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Channel</FormLabel>
+                                                        <Select
+                                                            onValueChange={(value) => field.onChange(Number(value))}
+                                                            value={field.value?.toString()}
+                                                            disabled={chatbotChannels.length <= 1 && !!template} // Disable if only one channel and editing
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a channel" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {chatbotChannels.map((channel) => (
+                                                                    <SelectItem key={channel.id} value={channel.id.toString()}>
+                                                                        {channel.channel.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
                                             <FormField
                                                 control={form.control}
                                                 name="display_name"

@@ -1,11 +1,16 @@
 import { ControllerRenderProps } from 'react-hook-form';
 import { ReactNode } from 'react';
 import { TemplateFormValues } from '@/pages/message_templates/form';
+import { ChatbotChannel as GlobalChatbotChannel, Channel } from '@/types';
 
 // Main entity types
 export interface Category {
     id: number;
     name: string;
+}
+
+export interface ChatbotChannel extends GlobalChatbotChannel {
+    channel: Channel;
 }
 
 export type HeaderType = 'none' | 'text' | 'image' | 'video' | 'document';
@@ -28,6 +33,8 @@ export interface Template {
     display_name?: string;
     name: string;
     category_id: number;
+    chatbot_channel_id: number;
+    chatbot_channel?: ChatbotChannel;
     language: string;
     header_type: HeaderType;
     header_content?: string;
@@ -43,6 +50,7 @@ export interface Template {
 // Prop types for components
 export interface TemplateFormPageProps {
     categories: Category[];
+    chatbotChannels: ChatbotChannel[];
     template: Template | null;
 }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\MessageTemplates;
 
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
 use App\DataTransferObjects\MessageTemplate\MessageTemplateData;
+use App\DataTransferObjects\MessageTemplate\MessageTemplateFormData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MessageTemplates\StoreMessageTemplateRequest;
 use App\Http\Requests\MessageTemplates\UpdateMessageTemplateRequest;
@@ -55,7 +56,6 @@ class MessageTemplateController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // TODO: Adjust DTO with proper example_data parsing for the frontend
         $mapTemplate = fn (MessageTemplate $template) => MessageTemplateData::fromMessageTemplate($template)->toArray();
 
         return Inertia::render('message_templates/index', [
@@ -82,13 +82,11 @@ class MessageTemplateController extends Controller
     public function edit(MessageTemplate $template): Response
     {
         $chatbot = $template->chatbotChannel->chatbot;
-        // TODO: Ensure example_data is parsed back into header_variable and variables_schema
-        // for the frontend form to correctly display the data.
         return Inertia::render('message_templates/form', [
             'categories' => MessageTemplateCategory::query()->select(['id', 'name'])
                 ->active()->get(),
             'chatbotChannels' => $chatbot->chatbotChannels()->with('channel')->get(),
-            'template' => $template->load(['category', 'chatbotChannel']),
+            'template' => MessageTemplateFormData::fromMessageTemplate($template->load(['category', 'chatbotChannel'])),
         ]);
     }
 

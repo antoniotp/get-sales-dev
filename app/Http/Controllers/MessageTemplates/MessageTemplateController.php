@@ -79,8 +79,9 @@ class MessageTemplateController extends Controller
         ]);
     }
 
-    public function edit(Chatbot $chatbot, MessageTemplate $template): Response
+    public function edit(MessageTemplate $template): Response
     {
+        $chatbot = $template->chatbotChannel->chatbot;
         // TODO: Ensure example_data is parsed back into header_variable and variables_schema
         // for the frontend form to correctly display the data.
         return Inertia::render('message_templates/form', [
@@ -91,16 +92,18 @@ class MessageTemplateController extends Controller
         ]);
     }
 
-    public function store(StoreMessageTemplateRequest $request, Chatbot $chatbot)
+    public function store(StoreMessageTemplateRequest $request)
     {
+        $chatbot = $request->route('chatbot');
         $template = $this->messageTemplateService->createTemplate($request->validated(), $chatbot);
 
         return redirect()->route('message-templates.index', $chatbot->id)
             ->with('success', 'Template created successfully and submitted for review. You will be notified once it is approved.');
     }
 
-    public function update(UpdateMessageTemplateRequest $request, Chatbot $chatbot, MessageTemplate $template)
+    public function update(UpdateMessageTemplateRequest $request, MessageTemplate $template)
     {
+        $chatbot = $template->chatbotChannel->chatbot;
         $this->messageTemplateService->updateTemplate($template, $request->validated());
 
         return redirect()->route('message-templates.index', $chatbot->id)

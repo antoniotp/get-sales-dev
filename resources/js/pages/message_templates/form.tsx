@@ -3,6 +3,7 @@ import MessageTemplateLayout from '@/layouts/message_templates/layout';
 import { BreadcrumbItem, PageProps } from '@/types';
 import { Card, CardContent } from "@/components/ui/card";
 import { Head, useForm as useInertiaForm, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -94,6 +95,8 @@ const getNextPositionalNumber = (placeholders: string[]): number => {
     return Math.max(...numbers) + 1;
 };
 
+const WABA_CHANNEL_ID = 1;
+
 // --- Main Component ---
 export default function TemplateForm({ categories, chatbotChannels, template }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
@@ -165,6 +168,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
         }
     };
 
+    // which chatbot_channel is related to WABA channel.
     const watchedHeaderType = form.watch('header_type');
     const watchedHeaderContent = form.watch('header_content');
     const watchedHeaderVariable = form.watch('header_variable');
@@ -172,6 +176,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
     const watchedBodyContent = form.watch('body_content');
     const watchedVariableType = form.watch('variable_type');
     const watchedVariablesSchema = form.watch('variables_schema');
+    const selectedChabotChannelId = form.watch('chatbot_channel_id');
 
     // --- Header Variables Logic ---
     const detectedHeaderPlaceholders = useMemo(() => {
@@ -303,7 +308,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
         }, 0);
     };
 
-    // Add new placeholder
+    // Add a new placeholder
     const handleAddPlaceholder = () => {
         let placeholder: string;
 
@@ -403,6 +408,27 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
         );
         form.setValue('variables_schema', newSchema, { shouldValidate: true });
     };
+
+    const handleSendToReview = () => {
+        if (!template?.id) return; // Should only be available for existing templates
+
+        // Perform the Inertia POST request to the new endpoint
+        router.post(route('message-templates.send-for-review', { template: template.id }), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // The backend redirect already handles the flash message
+            },
+            onError: (errors) => {
+                console.error('Error sending for review:', errors);
+            },
+        });
+    };
+
+    const selectedChatbotChannel = useMemo(() => {
+        return chatbotChannels.find(channel => channel.id === selectedChabotChannelId);
+    }, [chatbotChannels, selectedChabotChannelId]);
+
+    const isWabaChannelSelected = selectedChatbotChannel?.channel_id === WABA_CHANNEL_ID;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -508,9 +534,9 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
-                                                                <SelectItem value="es">Spanish</SelectItem>
-                                                                <SelectItem value="en_US">English</SelectItem>
-                                                                <SelectItem value="pt_BR">Portuguese</SelectItem>
+                                                                <SelectItem key="es" value="es">Spanish</SelectItem>
+                                                                <SelectItem key="en_US" value="en_US">English</SelectItem>
+                                                                <SelectItem key="pt_BR" value="pt_BR">Portuguese</SelectItem>
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />
@@ -526,10 +552,16 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                                     {processing ? 'Saving...' : 'Save'}
                                                 </Button>
 
-                                                {/*TODO: display only if is a WABA template*/}
-                                                {/*<Button type="button" className="btn-whatsapp">
-                                                    {processing ? 'Sending to Review...' : 'Send To Review'}
-                                                </Button>*/}
+                                                {template && isWabaChannelSelected && (
+                                                    <Button
+                                                        type="button"
+                                                        className="btn-whatsapp"
+                                                        onClick={handleSendToReview}
+                                                        disabled={processing}
+                                                    >
+                                                        {processing ? 'Sending...' : 'Send To Review'}
+                                                    </Button>
+                                                )}
                                             </div>
                                         </div>
 

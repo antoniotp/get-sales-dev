@@ -3,9 +3,11 @@
 namespace App\Services\MessageTemplate;
 
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
+use App\Events\MessageTemplateCreated;
 use App\Models\Chatbot;
 use App\Models\MessageTemplate;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class MessageTemplateService implements MessageTemplateServiceInterface
@@ -34,6 +36,25 @@ class MessageTemplateService implements MessageTemplateServiceInterface
         $processedData = $this->prepareTemplateData($data);
 
         $template->update($processedData);
+
+        return $template;
+    }
+
+    /**
+     * Send a message template for review.
+     *
+     * @param  MessageTemplate  $template  The message template instance to send for review.
+     */
+    public function sendForReview(MessageTemplate $template): MessageTemplate
+    {
+        $template->update([
+            'status' => 'pending',
+            'platform_status' => 1,
+        ]);
+
+        // Dispatch event to trigger template submission for review
+        event(new MessageTemplateCreated($template));
+        Log::info('Message template sent for review: '.$template->id);
 
         return $template;
     }

@@ -22,4 +22,11 @@ interface MessageTemplateServiceInterface
      * @param  array  $data  Validated data from the request (including frontend specific fields).
      */
     public function updateTemplate(MessageTemplate $template, array $data): MessageTemplate;
+
+    /**
+     * Send a message template for review.
+     *
+     * @param  MessageTemplate  $template  The message template instance to send for review.
+     */
+    public function sendForReview(MessageTemplate $template): MessageTemplate;
 }

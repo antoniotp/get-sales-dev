@@ -82,6 +82,7 @@ class MessageTemplateController extends Controller
     public function edit(MessageTemplate $template): Response
     {
         $chatbot = $template->chatbotChannel->chatbot;
+
         return Inertia::render('message_templates/form', [
             'categories' => MessageTemplateCategory::query()->select(['id', 'name'])
                 ->active()->get(),
@@ -95,7 +96,7 @@ class MessageTemplateController extends Controller
         $chatbot = $request->route('chatbot');
         $template = $this->messageTemplateService->createTemplate($request->validated(), $chatbot);
 
-        return redirect()->route('message-templates.index', $chatbot->id)
+        return redirect()->route('message-templates.edit', ['template' => $template->id])
             ->with('success', 'Template created successfully and submitted for review. You will be notified once it is approved.');
     }
 
@@ -106,6 +107,15 @@ class MessageTemplateController extends Controller
 
         return redirect()->route('message-templates.index', $chatbot->id)
             ->with('success', 'Template updated successfully.');
+    }
+
+    public function sendForReview(MessageTemplate $template)
+    {
+        $chatbot = $template->chatbotChannel->chatbot;
+        $this->messageTemplateService->sendForReview($template);
+
+        return redirect()->route('message-templates.index', $chatbot->id)
+            ->with('success', 'Template submitted for review. You will be notified once it is approved.');
     }
 
     public function destroy(Chatbot $chatbot, MessageTemplate $template)

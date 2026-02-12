@@ -74,8 +74,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chatbots/{chatbot}/message_templates', [MessageTemplateController::class, 'index'])->name('message-templates.index');
     Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->middleware('ensure.chatbot')->name('message-templates.create');
     Route::post('/message_templates', [MessageTemplateController::class, 'store'])->middleware('ensure.chatbot')->name('message-templates.store');
-    Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->name('message-templates.edit');
+    Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->middleware('ensure.chatbot')->name('message-templates.edit');
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
+    Route::post('/message_templates/{template}/send-for-review', [MessageTemplateController::class, 'sendForReview'])->middleware('ensure.chatbot')->name('message-templates.send-for-review');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
 
     Route::post('/messages/{message}/retry', [ChatController::class, 'retryMessage'])->name('messages.retry');

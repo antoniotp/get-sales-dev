@@ -1,0 +1,56 @@
+{
+    "contactsPage": {
+        "breadcrumb": "Contacts",
+        "headTitle": "Contacts",
+        "title": "Contacts",
+        "createContact": "Create Contact",
+        "searchPlaceholder": "Search by name, email, phone...",
+        "applyFilters": "Apply Filters",
+        "openMenu": "Open menu",
+        "edit": "Edit",
+        "delete": "Delete",
+        "noResults": "No contacts found.",
+        "filters": {
+            "country": "Country",
+            "language": "Language",
+            "chatbot": "Chatbot",
+            "channel": "Channel",
+            "allCountries": "All Countries",
+            "allLanguages": "All Languages",
+            "allChatbots": "All Chatbots",
+            "allChannels": "All Channels"
+        },
+        "table": {
+            "name": "Name",
+            "contact": "Contact",
+            "location": "Location",
+            "chatbots": "Chatbots",
+            "channels": "Channels"
+        }
+    },
+
+    "form": {
+        "createTitle": "Create Contact",
+        "editTitle": "Edit Contact",
+        "createDescription": "Add a new contact to your list.",
+        "editDescription": "Update the details of the existing contact.",
+        "create": "Create Contact",
+        "saveChanges": "Save Changes",
+        "cancel": "Cancel",
+        "fields": {
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "email": "Email",
+            "phone": "Phone",
+            "country": "Country",
+            "language": "Language"
+        }
+    },
+
+    "deleteDialog": {
+        "title": "Are you sure?",
+        "description": "This action cannot be undone. This will permanently delete the contact.",
+        "cancel": "Cancel",
+        "delete": "Delete"
+    }
+}

@@ -9,6 +9,7 @@ use App\Models\ChatbotChannel;
 use App\Models\Message;
 use App\Models\MessageTemplate;
 use Exception;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -79,29 +80,40 @@ class WhatsAppService implements WhatsAppServiceInterface
             Log::info('Submitting WhatsApp template for review: '.$template->name);
             Log::info('API URL: '.$apiUrl);
 
-            // Prepare button configuration if exists
             $components = [];
+            $exampleData = $template->example_data ?? []; // Get the full example_data
 
-            // Add header component if not 'none'
+            // --- HEADER Component ---
             if ($template->header_type !== 'none' && ! empty($template->header_content)) {
-                $components[] = [
+                $headerComponent = [
                     'type' => 'HEADER',
                     'format' => strtoupper($template->header_type),
-                    'text' => $template->header_type === 'text' ? $template->header_content : null,
-                    'example' => $template->header_type !== 'text' ? ['header_handle' => [0 => $template->header_content]] : null,
                 ];
+
+                if ($template->header_type === 'text') {
+                    $headerComponent['text'] = $template->header_content;
+                }
+                // Add the example object for the header part if present in example_data
+                $headerExample = Arr::only($exampleData, ['header_text', 'header_text_named_params', 'header_handle']);
+                if (! empty($headerExample)) {
+                    $headerComponent['example'] = $headerExample;
+                }
+                $components[] = $headerComponent;
             }
 
-            // Add body component (required)
-            $components[] = [
+            // --- BODY Component (Required) ---
+            $bodyComponent = [
                 'type' => 'BODY',
                 'text' => $template->body_content,
-                'example' => [
-                    'body_text' => $this->extractVariableExamples($template),
-                ],
             ];
+            // Add the example object for the body part if present in example_data
+            $bodyExample = Arr::only($exampleData, ['body_text', 'body_text_named_params']);
+            if (! empty($bodyExample)) {
+                $bodyComponent['example'] = $bodyExample;
+            }
+            $components[] = $bodyComponent;
 
-            // Add footer component if exists
+            // --- FOOTER Component ---
             if (! empty($template->footer_content)) {
                 $components[] = [
                     'type' => 'FOOTER',
@@ -109,14 +121,23 @@ class WhatsAppService implements WhatsAppServiceInterface
                 ];
             }
 
-            // Add buttons if configured
+            // --- BUTTONS Component ---
             if (! empty($template->button_config)) {
                 $buttons = [];
                 foreach ($template->button_config as $button) {
-                    $buttons[] = [
-                        'type' => $button['type'] ?? 'QUICK_REPLY',
-                        'text' => $button['text'] ?? 'Button',
+                    $buttonPayload = [
+                        'text' => $button['text'],
+                        'type' => $button['type'],
                     ];
+
+                    if ($button['type'] === 'URL') {
+                        // Only add the 'url' field if the type is URL and it's not empty
+                        if (! empty($button['url'])) {
+                            $buttonPayload['url'] = $button['url'];
+                        }
+                    }
+
+                    $buttons[] = $buttonPayload;
                 }
 
                 if (! empty($buttons)) {
@@ -128,14 +149,18 @@ class WhatsAppService implements WhatsAppServiceInterface
             }
 
             // Submit template to WhatsApp API
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$accessToken,
-            ])->post($apiUrl.'/message_templates', [
+            $categoryName = $template->category->name ?? 'UTILITY'; // Fallback for safety
+            $payload = [
                 'name' => $template->name,
-                'category' => $template->category->name,
+                'category' => strtoupper($categoryName), // Meta expects category in uppercase
                 'language' => $template->language,
                 'components' => $components,
-            ]);
+            ];
+            Log::info('Submitting template payload: '.json_encode($payload));
+
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->post($apiUrl.'/message_templates', $payload);
 
             if (! $response->successful()) {
                 throw new Exception('Failed to submit WhatsApp template: '.$response->body());
@@ -257,52 +282,5 @@ class WhatsAppService implements WhatsAppServiceInterface
         }
 
         throw new Exception('Invalid operation type: '.$operationType);
-    }
-
-    /**
-     * Extract example values for variables in the template
-     */
-    private function extractVariableExamples(MessageTemplate $template): array
-    {
-        $examples = [];
-        $variablesSchema = $template->variables_schema ?? [];
-
-        // If we have a schema with the new format, use those
-        if (! empty($variablesSchema)) {
-            // Check if it's the new JSON format with placeholder and example
-            if (is_array($variablesSchema) && isset($variablesSchema[0]['placeholder']) && isset($variablesSchema[0]['example'])) {
-                // Sort by placeholder number to maintain order ({{1}}, {{2}}, {{3}}, etc.)
-                usort($variablesSchema, function ($a, $b) {
-                    // Extract number from placeholder {{1}}, {{2}}, etc.
-                    $numA = (int) preg_replace('/[^0-9]/', '', $a['placeholder']);
-                    $numB = (int) preg_replace('/[^0-9]/', '', $b['placeholder']);
-
-                    return $numA <=> $numB;
-                });
-
-                // Extract examples in the correct order
-                foreach ($variablesSchema as $variable) {
-                    $examples[] = $variable['example'];
-                }
-            } else {
-                // Legacy format - check if it has 'example' key directly
-                foreach ($variablesSchema as $variable) {
-                    if (isset($variable['example'])) {
-                        $examples[] = $variable['example'];
-                    } else {
-                        // Default example if not specified
-                        $examples[] = 'Example';
-                    }
-                }
-            }
-        } else {
-            // Fallback: Count variables in the body content ({{1}}, {{2}}, etc.)
-            $count = $template->variables_count;
-            for ($i = 0; $i < $count; $i++) {
-                $examples[] = 'Example '.($i + 1);
-            }
-        }
-
-        return $examples;
     }
 }

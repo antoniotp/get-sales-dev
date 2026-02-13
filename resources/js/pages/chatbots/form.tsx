@@ -23,6 +23,8 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
+
 
 interface Chatbot {
     id: number;
@@ -41,21 +43,22 @@ interface Props {
 }
 
 // Zod schema definition
-const formSchema = z.object({
-    name: z.string().min(1, 'Agent name is required'),
-    description: z.string().min(1, 'Description is required'),
+const getFormSchema = (t: TFunction<'chatbot'>) =>
+z.object({
+    name: z.string().min(1, t('form.validation.name_required')),
+    description: z.string().min(1, t('form.validation.description_required')),
     system_prompt: z.string().optional(),
-    response_delay_min: z.number().min(0, 'Minimum delay must be 0 or greater'),
-    response_delay_max: z.number().min(0, 'Maximum delay must be 0 or greater'),
+    response_delay_min: z.number().min(0, t('form.validation.min_delay_invalid')),
+    response_delay_max: z.number().min(0, t('form.validation.max_delay_invalid')),
     status: z.number().optional(),
     ai_enabled: z.boolean().optional(),
     agent_visibility: z.enum(['all', 'assigned_only']).optional(),
 }).refine((data) => data.response_delay_max >= data.response_delay_min, {
-    message: "Maximum delay must be greater than or equal to minimum delay",
-    path: ["response_delay_max"],
+    message: t('form.validation.delay_range_invalid'),
+    path: ['response_delay_max'],
 });
 
-type ChatbotFormValues = z.infer<typeof formSchema>;
+type ChatbotFormValues = z.infer<ReturnType<typeof getFormSchema>>;
 
 export default function ChatbotForm({ chatbot }: Props) {
 
@@ -104,7 +107,7 @@ export default function ChatbotForm({ chatbot }: Props) {
 
     // React Hook Form with Zod validation
     const form = useForm<ChatbotFormValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(getFormSchema(t)),
         defaultValues: inertiaData,
         mode: 'onBlur',
     });

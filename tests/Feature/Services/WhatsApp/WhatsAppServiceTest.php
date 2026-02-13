@@ -217,4 +217,130 @@ class WhatsAppServiceTest extends TestCase
             return true;
         });
     }
+
+    #[Test]
+    public function it_handles_named_parameters_correctly_in_payload(): void
+    {
+        Http::fake([
+            'https://graph.facebook.com/v24.0/*/message_templates' => Http::response([
+                'id' => 'mocked_external_id_123',
+                'status' => 'pending',
+            ], 200),
+        ]);
+
+        $template = MessageTemplate::factory()->for($this->channel)->create([
+            'name' => 'seasonal_promotion',
+            'language' => 'en_US',
+            'category_id' => $this->marketingCategory->id,
+            'header_type' => 'text',
+            'header_content' => 'Our {{campaign}} is on!',
+            'body_content' => 'Shop now through {{store}} and use code {{promo_code}} to get {{discount}} off of all merchandise.',
+            'footer_content' => 'Use the buttons below to manage your marketing subscriptions',
+            'button_config' => [
+                ['type' => 'QUICK_REPLY', 'text' => 'Unsubscribe from Promos'],
+                ['type' => 'QUICK_REPLY', 'text' => 'Unsubscribe from All'],
+            ],
+            'example_data' => [
+                'header_text_named_params' => [
+                    [
+                        'param_name'    => 'campaign',
+                        'example' => 'Summer Sale',
+                    ]
+                ],
+                'body_text_named_params'   => [
+                    [
+                        'param_name' => 'store',
+                        'example'    => 'the end of August',
+                    ],
+                    [
+                        'param_name' => 'promo_code',
+                        'example'    => '25OFF',
+                    ],
+                    [
+                        'param_name' => 'discount',
+                        'example'    => '25%',
+                    ]
+                ]
+            ],
+            'status' => 'pending',
+            'platform_status' => 1,
+        ]);
+
+        // Define the expected payload that WhatsApp API should receive
+        $expectedPayload = [
+            'name' => 'seasonal_promotion',
+            'language' => 'en_US',
+            'category' => 'MARKETING',
+            'components' => [
+                [
+                    'type' => 'HEADER',
+                    'format' => 'TEXT',
+                    'text' => 'Our {{campaign}} is on!',
+                    'example' => [
+                        'header_text_named_params' => [
+                            [
+                                'param_name'    => 'campaign',
+                                'example' => 'Summer Sale',
+                            ]
+                        ],
+                    ]
+                ],
+                [
+                    'type' => 'BODY',
+                    'text' => 'Shop now through {{store}} and use code {{promo_code}} to get {{discount}} off of all merchandise.',
+                    'example' => [
+                        'body_text_named_params'   => [
+                            [
+                                'param_name' => 'store',
+                                'example'    => 'the end of August',
+                            ],
+                            [
+                                'param_name' => 'promo_code',
+                                'example'    => '25OFF',
+                            ],
+                            [
+                                'param_name' => 'discount',
+                                'example'    => '25%',
+                            ]
+                        ]
+                    ]
+                ],
+                [
+                    'type' => 'FOOTER',
+                    'text' => 'Use the buttons below to manage your marketing subscriptions',
+                ],
+                [
+                    'type' => 'BUTTONS',
+                    'buttons' => [
+                        [
+                            'type' => 'QUICK_REPLY',
+                            'text' => 'Unsubscribe from Promos',
+                        ],
+                        [
+                            'type' => 'QUICK_REPLY',
+                            'text' => 'Unsubscribe from All',
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
+        $this->whatsAppService->submitTemplateForReview($template);
+
+        // Assert that an HTTP request was sent with the correct payload
+        Http::assertSent(function (Request $request) use ($expectedPayload) {
+            // Check the URL
+            $expectedUrl = 'https://graph.facebook.com/v24.0/102290129340398/message_templates';
+            $this->assertEquals($expectedUrl, $request->url());
+
+            // Check the headers
+            $this->assertStringContainsString('Bearer EAAJBsdgh', $request->header('Authorization')[0]);
+            $this->assertEquals('application/json', $request->header('Content-Type')[0]);
+
+            // Check the body payload - this is the core assertion
+            $this->assertEquals($expectedPayload, $request->data());
+
+            return true; // Indicate that this request matches our assertion criteria
+        });
+    }
 }

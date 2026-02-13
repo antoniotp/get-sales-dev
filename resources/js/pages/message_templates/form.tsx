@@ -106,7 +106,7 @@ const getNextPositionalNumber = (placeholders: string[]): number => {
 const WABA_CHANNEL_ID = 1;
 
 // --- Main Component ---
-export default function TemplateForm({ categories, chatbotChannels, template }: TemplateFormPageProps) {
+export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
     const headerInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -542,9 +542,11 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
-                                                                <SelectItem key="es" value="es">Spanish</SelectItem>
-                                                                <SelectItem key="en_US" value="en_US">English</SelectItem>
-                                                                <SelectItem key="pt_BR" value="pt_BR">Portuguese</SelectItem>
+                                                                {availableLanguages.map((lang) => (
+                                                                    <SelectItem key={lang.code} value={lang.code}>
+                                                                        {lang.name}
+                                                                    </SelectItem>
+                                                                ))}
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />

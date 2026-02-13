@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\MessageTemplates;
 
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
+use App\Contracts\Services\WhatsApp\WabaLanguageServiceInterface;
 use App\DataTransferObjects\MessageTemplate\MessageTemplateData;
 use App\DataTransferObjects\MessageTemplate\MessageTemplateFormData;
 use App\Http\Controllers\Controller;
@@ -19,7 +20,8 @@ class MessageTemplateController extends Controller
 {
     public function __construct(
         private Organization $organization,
-        private MessageTemplateServiceInterface $messageTemplateService
+        private MessageTemplateServiceInterface $messageTemplateService,
+        private WabaLanguageServiceInterface $wabaLanguageService
     ) {}
 
     public function index(Chatbot $chatbot): Response
@@ -76,6 +78,7 @@ class MessageTemplateController extends Controller
                 ->active()->get(),
             'chatbotChannels' => $chatbot->chatbotChannels()->with('channel')->get(),
             'template' => null,
+            'availableLanguages' => $this->wabaLanguageService->getEnabled(),
         ]);
     }
 
@@ -88,6 +91,7 @@ class MessageTemplateController extends Controller
                 ->active()->get(),
             'chatbotChannels' => $chatbot->chatbotChannels()->with('channel')->get(),
             'template' => MessageTemplateFormData::fromMessageTemplate($template->load(['category', 'chatbotChannel'])),
+            'availableLanguages' => $this->wabaLanguageService->getEnabled(),
         ]);
     }
 

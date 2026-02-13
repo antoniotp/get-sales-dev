@@ -12,6 +12,7 @@ import { EllipsisVertical } from 'lucide-react';
 import { DeleteContactDialog } from '@/pages/contacts/partials/delete-contact-dialog';
 import { UpsertContactSheet } from '@/pages/contacts/partials/upsert-contact-sheet';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Contact } from '@/types/contact';
 import { Card } from '@/components/ui/card';
 import { CustomPagination } from '@/components/general/CustomPagination';
@@ -49,11 +50,13 @@ interface FormData {
     [key: string]: string | undefined;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Contacts', href: route('contacts.index') },
-];
-
 export default function ContactsPage({ contacts, filters, filterOptions }: ContactsPageProps) {
+    const { t } = useTranslation('contact');
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: t('contactsPage.breadcrumb'), href: route('contacts.index') },
+    ];
+
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedContact, setSelectedContact] = useState<Contact | undefined>(undefined);
@@ -88,23 +91,23 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Contacts" />
+            <Head title={t('contactsPage.headTitle')} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <Card className="w-full p-3">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Contacts</h2>
+                            <h2 className="text-2xl font-bold">{t('contactsPage.title')}</h2>
                             <Button className="ml-2" onClick={() => {
                                 setTimeout(() => {
                                     setSelectedContact(undefined);
                                     setIsSheetOpen(true);
                                 }, 100);
-                            }}>Create Contact</Button>
+                            }}>{t('contactsPage.createContact')}</Button>
                         </div>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
                                 <Input
-                                    placeholder="Search by name, email, phone..."
+                                    placeholder={t('contactsPage.searchPlaceholder')}
                                     className="max-w-sm"
                                     value={data.search}
                                     onChange={(e) => setData('search', e.target.value)}
@@ -112,10 +115,10 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                 />
                                 <Select value={data.country} onValueChange={(v) => handleSelectChange('country', v)}>
                                     <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Country" />
+                                        <SelectValue placeholder={t('contactsPage.filters.country')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Countries</SelectItem>
+                                        <SelectItem value="all">{t('contactsPage.filters.allCountries')}</SelectItem>
                                         {filterOptions.countries.map((country) => (
                                             <SelectItem key={country} value={country}>
                                                 {country}
@@ -125,10 +128,10 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                 </Select>
                                 <Select value={data.language} onValueChange={(v) => handleSelectChange('language', v)}>
                                     <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Language" />
+                                        <SelectValue placeholder={t('contactsPage.filters.language')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Languages</SelectItem>
+                                        <SelectItem value="all">{t('contactsPage.filters.allLanguages')}</SelectItem>
                                         {filterOptions.languages.map((lang) => (
                                             <SelectItem key={lang} value={lang}>
                                                 {lang}
@@ -138,10 +141,10 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                 </Select>
                                 <Select value={data.chatbot} onValueChange={(v) => handleSelectChange('chatbot', v)}>
                                     <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Chatbot" />
+                                        <SelectValue placeholder={t('contactsPage.filters.chatbot')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Chatbots</SelectItem>
+                                        <SelectItem value="all">{t('contactsPage.filters.allChatbots')}</SelectItem>
                                         {filterOptions.chatbots.map((bot) => (
                                             <SelectItem key={bot.id} value={String(bot.id)}>
                                                 {bot.name}
@@ -151,10 +154,10 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                 </Select>
                                 <Select value={data.channel} onValueChange={(v) => handleSelectChange('channel', v)}>
                                     <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Channel" />
+                                        <SelectValue placeholder={t('contactsPage.filters.channel')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Channels</SelectItem>
+                                        <SelectItem value="all">{t('contactsPage.filters.allChannels')}</SelectItem>
                                         {filterOptions.channels.map((chan) => (
                                             <SelectItem key={chan.id} value={String(chan.id)}>
                                                 {chan.name}
@@ -162,7 +165,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <Button onClick={handleFilterChange}>Apply Filters</Button>
+                                <Button onClick={handleFilterChange}>{t('contactsPage.applyFilters')}</Button>
                             </div>
 
                         </div>
@@ -171,11 +174,11 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Contact</TableHead>
-                                        <TableHead>Location</TableHead>
-                                        <TableHead>Chatbots</TableHead>
-                                        <TableHead>Channels</TableHead>
+                                        <TableHead>{t('contactsPage.table.name')}</TableHead>
+                                        <TableHead>{t('contactsPage.table.contact')}</TableHead>
+                                        <TableHead>{t('contactsPage.table.location')}</TableHead>
+                                        <TableHead>{t('contactsPage.table.chatbots')}</TableHead>
+                                        <TableHead>{t('contactsPage.table.channels')}</TableHead>
                                         <TableHead></TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -216,7 +219,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                <span className="sr-only">Open menu</span>
+                                                                <span className="sr-only">{t('contactsPage.openMenu')}</span>
                                                                 <EllipsisVertical className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -229,7 +232,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                                                     }, 100);
                                                                 }}
                                                             >
-                                                                Edit
+                                                                {t('contactsPage.edit')}
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
                                                                 onClick={() => {
@@ -238,7 +241,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                                                 }}
                                                                 className="text-red-600"
                                                             >
-                                                                Delete
+                                                                {t('contactsPage.delete')}
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
@@ -248,7 +251,7 @@ export default function ContactsPage({ contacts, filters, filterOptions }: Conta
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={6} className="h-24 text-center">
-                                                No contacts found.
+                                                {t('contactsPage.noResults')}
                                             </TableCell>
                                         </TableRow>
                                     )}

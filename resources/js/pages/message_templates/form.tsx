@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { File, Image as ImageIcon, Pilcrow, Trash2, Video, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -35,9 +35,17 @@ const variableSchemaItem = z.object({
 
 const buttonConfigItem = z.object({
     type: z.enum(['QUICK_REPLY', 'URL', 'PHONE_NUMBER', 'COPY_CODE']),
-    text: z.string(),
-    url: z.string().nullable().optional(),
+    text: z.string().min(1, 'Button text is required'),
+    url: z.string().url('Must be a valid URL').nullable().optional(),
     phone_number: z.string().optional(),
+}).superRefine((data, ctx) => {
+    if (data.type === 'URL' && (!data.url || data.url.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'URL is required for URL buttons.',
+            path: ['url'],
+        });
+    }
 });
 
 const formSchema = z.object({
@@ -725,22 +733,39 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                                         </div>
                                                         {hasHeaderVariable && watchedHeaderVariable && (
                                                             <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
-                                                                <span className="font-mono text-sm font-medium">
-                                                                    {watchedHeaderVariable.placeholder}
-                                                                </span>
-                                                                <Input
-                                                                    placeholder="Enter example value..."
-                                                                    value={watchedHeaderVariable.example}
-                                                                    onChange={(e) => handleHeaderExampleChange(e.target.value)}
+                                                                <FormField
+                                                                    control={form.control}
+                                                                    name="header_variable.example"
+                                                                    render={({field}) => (
+                                                                        <>
+                                                                            <span className="font-mono text-sm font-medium">
+                                                                                {watchedHeaderVariable.placeholder}
+                                                                            </span>
+                                                                            <FormItem className="space-y-0">
+                                                                                <FormControl>
+                                                                                    <Input
+                                                                                        placeholder="Enter example value..."
+                                                                                        value={field.value}
+                                                                                        onChange={(e) => {
+                                                                                            handleHeaderExampleChange(e.target.value)
+                                                                                            field.onChange(e);
+                                                                                        }}
+                                                                                        onBlur={field.onBlur}
+                                                                                    />
+                                                                                </FormControl>
+                                                                                <FormMessage className="text-xs" />
+                                                                            </FormItem>
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                onClick={handleRemoveHeaderVariable}
+                                                                            >
+                                                                                <Trash2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
                                                                 />
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={handleRemoveHeaderVariable}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
                                                             </div>
                                                         )}
                                                     </div>
@@ -861,18 +886,31 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                                         <Label className="text-sm">Detected Variables ({watchedVariablesSchema.length})</Label> *<small>All are required</small>
                                                         <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center rounded-lg border p-3">
                                                             {watchedVariablesSchema.map((variable, index) => (
-                                                                <>
-                                                                    <span key={`label-${index}`} className="font-mono text-sm font-medium">
+                                                                <Fragment key={index}>
+                                                                    <span className="font-mono text-sm font-medium">
                                                                         {variable.placeholder}
                                                                     </span>
-                                                                    <Input
-                                                                        key={`input-${index}`}
-                                                                        placeholder="Enter example value..."
-                                                                        value={variable.example}
-                                                                        onChange={(e) => handleExampleChange(variable.placeholder, e.target.value)}
-                                                                    />
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name={`variables_schema.${index}.example`}
+                                                                        render={({ field }) => (
+                                                                            <FormItem className="space-y-0">
+                                                                                <FormControl>
+                                                                                    <Input
+                                                                                        placeholder="Enter example value..."
+                                                                                        value={field.value}
+                                                                                        onChange={(e) => {
+                                                                                            handleExampleChange(variable.placeholder, e.target.value)
+                                                                                            field.onChange(e)
+                                                                                        }}
+                                                                                        onBlur={field.onBlur}
+                                                                                    />
+                                                                                </FormControl>
+                                                                                <FormMessage className="text-xs" />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />{' '}
                                                                     <Button
-                                                                        key={`btn-${index}`}
                                                                         type="button"
                                                                         variant="ghost"
                                                                         size="icon"
@@ -880,7 +918,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                                                     >
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
-                                                                </>
+                                                                </Fragment>
                                                             ))}
                                                         </div>
                                                     </div>

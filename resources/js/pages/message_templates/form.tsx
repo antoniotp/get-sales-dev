@@ -439,7 +439,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
     const isWabaChannelSelected = selectedChatbotChannel?.channel_id === WABA_CHANNEL_ID;
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs} customMainClassName="overflow-y-hidden">
             <Head title={template ? 'Edit Message Template' : 'Create Message Template'} />
             <MessageTemplateLayout>
                 <h2 className="text-2xl font-bold mb-2">{template ? 'Update Template' : 'Create Template'}</h2>

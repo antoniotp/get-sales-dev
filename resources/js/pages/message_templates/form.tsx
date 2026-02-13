@@ -443,14 +443,14 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
             <Head title={template ? 'Edit Message Template' : 'Create Message Template'} />
             <MessageTemplateLayout>
                 <h2 className="text-2xl font-bold mb-2">{template ? 'Update Template' : 'Create Template'}</h2>
-                <div className="h-[calc(100vh-11rem)] w-full overflow-auto">
+                <div className="h-[calc(100vh-9rem)] w-full overflow-auto">
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-row gap-4 w-full">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-row gap-2 w-full">
 
                             {/* Columna del Formulario */}
                             <div className="flex-1">
-                                <Card>
-                                    <CardContent className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Card className="py-2">
+                                    <CardContent className="p-2 grid grid-cols-1 md:grid-cols-3 gap-4">
                                         {/* Sub-columna Izquierda del Formulario */}
                                         <div className="md:col-span-1 space-y-6">
                                             <FormField
@@ -574,7 +574,7 @@ export default function TemplateForm({ categories, chatbotChannels, template }: 
                                         </div>
 
                                         {/* Sub-columna Derecha del Formulario */}
-                                        <div className="md:col-span-2 space-y-6">
+                                        <div className="md:col-span-2 space-y-6 md:h-[calc(100vh-12rem)] md:overflow-auto">
                                             <div className="flex justify-between items-center">
                                                 <h3 className="text-lg font-medium">
                                                     {form.watch('display_name') || 'Template Name'} • {form.watch('language')}

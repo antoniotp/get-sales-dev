@@ -19,6 +19,7 @@ use App\Contracts\Services\System\TimezoneServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
+use App\Contracts\Services\WhatsApp\WabaLanguageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
@@ -40,6 +41,7 @@ use App\Services\System\TimezoneService;
 use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\Util\PhoneService;
 use App\Services\WhatsApp\FacebookService;
+use App\Services\WhatsApp\WabaLanguageService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\WhatsApp\WhatsAppWebhookHandlerService;
 use App\Services\WhatsApp\WhatsAppWebService;
@@ -94,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(PushSubscriptionServiceInterface::class, PushSubscriptionService::class);
         $this->app->bind(TimezoneServiceInterface::class, TimezoneService::class);
         $this->app->bind(MessageTemplateServiceInterface::class, MessageTemplateService::class);
+        $this->app->bind(WabaLanguageServiceInterface::class, WabaLanguageService::class);
     }
 
     /**

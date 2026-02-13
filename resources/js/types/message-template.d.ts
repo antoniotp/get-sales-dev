@@ -52,6 +52,7 @@ export interface TemplateFormPageProps {
     categories: Category[];
     chatbotChannels: ChatbotChannel[];
     template: Template | null;
+    availableLanguages: { code: string; name: string }[];
 }
 
 export interface HeaderTypeButtonProps {

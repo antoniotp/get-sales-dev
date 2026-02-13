@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\MessageTemplates;
 
+use App\Contracts\Services\WhatsApp\WabaLanguageServiceInterface;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -22,7 +23,7 @@ class StoreMessageTemplateRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array|string>
      */
-    public function rules(): array
+    public function rules(WabaLanguageServiceInterface $wabaLanguageService): array
     {
         $chatbot = $this->route('chatbot');
 
@@ -34,7 +35,7 @@ class StoreMessageTemplateRequest extends FormRequest
                 // Ensure the name is unique for the given chatbot channel
                 Rule::unique('message_templates')->where(function ($query) {
                     return $query->where('chatbot_channel_id', $this->input('chatbot_channel_id'));
-                })
+                }),
             ],
             'display_name' => 'required|string|max:255',
             'chatbot_channel_id' => [
@@ -46,7 +47,7 @@ class StoreMessageTemplateRequest extends FormRequest
                 }),
             ],
             'category_id' => 'required|exists:message_template_categories,id',
-            'language' => 'required|string|max:10',
+            'language' => ['required', 'string', Rule::in($wabaLanguageService->getEnabledCodes())],
             'header_type' => 'required|string|in:none,text,image,video,document',
             'header_content' => 'nullable|string|max:1024',
             'header_variable' => 'nullable|array',

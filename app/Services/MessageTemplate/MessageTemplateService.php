@@ -81,7 +81,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
             if ($headerVariableType === 'named') {
                 $exampleData['header_text_named_params'] = [
                     [
-                        'param_name' => Str::after($headerVariable['placeholder'], '{{', '}'),
+                        'param_name' => Str::after(Str::before($headerVariable['placeholder'], '}}'), '{{'),
                         'example' => $headerVariable['example'],
                     ],
                 ];
@@ -102,7 +102,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
                 $namedParams = [];
                 foreach ($variablesSchema as $var) {
                     $namedParams[] = [
-                        'param_name' => Str::after($var['placeholder'], '{{', '}'),
+                        'param_name' => Str::after(Str::before($var['placeholder'], '}}'), '{{'),
                         'example' => $var['example'],
                     ];
                 }

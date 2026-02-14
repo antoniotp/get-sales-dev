@@ -5,6 +5,8 @@ import login from './locales/es/login.json';
 import register from './locales/es/register.json';
 import chatbot from './locales/es/chatbot.json';
 import contact from './locales/es/contact.json';
+import organization from './locales/es/organization.json';
+import messageTemplates from './locales/es/message_templates.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -15,6 +17,8 @@ declare module 'i18next' {
       register: typeof register;
       chatbot: typeof chatbot;
       contact: typeof contact;
+      organization: typeof organization;
+      message_templates: typeof messageTemplates;
     };
   }
 }

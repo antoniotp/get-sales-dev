@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Member extends User {
     pivot: {
@@ -55,6 +56,8 @@ interface MembersPageProps {
 
 // --- Invite Member Form ---
 function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: boolean) => void }) {
+    const { t } = useTranslation('organization');
+
     const { data, setData, post, processing, errors, wasSuccessful, reset } = useForm({
         email: '',
         role_id: '',
@@ -77,11 +80,11 @@ function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: bo
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t('members.invite.fields.email')}</Label>
                 <Input
                     id="email"
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder={t('members.invite.placeholders.email')}
                     value={data.email}
                     onChange={(e) => setData('email', e.target.value)}
                     disabled={processing}
@@ -89,10 +92,10 @@ function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: bo
                 {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div className="grid gap-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role">{t('members.invite.fields.role')}</Label>
                 <Select onValueChange={(value) => setData('role_id', value)} value={data.role_id} disabled={processing}>
                     <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
+                        <SelectValue placeholder={t('members.invite.placeholders.role')} />
                     </SelectTrigger>
                     <SelectContent>
                         {Object.values(roles).map((role) => (
@@ -106,17 +109,17 @@ function InviteMemberForm({ roles, setOpen }: { roles: Roles; setOpen: (open: bo
             </div>
             <DialogFooter>
                 <Button type="submit" disabled={processing}>
-                    {processing ? 'Sending...' : 'Send Invitation'}
+                    {processing ? t('members.invite.actions.sending') : t('members.invite.actions.send')}
                 </Button>
             </DialogFooter>
         </form>
     );
 }
 
-
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Members', href: route('organizations.members.index') },
+    { title: 'organization:members.breadcrumb', href: route('organizations.members.index') },
 ];
+
 // --- Main Page Component ---
 export default function OrganizationMembers({
     organizationDetails,
@@ -125,6 +128,7 @@ export default function OrganizationMembers({
     currentUserRoleSlug,
     invitations,
 }: MembersPageProps) {
+    const { t } = useTranslation('organization');
     const [isInviteDialogOpen, setInviteDialogOpen] = useState(false);
 
     const formatDate = (dateString: string) => {
@@ -146,24 +150,30 @@ export default function OrganizationMembers({
         });
     };
 
+    const translatedBreadcrumbs = [
+        { ...breadcrumbs[0], title: t('members.breadcrumb') },
+    ];
+
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Members of ${organizationDetails.name}`} />
+        <AppLayout breadcrumbs={translatedBreadcrumbs}>
+            <Head title={t('members.head.title', { name: organizationDetails.name })} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <div className="w-full overflow-auto pb-12 space-y-8">
                         <Card className="w-full p-3 overflow-auto">
                             <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Organization Members</CardTitle>
+                                <CardTitle>{t('members.title')}</CardTitle>
                                 <Dialog open={isInviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                                     <DialogTrigger asChild>
-                                        <Button disabled={!canInvite}>Invite Member</Button>
+                                        <Button disabled={!canInvite}>
+                                            {t('members.invite.button')}
+                                        </Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Invite a new member</DialogTitle>
+                                            <DialogTitle>{t('members.invite.title')}</DialogTitle>
                                             <DialogDescription>
-                                                Enter the email address and assign a role for the new member.
+                                                {t('members.invite.description')}
                                             </DialogDescription>
                                         </DialogHeader>
                                         <InviteMemberForm roles={roles} setOpen={setInviteDialogOpen} />
@@ -174,11 +184,11 @@ export default function OrganizationMembers({
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Name</TableHead>
-                                            <TableHead>Email</TableHead>
-                                            <TableHead>Role</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Joined At</TableHead>
+                                            <TableHead>{t('members.table.name')}</TableHead>
+                                            <TableHead>{t('members.table.email')}</TableHead>
+                                            <TableHead>{t('members.table.role')}</TableHead>
+                                            <TableHead>{t('members.table.status')}</TableHead>
+                                            <TableHead>{t('members.table.joined')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -186,7 +196,7 @@ export default function OrganizationMembers({
                                             <TableRow key={member.id}>
                                                 <TableCell>{member.name}</TableCell>
                                                 <TableCell>{member.email}</TableCell>
-                                                <TableCell>{roles[member.pivot.role_id]?.name || 'N/A'}</TableCell>
+                                                <TableCell>{roles[member.pivot.role_id]?.name || t('members.table.na')}</TableCell>
                                                 <TableCell>{member.pivot.status}</TableCell>
                                                 <TableCell>{formatDate(member.pivot.joined_at)}</TableCell>
                                             </TableRow>
@@ -199,17 +209,17 @@ export default function OrganizationMembers({
                         {invitations.length > 0 && (
                             <Card className="w-full p-3 overflow-auto">
                                 <CardHeader>
-                                    <CardTitle>Invitations</CardTitle>
+                                    <CardTitle>{t('members.invitations.title')}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead>Email</TableHead>
-                                                <TableHead>Role</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead>Expires At</TableHead>
-                                                <TableHead>Actions</TableHead>
+                                                <TableHead>{t('members.table.email')}</TableHead>
+                                                <TableHead>{t('members.table.role')}</TableHead>
+                                                <TableHead>{t('members.table.status')}</TableHead>
+                                                <TableHead>{t('members.table.expires')}</TableHead>
+                                                <TableHead>{t('members.table.actions')}</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
@@ -225,14 +235,14 @@ export default function OrganizationMembers({
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => handleCancelInvitation(invitation.id)}>
-                                                                Cancel
+                                                                {t('members.actions.cancel')}
                                                             </Button>
                                                         ) : (
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
                                                                 onClick={() => handleResendInvitation(invitation.id)}>
-                                                                Resend
+                                                                {t('members.actions.resend')}
                                                             </Button>
                                                         )}
                                                     </TableCell>

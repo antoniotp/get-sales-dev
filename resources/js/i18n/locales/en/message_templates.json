@@ -1,0 +1,102 @@
+{
+    "templates": {
+        "page_title": "Message templates | List",
+        "title": "Message Templates",
+        "create": "Create Template",
+        "management": "Message templates management",
+        "caption": "A list of your templates.",
+        "confirm_delete": "Are you sure you want to delete this template?",
+        "delete_failed": "Failed to delete template.",
+        "no_templates": "No templates found",
+        "open_menu": "Open menu",
+        "actions": "Actions",
+        "edit": "Edit",
+        "delete": "Delete",
+        "deleted": "Deleted",
+        "active": "Active",
+        "inactive": "Inactive",
+        "tabs": {
+        "library": "Template Library",
+        "active": "Active",
+        "deleted": "Deleted"
+        },
+        "table": {
+        "name": "Name",
+        "platform_status": "Platform Status",
+        "category": "Category",
+        "language": "Language",
+        "active": "Active",
+        "actions": "Actions"
+        },
+        "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "paused": "Paused",
+        "disabled": "Disabled"
+        }
+    },
+
+    "form": {
+        "create_head_title": "Create Message Template",
+        "edit_head_title": "Edit Message Template",
+
+        "create_title": "Create Template",
+        "update_title": "Update Template",
+
+        "template_name": "Template Name",
+        "template_name_placeholder": "my_awesome_template",
+        "template_name_description": "Use lowercase letters, numbers, and underscores.",
+
+        "category": "Category",
+        "select_category": "Select a category",
+
+        "language": "Language",
+        "select_language": "Select language",
+        "languages": {
+        "es": "Spanish (es)",
+        "en": "English (en)",
+        "pt": "Portuguese (pt)"
+        },
+
+        "template_content": "Template Content",
+        "template_content_description": "Craft the message that will be sent to your users.",
+
+        "header_type": "Header Type",
+        "header_type_description": "Choose the type of header for your message. 'None' means no header.",
+        "header_types": {
+        "none": "None",
+        "text": "Text",
+        "image": "Image",
+        "video": "Video",
+        "document": "Document"
+        },
+
+        "header_content": "Header Content",
+        "header_text_placeholder": "Your header text (max 60 characters, no variables)",
+        "header_media_placeholder": "URL to your media/document (e.g., https://example.com/image.jpg)",
+
+        "message_body": "Message Body",
+        "body_placeholder": "Enter message content with variables like {{1}}, {{2}}. E.g., Hello {{1}}, your order {{2}} has shipped.",
+
+        "variable_examples": "Variable Examples",
+        "variable_examples_description": "Provide example values for each variable to help users understand what data should be passed.",
+        "variable_example_placeholder": "Example for {{variable}}",
+
+        "footer_content": "Footer Content (Optional)",
+        "footer_placeholder": "e.g., Regards, Your Team (max 60 characters, no variables)",
+
+        "advanced_configuration": "Advanced Configuration (Optional)",
+        "advanced_configuration_description": "Configure interactive buttons and define your template variables.",
+
+        "button_configuration": "Button Configuration (JSON)",
+        "button_configuration_description": "Enter a JSON array for button configuration. Supports `reply`, `url`, and `call` types. URL buttons can use variables. Refer to Meta's documentation for exact structure.",
+        "button_configuration_placeholder": "[\n  {\n    \"type\": \"reply\",\n    \"text\": \"Yes!\"\n  },\n  {\n    \"type\": \"url\",\n    \"text\": \"Visit Site\",\n    \"url\": \"https://example.com/{{1}}\"\n  }\n]",
+
+        "invalid_json": "Invalid JSON format",
+
+        "cancel": "Cancel",
+        "saving": "Saving...",
+        "message_preview": "Message Preview"
+  }
+}

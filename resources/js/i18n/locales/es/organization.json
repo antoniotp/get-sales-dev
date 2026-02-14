@@ -1,0 +1,73 @@
+{
+  "form": {
+    "head": {
+      "create": "Crear organización",
+      "edit": "Detalles de la organización"
+    },
+    "titles": {
+      "create": "Crear nueva organización",
+      "edit": "General"
+    },
+    "descriptions": {
+      "create": "Completa los siguientes datos para crear una nueva organización.",
+      "edit": "Detalles de la organización."
+    },
+    "fields": {
+      "name": "Nombre",
+      "website": "Sitio web",
+      "address": "Dirección",
+      "timezone": "Zona horaria",
+      "locale": "Idioma"
+    },
+    "placeholders": {
+      "timezone": "Selecciona una zona horaria",
+      "locale": "Selecciona un idioma"
+    },
+    "actions": {
+      "save": "Guardar",
+      "create": "Crear organización"
+    }
+  },
+
+    "members": {
+        "breadcrumb": "Miembros",
+        "head": {
+        "title": "Miembros de {{name}}"
+        },
+        "title": "Miembros de la organización",
+        "table": {
+        "name": "Nombre",
+        "email": "Correo electrónico",
+        "role": "Rol",
+        "status": "Estado",
+        "joined": "Fecha de ingreso",
+        "expires": "Expira el",
+        "actions": "Acciones",
+        "na": "N/A"
+        },
+        "invite": {
+        "button": "Invitar miembro",
+        "title": "Invitar nuevo miembro",
+        "description": "Ingresa el correo electrónico y asigna un rol al nuevo miembro.",
+        "fields": {
+            "email": "Correo electrónico",
+            "role": "Rol"
+        },
+        "placeholders": {
+            "email": "nombre@ejemplo.com",
+            "role": "Selecciona un rol"
+        },
+        "actions": {
+            "send": "Enviar invitación",
+            "sending": "Enviando..."
+        }
+        },
+        "invitations": {
+        "title": "Invitaciones"
+        },
+        "actions": {
+        "cancel": "Cancelar",
+        "resend": "Reenviar"
+        }
+    }
+}

@@ -1,142 +1,153 @@
-import AppLayout from '@/layouts/app-layout'
-import MessageTemplateLayout from '@/layouts/message_templates/layout'
+import AppLayout from '@/layouts/app-layout';
+import MessageTemplateLayout from '@/layouts/message_templates/layout';
 import { BreadcrumbItem, PageProps } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
+import { Card, CardContent } from "@/components/ui/card";
 import { Head, useForm as useInertiaForm, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-
 import { Button } from '@/components/ui/button';
-import {
-    Form,
-    FormControl,
-    FormDescription,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
+import { File, Image as ImageIcon, Pilcrow, Trash2, Video, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    RadioGroup,
-    RadioGroupItem
-} from '@/components/ui/radio-group'
-import { Separator } from '@/components/ui/separator'
-import { Label } from '@/components/ui/label'
-import {useEffect, useMemo, useState} from 'react';
+    TemplateFormPageProps,
+} from '@/types/message-template.d';
+import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
+import { generateSlug } from '@/lib/utils';
 import MessagePreview from '@/components/message_templates/MessagePreview';
+import { ButtonsSection } from '@/components/message_templates/ButtonsSection';
 
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Template {
-    id?: number;
-    name: string;
-    category_id: number;
-    language: string;
-    header_type: 'none' | 'text' | 'image' | 'video' | 'document';
-    header_content?: string;
-    body_content: string;
-    footer_content?: string;
-    button_config?: never[];
-    variables_count: number;
-    variables_schema: Array<{ placeholder: string; example?: string }> | null;
-}
-
-interface Props {
-    categories: Category[];
-    template: Template | null;
-}
-
+// --- Zod Schemas ---
 const variableSchemaItem = z.object({
     placeholder: z.string(),
-    example: z.string().optional(),
+    example: z.string().min(1, 'Example value is required'),
+});
+
+const buttonConfigItem = z.object({
+    type: z.enum(['QUICK_REPLY', 'URL', 'PHONE_NUMBER', 'COPY_CODE']),
+    text: z.string().min(1, 'Button text is required'),
+    url: z.string().url('Must be a valid URL').nullable().optional(),
+    phone_number: z.string().optional(),
+}).superRefine((data, ctx) => {
+    if (data.type === 'URL' && (!data.url || data.url.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'URL is required for URL buttons.',
+            path: ['url'],
+        });
+    }
 });
 
 const formSchema = z.object({
+    chatbot_channel_id: z.number({ required_error: 'Channel is required' }).min(1, 'Channel is required'),
+    display_name: z.string().min(1, 'Display name is required'),
     name: z.string().min(1, 'Template name is required'),
     category_id: z.number({ required_error: 'Category is required' }).min(1, 'Category is required'),
     language: z.string().min(1, 'Language is required'),
     header_type: z.enum(['none', 'text', 'image', 'video', 'document']),
     header_content: z.string().optional(),
+    header_variable: variableSchemaItem.nullable().optional(),
+    header_variable_type: z.enum(['positional', 'named']).optional(),
     body_content: z.string().min(1, 'Message content is required'),
     footer_content: z.string().optional(),
-    button_config: z.array(z.any()).refine((data) => {
-        try {
-            return Array.isArray(data);
-        } catch {
-            return false;
-        }
-    }, "Invalid button configuration format"),
+    button_config: z.array(buttonConfigItem).nullable(),
     variables_schema: z.array(variableSchemaItem).nullable(),
+    variable_type: z.enum(['positional', 'named']).optional(),
 });
 
-type TemplateFormValues = z.infer<typeof formSchema>;
+export type TemplateFormValues = z.infer<typeof formSchema>;
 
-export default function TemplateForm({ categories, template }: Props) {
+// --- Helper Functions ---
+const extractPlaceholders = (text: string): string[] => {
+    const regex = /\{\{(\d+|[a-zA-Z_][a-zA-Z0-9_]*)}}/g;
+    const matches = text.matchAll(regex);
+    const placeholders: string[] = [];
+    for (const match of matches) {
+        const placeholder = `{{${match[1]}}}`;
+        if (!placeholders.includes(placeholder)) {
+            placeholders.push(placeholder);
+        }
+    }
+    return placeholders;
+};
+
+const detectVariableType = (placeholders: string[]): 'positional' | 'named' | 'mixed' | null => {
+    if (placeholders.length === 0) return null;
+
+    const hasPositional = placeholders.some(p => /^\{\{\d+}}$/.test(p));
+    const hasNamed = placeholders.some(p => /^\{\{[a-zA-Z_][a-zA-Z0-9_]*}}$/.test(p));
+
+    if (hasPositional && hasNamed) return 'mixed';
+    if (hasPositional) return 'positional';
+    if (hasNamed) return 'named';
+    return null;
+};
+
+const getNextPositionalNumber = (placeholders: string[]): number => {
+    const numbers = placeholders
+        .filter(p => /^\{\{\d+}}$/.test(p))
+        .map(p => parseInt(p.replace(/[{}]/g, '')))
+        .sort((a, b) => a - b);
+
+    if (numbers.length === 0) return 1;
+    return Math.max(...numbers) + 1;
+};
+
+const WABA_CHANNEL_ID = 1;
+
+// --- Main Component ---
+export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
+    const headerInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [namedVariableName, setNamedVariableName] = useState('');
+    const [namedHeaderVariableName, setNamedHeaderVariableName] = useState('');
+    const [variableTypeError, setVariableTypeError] = useState<string | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
-        {
-            title: 'Message templates management',
-            href: route('message-templates.index', props.chatbot.id),
-        },
-        {
-            title: 'Create template',
-            href: route('message-templates.create'),
-        },
-    ], [props.chatbot]);
+        { title: 'Message Templates', href: route('message-templates.index', props.chatbot.id) },
+        { title: template ? 'Edit Template' : 'Create Template', href: template ? route('message-templates.edit', { id: template.id }) : route('message-templates.create') },
+    ], [props.chatbot, template]);
 
-    const {
-        data: inertiaData,
-        setData: setInertiaData,
-        post,
-        put,
-        processing,
-    } = useInertiaForm<TemplateFormValues>(
+    const { data: inertiaData, setData: setInertiaData, post, put, processing } = useInertiaForm<TemplateFormValues>(
         template
-            ? { // Editing an existing template
-                name: template.name,
-                category_id: template.category_id,
-                language: template.language,
-                header_type: template.header_type,
-                header_content: template.header_content || '', // Ensure it's a string
-                body_content: template.body_content,
-                footer_content: template.footer_content || '', // Ensure it's a string
-                button_config: template.button_config || [],
-                variables_schema: template.variables_schema || [],
+            ? {
+                ...template,
+                chatbot_channel_id: template.chatbot_channel_id || 0,
+                display_name: template.display_name || template.name,
+                header_content: template.header_content || '',
+                header_variable: template.header_variable || null,
+                header_variable_type: template.header_variable_type || 'positional',
+                footer_content: template.footer_content || '',
+                button_config: template.button_config || null,
+                variable_type: template.variable_type || 'positional',
             }
-            : { // Creating a new template
+            : {
+                chatbot_channel_id: chatbotChannels[0]?.id || 0, // Set default if available, otherwise 0 for validation
+                display_name: '',
                 name: '',
                 category_id: 0,
-                language: '',
+                language: 'es',
                 header_type: 'none',
                 header_content: '',
+                header_variable: null,
+                header_variable_type: 'positional',
                 body_content: '',
                 footer_content: '',
-                button_config: [],
-                variables_schema: [],
+                button_config: null,
+                variables_schema: null,
+                variable_type: 'positional',
             }
-    );
-
-    const [localButtonConfig, setLocalButtonConfig] = useState(() => JSON.stringify(inertiaData.button_config || [], null, 2));
-    const [variablePlaceholders, setVariablePlaceholders] = useState<Array<{ placeholder: string; example: string }>>(
-        template?.variables_schema?.map(item => ({
-            placeholder: item.placeholder,
-            example: item.example || '' // Ensure that the example is always a string
-        })) || []
     );
 
     const form = useForm<TemplateFormValues>({
@@ -145,8 +156,6 @@ export default function TemplateForm({ categories, template }: Props) {
         mode: 'onBlur',
     });
 
-    // Synchronize changes from the react-hook-form form with Inertia data.
-    // This is important so that useInertiaForm.data always reflects the current values of the form
     useEffect(() => {
         const subscription = form.watch((value) => {
             setInertiaData(value as TemplateFormValues);
@@ -154,128 +163,345 @@ export default function TemplateForm({ categories, template }: Props) {
         return () => subscription.unsubscribe();
     }, [form, setInertiaData]);
 
-    const onSubmit = (values: TemplateFormValues) => {
-        console.log('Sending form:', values);
+    const onSubmit = () => {
         if (template?.id) {
-            put(`/message_templates/${template.id}`, {
+            put(route('message-templates.update', { template: template.id }), {
                 preserveScroll: true,
-                onSuccess: () => {
-                    console.log('Template updated!');
-                },
-                onError: (errors) => {
-                    console.error('Error at updating:', errors);
-                },
             });
         } else {
-            post('/message_templates', {
+            post(route('message-templates.store', props.chatbot.id), {
                 preserveScroll: true,
-                onSuccess: () => {
-                    console.log('Template created!');
-                    form.reset();
-                },
-                onError: (errors) => {
-                    console.error('Error at creating:', errors);
-                },
+                onSuccess: () => form.reset(),
             });
         }
     };
 
-    function generateInputsForPlaceholders(template: string) {
-        console.log("body content: ", template);
-        //count and extract unique placeholders
-        const varRegex = /\{\{(\d+)}}/g;
-        const uniqueVars = new Set<string>();
-        let match;
-        while ((match = varRegex.exec(template)) !== null) {
-            uniqueVars.add(match[1]); // match[1] contains the number without braces
-        }
-        console.log("uniqueVars: ", uniqueVars);
-        console.log( "uniqueVars.size: ", uniqueVars.size);
+    // which chatbot_channel is related to WABA channel.
+    const watchedHeaderType = form.watch('header_type');
+    const watchedHeaderContent = form.watch('header_content');
+    const watchedHeaderVariable = form.watch('header_variable');
+    const watchedHeaderVariableType = form.watch('header_variable_type');
+    const watchedBodyContent = form.watch('body_content');
+    const watchedVariableType = form.watch('variable_type');
+    const watchedVariablesSchema = form.watch('variables_schema');
+    const selectedChabotChannelId = form.watch('chatbot_channel_id');
 
-        // Convert uniqueVars to sorted array for consistent ordering
-        const sortedVars = Array.from(uniqueVars).sort((a, b) => parseInt(a) - parseInt(b));
+    // --- Header Variables Logic ---
+    const detectedHeaderPlaceholders = useMemo(() => {
+        return extractPlaceholders(watchedHeaderContent || '');
+    }, [watchedHeaderContent]);
 
-        // Create new variablePlaceholders array based on uniqueVars
-        const newVariablePlaceholders = sortedVars.map(varNumber => {
-            // Check if this variable already exists in current variablePlaceholders
-            const existing = variablePlaceholders.find(vp => vp.placeholder === `{{${varNumber}}}`);
+    const hasHeaderVariable = !!watchedHeaderVariable;
 
-            return {
-                placeholder: `{{${varNumber}}}`,
-                example: existing?.example || '' // Keep existing example or empty string
-            };
-        });
+    const insertHeaderPlaceholder = (placeholder: string) => {
+        const input = headerInputRef.current;
+        if (!input) return;
 
-        // Update the state
-        setVariablePlaceholders(newVariablePlaceholders);
+        const start = input.selectionStart || 0;
+        const end = input.selectionEnd || 0;
+        const currentValue = watchedHeaderContent || '';
+        const newValue = currentValue.substring(0, start) + placeholder + currentValue.substring(end);
+        form.setValue('header_content', newValue, { shouldValidate: true });
 
-        // Update the form's variables_schema field
-        const newVariablesSchema = newVariablePlaceholders.map(vp => ({
-            placeholder: vp.placeholder,
-            example: vp.example
-        }));
-
-        // Update form field
-        form.setValue('variables_schema', newVariablesSchema);
-
-        // Update Inertia data
-        setInertiaData(prev => ({
-            ...prev,
-            variables_schema: newVariablesSchema
-        }));
-    }
-
-    // Function to handle example input changes
-    const handleExampleChange = (placeholder: string, example: string) => {
-        const updatedPlaceholders = variablePlaceholders.map(vp =>
-            vp.placeholder === placeholder ? { ...vp, example } : vp
-        );
-
-        setVariablePlaceholders(updatedPlaceholders);
-
-        // Update form and Inertia data
-        const newVariablesSchema = updatedPlaceholders.map(vp => ({
-            placeholder: vp.placeholder,
-            example: vp.example
-        }));
-
-        form.setValue('variables_schema', newVariablesSchema);
-        setInertiaData(prev => ({
-            ...prev,
-            variables_schema: newVariablesSchema
-        }));
+        setTimeout(() => {
+            input.focus();
+            const newCursorPos = start + placeholder.length;
+            input.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
     };
 
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${template ? 'Edit' : 'Create'} Message Template`} />
-            <MessageTemplateLayout>
-                <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
-                    <div className="w-full lg:w-1/2 overflow-auto pb-12 pr-4">
-                        <h2 className="text-2xl font-bold">{template ? 'Update Template' : 'Create Template'}</h2>
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                                {/* Basic Information */}
-                                <Card className="py-4">
-                                    <CardContent className="space-y-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="name"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Template Name</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="my_awesome_template" {...field} />
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        Use lowercase letters, numbers, and underscores.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+    const handleAddHeaderPlaceholder = () => {
+        if (detectedHeaderPlaceholders.length > 0) {
+            form.setError('header_content', { type: 'manual', message: 'Only one placeholder is allowed in the header.' });
+            return;
+        }
 
-                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        let placeholder: string;
+        if (watchedHeaderVariableType === 'positional') {
+            placeholder = '{{1}}';
+        } else {
+            const trimmedName = namedHeaderVariableName.trim();
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+                form.setError('header_content', {
+                    type: 'manual',
+                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores.'
+                });
+                return;
+            }
+            placeholder = `{{${trimmedName}}}`;
+        }
+
+        insertHeaderPlaceholder(placeholder);
+        form.setValue('header_variable', { placeholder, example: '' }, { shouldValidate: true });
+
+        if (watchedHeaderVariableType === 'named') {
+            setNamedHeaderVariableName('');
+        }
+    };
+
+    const handleRemoveHeaderVariable = () => {
+        if (!watchedHeaderVariable) return;
+
+        const { placeholder } = watchedHeaderVariable;
+        form.setValue('header_variable', null, { shouldValidate: true });
+
+        const currentHeader = watchedHeaderContent || '';
+        const escapedPlaceholder = placeholder.replace(/[{}]/g, '\\$&');
+        const regex = new RegExp(escapedPlaceholder, 'g');
+        const newHeader = currentHeader.replace(regex, '');
+        form.setValue('header_content', newHeader, { shouldValidate: true });
+        form.clearErrors('header_content');
+    };
+
+    const syncHeaderVariable = () => {
+        const placeholders = extractPlaceholders(watchedHeaderContent || '');
+
+        if (placeholders.length > 1) {
+            form.setError('header_content', { type: 'manual', message: 'Only one placeholder is allowed in the header.' });
+            return;
+        }
+
+        form.clearErrors('header_content');
+        if (variableTypeError?.includes('header')) {
+            setVariableTypeError(null);
+        }
+
+        const placeholder = placeholders[0] || null;
+        if (placeholder) {
+            if (!watchedHeaderVariable || watchedHeaderVariable.placeholder !== placeholder) {
+                form.setValue('header_variable', { placeholder, example: watchedHeaderVariable?.example || '' }, { shouldValidate: true });
+            }
+        } else if (watchedHeaderVariable) {
+            form.setValue('header_variable', null, { shouldValidate: true });
+        }
+    };
+
+    const handleHeaderExampleChange = (example: string) => {
+        if (!watchedHeaderVariable) return;
+        form.setValue('header_variable', { ...watchedHeaderVariable, example }, { shouldValidate: true });
+    };
+
+
+    // --- Body Variables Logic ---
+    // Detect placeholders
+    const detectedPlaceholders = useMemo(() => {
+        return extractPlaceholders(watchedBodyContent || '');
+    }, [watchedBodyContent]);
+
+    // Check for added variables
+    const hasVariables = (watchedVariablesSchema?.length ?? 0) > 0;
+
+    const nextPositionalNumber = useMemo(() => {
+        return getNextPositionalNumber(detectedPlaceholders);
+    }, [detectedPlaceholders]);
+
+    // Function to insert placeholder in the textarea
+    const insertPlaceholder = (placeholder: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentValue = watchedBodyContent || '';
+
+        const newValue = currentValue.substring(0, start) + placeholder + currentValue.substring(end);
+
+        form.setValue('body_content', newValue, { shouldValidate: true });
+
+        // Reset focus and position cursor after placeholder
+        setTimeout(() => {
+            textarea.focus();
+            const newCursorPos = start + placeholder.length;
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    };
+
+    // Add a new placeholder
+    const handleAddPlaceholder = () => {
+        let placeholder: string;
+
+        if (watchedVariableType === 'positional') {
+            placeholder = `{{${nextPositionalNumber}}}`;
+        } else {
+            // Named
+            const trimmedName = namedVariableName.trim();
+
+            // check format
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+                form.setError('body_content', {
+                    type: 'manual',
+                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores'
+                });
+                return;
+            }
+
+            placeholder = `{{${trimmedName}}}`;
+
+            // check duplicates
+            const currentSchema = watchedVariablesSchema || [];
+            if (currentSchema.some(v => v.placeholder === placeholder)) {
+                form.setError('body_content', {
+                    type: 'manual',
+                    message: `Variable ${placeholder} already exists`
+                });
+                return;
+            }
+        }
+
+        insertPlaceholder(placeholder);
+
+        // Add to variables_schema
+        const currentSchema = watchedVariablesSchema || [];
+        form.setValue('variables_schema', [
+            ...currentSchema,
+            { placeholder, example: '' }
+        ], { shouldValidate: true });
+
+        if (watchedVariableType === 'named') {
+            setNamedVariableName('');
+        }
+    };
+
+    const handleRemoveVariable = (placeholder: string) => {
+        // Remove var from variables_schema
+        const currentSchema = watchedVariablesSchema || [];
+        const newSchema = currentSchema.filter(v => v.placeholder !== placeholder);
+        form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+
+        // Remove var from the textarea
+        const currentBody = watchedBodyContent || '';
+        const escapedPlaceholder = placeholder.replace(/[{}]/g, '\\$&');
+        const regex = new RegExp(escapedPlaceholder, 'g');
+        const newBody = currentBody.replace(regex, '');
+        form.setValue('body_content', newBody, { shouldValidate: true });
+    };
+
+    // Sync variables on textarea blur
+    const handleBodyContentBlur = () => {
+        const placeholders = extractPlaceholders(watchedBodyContent || '');
+
+        // Detect mixed variable types
+        const detectedType = detectVariableType(placeholders);
+        if (detectedType === 'mixed') {
+            setVariableTypeError('You cannot mix Positional ({{1}}) and Named ({{name}}) variables in the same template. Please use only one type.');
+            form.setError('body_content', {
+                type: 'manual',
+                message: 'Mixed variable types detected'
+            });
+            return;
+        } else {
+            setVariableTypeError(null);
+            form.clearErrors('body_content');
+        }
+
+        const currentSchema = watchedVariablesSchema || [];
+
+        const newSchema = placeholders.map(placeholder => {
+            const existing = currentSchema.find(v => v.placeholder === placeholder);
+            return existing || { placeholder, example: '' };
+        });
+
+        const hasChanges = JSON.stringify(currentSchema.map(v => v.placeholder).sort()) !==
+                          JSON.stringify(newSchema.map(v => v.placeholder).sort());
+
+        if (hasChanges) {
+            form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+        }
+    };
+
+    const handleExampleChange = (placeholder: string, example: string) => {
+        const currentSchema = watchedVariablesSchema || [];
+        const newSchema = currentSchema.map(v =>
+            v.placeholder === placeholder ? { ...v, example } : v
+        );
+        form.setValue('variables_schema', newSchema, { shouldValidate: true });
+    };
+
+    const handleSendToReview = () => {
+        if (!template?.id) return; // Should only be available for existing templates
+
+        // Perform the Inertia POST request to the new endpoint
+        router.post(route('message-templates.send-for-review', { template: template.id }), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                // The backend redirect already handles the flash message
+            },
+            onError: (errors) => {
+                console.error('Error sending for review:', errors);
+            },
+        });
+    };
+
+    const selectedChatbotChannel = useMemo(() => {
+        return chatbotChannels.find(channel => channel.id === selectedChabotChannelId);
+    }, [chatbotChannels, selectedChabotChannelId]);
+
+    const isWabaChannelSelected = selectedChatbotChannel?.channel_id === WABA_CHANNEL_ID;
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs} customMainClassName="overflow-y-hidden">
+            <Head title={template ? 'Edit Message Template' : 'Create Message Template'} />
+            <MessageTemplateLayout>
+                <h2 className="text-2xl font-bold mb-2">{template ? 'Update Template' : 'Create Template'}</h2>
+                <div className="h-[calc(100vh-9rem)] w-full overflow-auto">
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-row gap-2 w-full">
+
+                            {/* Columna del Formulario */}
+                            <div className="flex-1">
+                                <Card className="py-2">
+                                    <CardContent className="p-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        {/* Sub-columna Izquierda del Formulario */}
+                                        <div className="md:col-span-1 space-y-6">
+                                            <FormField
+                                                control={form.control}
+                                                name="chatbot_channel_id"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Channel</FormLabel>
+                                                        <Select
+                                                            onValueChange={(value) => field.onChange(Number(value))}
+                                                            value={field.value?.toString()}
+                                                            disabled={chatbotChannels.length <= 1 && !!template} // Disable if only one channel and editing
+                                                        >
+                                                            <FormControl>
+                                                                <SelectTrigger>
+                                                                    <SelectValue placeholder="Select a channel" />
+                                                                </SelectTrigger>
+                                                            </FormControl>
+                                                            <SelectContent>
+                                                                {chatbotChannels.map((channel) => (
+                                                                    <SelectItem key={channel.id} value={channel.id.toString()}>
+                                                                        {channel.channel.name}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="display_name"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>Display Name</FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder="My Template Name"
+                                                                {...field}
+                                                                onChange={(e) => {
+                                                                    field.onChange(e);
+                                                                    const slug = generateSlug(e.target.value);
+                                                                    form.setValue('name', slug, { shouldValidate: true });
+                                                                }}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
                                             <FormField
                                                 control={form.control}
                                                 name="category_id"
@@ -284,7 +510,7 @@ export default function TemplateForm({ categories, template }: Props) {
                                                         <FormLabel>Category</FormLabel>
                                                         <Select
                                                             onValueChange={(value) => field.onChange(Number(value))}
-                                                            defaultValue={field.value ? field.value.toString() : ''}
+                                                            value={field.value?.toString()}
                                                         >
                                                             <FormControl>
                                                                 <SelectTrigger>
@@ -309,222 +535,427 @@ export default function TemplateForm({ categories, template }: Props) {
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormLabel>Language</FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                        <Select onValueChange={field.onChange} value={field.value}>
                                                             <FormControl>
                                                                 <SelectTrigger>
                                                                     <SelectValue placeholder="Select language" />
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
-                                                                <SelectItem value="es">Spanish (es)</SelectItem>
-                                                                <SelectItem value="en">English (en)</SelectItem>
-                                                                <SelectItem value="pt">Portuguese (pt)</SelectItem>
-                                                                {/* Add more languages as needed based on Meta's supported locales */}
+                                                                {availableLanguages.map((lang) => (
+                                                                    <SelectItem key={lang.code} value={lang.code}>
+                                                                        {lang.name}
+                                                                    </SelectItem>
+                                                                ))}
                                                             </SelectContent>
                                                         </Select>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
+
+                                            <div className="flex flex-col gap-2">
+                                                <Button type="button" variant="outline" onClick={() => window.history.back()}>
+                                                    Cancel
+                                                </Button>
+                                                <Button type="submit" disabled={processing}>
+                                                    {processing ? 'Saving...' : 'Save'}
+                                                </Button>
+
+                                                {template && isWabaChannelSelected && (
+                                                    <Button
+                                                        type="button"
+                                                        className="btn-whatsapp"
+                                                        onClick={handleSendToReview}
+                                                        disabled={processing}
+                                                    >
+                                                        {processing ? 'Sending...' : 'Send To Review'}
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
 
-                                <Separator />
+                                        {/* Sub-columna Derecha del Formulario */}
+                                        <div className="md:col-span-2 space-y-6 md:h-[calc(100vh-12rem)] md:overflow-auto">
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="text-lg font-medium">
+                                                    {form.watch('display_name') || 'Template Name'} • {form.watch('language')}
+                                                </h3>
+                                            </div>
 
-                                {/* Content Section */}
-                                <Card className="py-4">
-                                    <CardHeader>
-                                        <CardTitle>Template Content</CardTitle>
-                                        <CardDescription>Craft the message that will be sent to your users.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-6">
-                                        {/* Header Type */}
-                                        <FormField
-                                            control={form.control}
-                                            name="header_type"
-                                            render={({ field }) => (
-                                                <FormItem className="space-y-3">
-                                                    <FormLabel>Header Type</FormLabel>
-                                                    <FormControl>
-                                                        <RadioGroup
-                                                            onValueChange={field.onChange}
-                                                            defaultValue={field.value}
-                                                            className="flex flex-row space-x-4"
-                                                        >
-                                                            {['none', 'text', 'image', 'video', 'document'].map((type) => (
-                                                                <FormItem key={type} className="flex items-center space-y-0 space-x-3">
-                                                                    <FormControl>
-                                                                        <RadioGroupItem value={type} />
-                                                                    </FormControl>
-                                                                    <Label className="font-normal">
-                                                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                                                    </Label>
-                                                                </FormItem>
-                                                            ))}
-                                                        </RadioGroup>
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        Choose the type of header for your message. 'None' means no header.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                            <div className="space-y-2">
+                                                <Label>
+                                                    Header <span className="text-gray-500">(Optional)</span>
+                                                </Label>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="header_type"
+                                                    render={({ field }) => (
+                                                        <div className="flex flex-wrap gap-2">
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="text"
+                                                                icon={<Pilcrow size={16} />}
+                                                                label="Text"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="image"
+                                                                icon={<ImageIcon size={16} />}
+                                                                label="Image"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="video"
+                                                                icon={<Video size={16} />}
+                                                                label="Video"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                            <HeaderTypeButton
+                                                                field={field}
+                                                                value="document"
+                                                                icon={<File size={16} />}
+                                                                label="File"
+                                                                currentType={watchedHeaderType}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                />
+                                                {watchedHeaderType && watchedHeaderType !== 'none' && (
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="header_content"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormControl>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Input
+                                                                            placeholder={
+                                                                                watchedHeaderType === 'text'
+                                                                                    ? 'Enter header text...'
+                                                                                    : 'Enter media URL...'
+                                                                            }
+                                                                            {...field}
+                                                                            ref={headerInputRef}
+                                                                            onBlur={syncHeaderVariable}
+                                                                        />
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            onClick={() => {
+                                                                                form.setValue('header_type', 'none');
+                                                                                form.setValue('header_content', '');
+                                                                                if (watchedHeaderVariable) {
+                                                                                    handleRemoveHeaderVariable();
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                )}
+                                                {watchedHeaderType === 'text' && (
+                                                    <div className="space-y-3 rounded-lg border p-3">
+                                                        <Label className="text-sm">Header Variable</Label>
+                                                        <div className="flex items-center gap-3">
+                                                            <TooltipProvider>
+                                                                <Tooltip delayDuration={250}>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div>
+                                                                            <FormField
+                                                                                control={form.control}
+                                                                                name="header_variable_type"
+                                                                                render={({ field }) => (
+                                                                                    <RadioGroup
+                                                                                        onValueChange={field.onChange}
+                                                                                        value={field.value}
+                                                                                        className="flex items-center gap-4"
+                                                                                        disabled={hasHeaderVariable}
+                                                                                    >
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="positional" id="h-positional" />
+                                                                                            <Label htmlFor="h-positional" className="cursor-pointer font-normal">Positional</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="named" id="h-named" />
+                                                                                            <Label htmlFor="h-named" className="cursor-pointer font-normal">Named</Label>
+                                                                                        </div>
+                                                                                    </RadioGroup>
+                                                                                )}
+                                                                            />
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    {hasHeaderVariable && (
+                                                                        <TooltipContent
+                                                                        className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                        side="bottom"
+                                                                        >
+                                                                        <p>Remove the variable to change type</p>
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
+                                                            </TooltipProvider>
 
-                                        {/* Conditional: Header Content */}
-                                        {form.watch('header_type') !== 'none' && (
+                                                            {watchedHeaderVariableType === 'named' && (
+                                                                <Input
+                                                                    placeholder="variable_name"
+                                                                    value={namedHeaderVariableName}
+                                                                    onChange={(e) => setNamedHeaderVariableName(e.target.value)}
+                                                                    className="max-w-[150px]"
+                                                                    disabled={hasHeaderVariable}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === 'Enter') {
+                                                                            e.preventDefault();
+                                                                            handleAddHeaderPlaceholder();
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={handleAddHeaderPlaceholder}
+                                                                disabled={
+                                                                    hasHeaderVariable ||
+                                                                    (watchedHeaderVariableType === 'named' && !namedHeaderVariableName.trim())
+                                                                }
+                                                            >
+                                                                + Add Placeholder
+                                                                {watchedHeaderVariableType === 'positional' && ' {{1}}'}
+                                                            </Button>
+                                                        </div>
+                                                        {hasHeaderVariable && watchedHeaderVariable && (
+                                                            <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
+                                                                <FormField
+                                                                    control={form.control}
+                                                                    name="header_variable.example"
+                                                                    render={({field}) => (
+                                                                        <>
+                                                                            <span className="font-mono text-sm font-medium">
+                                                                                {watchedHeaderVariable.placeholder}
+                                                                            </span>
+                                                                            <FormItem className="space-y-0">
+                                                                                <FormControl>
+                                                                                    <Input
+                                                                                        placeholder="Enter example value..."
+                                                                                        value={field.value}
+                                                                                        onChange={(e) => {
+                                                                                            handleHeaderExampleChange(e.target.value)
+                                                                                            field.onChange(e);
+                                                                                        }}
+                                                                                        onBlur={field.onBlur}
+                                                                                    />
+                                                                                </FormControl>
+                                                                                <FormMessage className="text-xs" />
+                                                                            </FormItem>
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                onClick={handleRemoveHeaderVariable}
+                                                                            >
+                                                                                <Trash2 className="h-4 w-4" />
+                                                                            </Button>
+                                                                        </>
+                                                                    )}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             <FormField
                                                 control={form.control}
-                                                name="header_content"
+                                                name="body_content"
                                                 render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel>Header Content</FormLabel>
+                                                    <FormItem className="mb-0">
+                                                        <Label>Message</Label>
                                                         <FormControl>
-                                                            <Input
-                                                                placeholder={
-                                                                    form.watch('header_type') === 'text'
-                                                                        ? 'Your header text (max 60 characters, no variables)'
-                                                                        : 'URL to your media/document (e.g., https://example.com/image.jpg)'
-                                                                }
+                                                            <Textarea
+                                                                placeholder="Enter message content..."
+                                                                className="min-h-[150px]"
                                                                 {...field}
+                                                                ref={(e) => {
+                                                                    field.ref(e);
+                                                                    textareaRef.current = e;
+                                                                }}
+                                                                onBlur={() => {
+                                                                    field.onBlur();
+                                                                    handleBodyContentBlur();
+                                                                }}
                                                             />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
                                             />
-                                        )}
+                                            {/* Variables Section */}
+                                            <div className="space-y-2">
+                                                {variableTypeError && (
+                                                    <Alert variant="destructive">
+                                                        <AlertCircle className="h-4 w-4" />
+                                                        <AlertDescription>{variableTypeError}</AlertDescription>
+                                                    </Alert>
+                                                )}
 
-                                        {/* Body Content */}
-                                        <FormField
-                                            control={form.control}
-                                            name="body_content"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Message Body</FormLabel>
-                                                    <FormControl>
-                                                        <Textarea
-                                                            placeholder="Enter message content with variables like {{1}}, {{2}}. E.g., Hello {{1}}, your order {{2}} has shipped."
-                                                            className="min-h-[120px]"
-                                                            {...field}
-                                                            onBlur={(e) => generateInputsForPlaceholders(e.target.value)}
+                                                {/* Variable Type Selector + Add Placeholder */}
+                                                <div className="flex items-center gap-3">
+                                                    <TooltipProvider>
+                                                        <Tooltip delayDuration={250}>
+                                                            <TooltipTrigger asChild>
+                                                                <div>
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name="variable_type"
+                                                                        render={({ field }) => (
+                                                                            <RadioGroup
+                                                                                onValueChange={field.onChange}
+                                                                                value={field.value}
+                                                                                className="flex items-center gap-4"
+                                                                                disabled={hasVariables}
+                                                                            >
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <RadioGroupItem value="positional" id="positional" />
+                                                                                    <Label
+                                                                                        htmlFor="positional"
+                                                                                        className="cursor-pointer font-normal"
+                                                                                    >
+                                                                                        Positional
+                                                                                    </Label>
+                                                                                </div>
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <RadioGroupItem value="named" id="named" />
+                                                                                    <Label htmlFor="named" className="cursor-pointer font-normal">
+                                                                                        Named
+                                                                                    </Label>
+                                                                                </div>
+                                                                            </RadioGroup>
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            {hasVariables && (
+                                                                <TooltipContent
+                                                                    className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                    side="bottom"
+                                                                >
+                                                                    <p>Remove all variables to change type</p>
+                                                                </TooltipContent>
+                                                            )}
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+
+                                                    {watchedVariableType === 'named' && (
+                                                        <Input
+                                                            placeholder="variable_name"
+                                                            value={namedVariableName}
+                                                            onChange={(e) => setNamedVariableName(e.target.value)}
+                                                            className="max-w-[200px]"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleAddPlaceholder();
+                                                                }
+                                                            }}
                                                         />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                                    )}
 
-                                        {/* Dynamic Variable Inputs */}
-                                        {variablePlaceholders.length > 0 && (
-                                            <div className="space-y-4">
-                                                <Label className="text-sm font-medium">Variable Examples</Label>
-                                                <FormDescription>
-                                                    Provide example values for each variable to help users understand what data should be passed.
-                                                </FormDescription>
-                                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                    {variablePlaceholders.map((variable) => (
-                                                        <div key={variable.placeholder} className="space-y-2">
-                                                            <Label className="text-sm text-muted-foreground">{variable.placeholder}</Label>
-                                                            <Input
-                                                                placeholder={`Example for ${variable.placeholder}`}
-                                                                value={variable.example}
-                                                                onChange={(e) => handleExampleChange(variable.placeholder, e.target.value)}
-                                                            />
-                                                        </div>
-                                                    ))}
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handleAddPlaceholder}
+                                                        disabled={watchedVariableType === 'named' && !namedVariableName.trim()}
+                                                    >
+                                                        + Add Placeholder
+                                                        {watchedVariableType === 'positional' && ` {{${nextPositionalNumber}}}`}
+                                                    </Button>
                                                 </div>
+
+                                                {/* Variables List */}
+                                                {watchedVariablesSchema && watchedVariablesSchema.length > 0 && (
+                                                    <div className="space-y-3">
+                                                        <Label className="text-sm">Detected Variables ({watchedVariablesSchema.length})</Label> *<small>All are required</small>
+                                                        <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center rounded-lg border p-3">
+                                                            {watchedVariablesSchema.map((variable, index) => (
+                                                                <Fragment key={index}>
+                                                                    <span className="font-mono text-sm font-medium">
+                                                                        {variable.placeholder}
+                                                                    </span>
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name={`variables_schema.${index}.example`}
+                                                                        render={({ field }) => (
+                                                                            <FormItem className="space-y-0">
+                                                                                <FormControl>
+                                                                                    <Input
+                                                                                        placeholder="Enter example value..."
+                                                                                        value={field.value}
+                                                                                        onChange={(e) => {
+                                                                                            handleExampleChange(variable.placeholder, e.target.value)
+                                                                                            field.onChange(e)
+                                                                                        }}
+                                                                                        onBlur={field.onBlur}
+                                                                                    />
+                                                                                </FormControl>
+                                                                                <FormMessage className="text-xs" />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />{' '}
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => handleRemoveVariable(variable.placeholder)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </Fragment>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
 
-                                        {/* Footer Content */}
-                                        <FormField
-                                            control={form.control}
-                                            name="footer_content"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>Footer Content (Optional)</FormLabel>
-                                                    <FormControl>
-                                                        <Input placeholder="e.g., Regards, Your Team (max 60 characters, no variables)" {...field} />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                                            <FormField
+                                                control={form.control}
+                                                name="footer_content"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <Label>
+                                                            Footer <span className="text-gray-500">(Optional)</span>
+                                                        </Label>
+                                                        <FormControl>
+                                                            <Input placeholder="Enter footer text..." {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <ButtonsSection control={form.control} />
+                                        </div>
                                     </CardContent>
                                 </Card>
+                            </div>
 
-                                <Separator />
-
-                                {/* Advanced Configuration (Buttons and Variables) */}
-                                <Card className="p-4">
-                                    <CardHeader>
-                                        <CardTitle>Advanced Configuration (Optional)</CardTitle>
-                                        <CardDescription>Configure interactive buttons and define your template variables.</CardDescription>
-                                    </CardHeader>
-                                    <CardContent className="space-y-6">
-                                        {/* Button Configuration */}
-                                        <FormField
-                                            control={form.control}
-                                            name="button_config"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <Label htmlFor="button_config_raw">Button Configuration (JSON)</Label>
-                                                    <Textarea
-                                                        id="button_config_raw"
-                                                        value={localButtonConfig}
-                                                        onChange={(e) => setLocalButtonConfig(e.target.value)}
-                                                        onBlur={(e) => {
-                                                            try {
-                                                                const parsed = e.target.value.trim() ? JSON.parse(e.target.value) : [];
-                                                                setInertiaData((prev) => ({
-                                                                    ...prev,
-                                                                    button_config: parsed,
-                                                                }));
-                                                                // Actualizar el valor del formulario
-                                                                field.onChange(parsed);
-                                                                form.clearErrors('button_config');
-                                                            } catch (error) {
-                                                                console.log('Error: ', error);
-                                                                // Restaurar el valor anterior en caso de JSON inválido
-                                                                setLocalButtonConfig(JSON.stringify(inertiaData.button_config || [], null, 2));
-                                                                // Establecer error en el formulario
-                                                                form.setError('button_config', {
-                                                                    type: 'manual',
-                                                                    message: 'Invalid JSON format',
-                                                                });
-                                                            }
-                                                        }}
-                                                        placeholder={`[\n  {\n    "type": "reply",\n    "text": "Yes!"\n  },\n  {\n    "type": "url",\n    "text": "Visit Site",\n    "url": "https://example.com/{{1}}"\n  }\n]`}
-                                                        className="min-h-[150px] font-mono"
-                                                    />
-                                                    <FormDescription>
-                                                        Enter a JSON array for button configuration. Supports `reply`, `url`, and `call` types. URL
-                                                        buttons can use variables. Refer to Meta's documentation for exact structure.
-                                                    </FormDescription>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </CardContent>
-                                </Card>
-
-                                <div className="flex justify-end space-x-2">
-                                    <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={processing}>
-                                        {processing ? 'Saving...' : template ? 'Update Template' : 'Create Template'}
-                                    </Button>
+                            {/* Columna de Vista Previa */}
+                            <div className="w-[290px] hidden lg:block">
+                                <div className="sticky top-0">
+                                    <MessagePreview templateData={form.watch()} />
                                 </div>
-                            </form>
-                        </Form>
-                    </div>
-                    <div className="hidden lg:block w-full lg:w-1/2 overflow-auto pb-12 pl-4">
-                        <h2 className="text-2xl font-bold">Message Preview</h2>
-                        <MessagePreview templateData={form.watch()} />
-                    </div>
+                            </div>
+                        </form>
+                    </Form>
                 </div>
             </MessageTemplateLayout>
         </AppLayout>

@@ -11,6 +11,7 @@ use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Contact\ContactServiceInterface;
 use App\Contracts\Services\Invitation\InvitationServiceInterface;
+use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
 use App\Contracts\Services\Notification\PushSubscriptionServiceInterface;
 use App\Contracts\Services\Organization\OrganizationServiceInterface;
 use App\Contracts\Services\PublicForm\PublicContactFormServiceInterface;
@@ -18,6 +19,7 @@ use App\Contracts\Services\System\TimezoneServiceInterface;
 use App\Contracts\Services\Util\PhoneNumberNormalizerInterface;
 use App\Contracts\Services\Util\PhoneServiceInterface;
 use App\Contracts\Services\WhatsApp\FacebookServiceInterface;
+use App\Contracts\Services\WhatsApp\WabaLanguageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebServiceInterface;
@@ -31,6 +33,7 @@ use App\Services\Chat\MessageService;
 use App\Services\Chatbot\ChatbotService;
 use App\Services\Contact\ContactService;
 use App\Services\Invitation\InvitationService;
+use App\Services\MessageTemplate\MessageTemplateService;
 use App\Services\Notification\PushSubscriptionService;
 use App\Services\Organization\OrganizationService;
 use App\Services\PublicForm\PublicContactFormService;
@@ -38,6 +41,7 @@ use App\Services\System\TimezoneService;
 use App\Services\Util\PhoneNumberNormalizer;
 use App\Services\Util\PhoneService;
 use App\Services\WhatsApp\FacebookService;
+use App\Services\WhatsApp\WabaLanguageService;
 use App\Services\WhatsApp\WhatsAppService;
 use App\Services\WhatsApp\WhatsAppWebhookHandlerService;
 use App\Services\WhatsApp\WhatsAppWebService;
@@ -91,6 +95,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(ContactServiceInterface::class, ContactService::class);
         $this->app->bind(PushSubscriptionServiceInterface::class, PushSubscriptionService::class);
         $this->app->bind(TimezoneServiceInterface::class, TimezoneService::class);
+        $this->app->bind(MessageTemplateServiceInterface::class, MessageTemplateService::class);
+        $this->app->bind(WabaLanguageServiceInterface::class, WabaLanguageService::class);
     }
 
     /**

@@ -7,7 +7,7 @@ export default function MessageTemplateLayout({ children }: PropsWithChildren) {
     }
 
     return (
-        <div className="flex h-full flex-1 flex-col px-4 py-6 rounded-xl overflow-hidden dark:bg-gray-900">
+        <div className="flex h-full flex-1 flex-col px-4 py-3 rounded-xl overflow-hidden dark:bg-gray-900">
             {children}
         </div>
     )

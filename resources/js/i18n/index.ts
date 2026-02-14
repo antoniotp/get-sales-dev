@@ -13,6 +13,10 @@ import esChatbot from './locales/es/chatbot.json';
 import enChatbot from './locales/en/chatbot.json';
 import esContact from './locales/es/contact.json';
 import enContact from './locales/en/contact.json';
+import esOrganization from './locales/es/organization.json';
+import enOrganization from './locales/en/organization.json';
+import esMessageTemplates from './locales/es/message_templates.json';
+import enMessageTemplates from './locales/en/message_templates.json';
 
 i18n
   .use(initReactI18next)
@@ -25,6 +29,8 @@ i18n
         register: esRegister,
         chatbot: esChatbot,
         contact: esContact,
+        organization: esOrganization,
+        message_templates: esMessageTemplates,
       },
       en: {
         navigation: enNavigation,
@@ -33,6 +39,8 @@ i18n
         register: enRegister,
         chatbot: enChatbot,
         contact: enContact,
+        organization: enOrganization,
+        message_templates: enMessageTemplates,
       },
     },
     lng: 'es',

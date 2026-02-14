@@ -19,6 +19,7 @@ import {
     Ban
 } from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { useTranslation } from 'react-i18next';
 
 interface Template {
     id: number;
@@ -36,12 +37,12 @@ interface TemplatesProps {
     deletedTemplates: Template[];
 }
 
-
 const TemplateTable = ({ templates }: { templates: Template[] }) => {
     const { delete: inertiaDelete } = useForm(); // Destructure delete method from useForm
+    const { t } = useTranslation('message_templates');
 
     const handleDelete = (templateId: number) => {
-        if (confirm('Are you sure you want to delete this template?')) {
+        if (confirm(t('templates.confirm_delete'))) {
             inertiaDelete(route('message-templates.destroy', templateId), { // Use inertiaDelete for DELETE request
                 onSuccess: () => {
                     // Optionally, you can add some feedback here
@@ -49,7 +50,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                 },
                 onError: (errors) => {
                     console.error('Error deleting template:', errors);
-                    alert('Failed to delete template.');
+                    alert(t('templates.delete_failed'));
                 }
             });
         }
@@ -65,35 +66,35 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     return (
                         <Badge className="bg-yellow-500 text-white dark:bg-yellow-600">
                             <Clock className="w-3 h-3 mr-1" />
-                            Pending
+                            {t('templates.status.pending')}
                         </Badge>
                     );
                 case 'approved':
                     return (
                         <Badge className="bg-green-500 text-white dark:bg-green-600">
                             <CheckCircle className="w-3 h-3 mr-1" />
-                            Approved
+                            {t('templates.status.approved')}
                         </Badge>
                     );
                 case 'rejected':
                     return (
                         <Badge className="bg-red-500 text-white dark:bg-red-600">
                             <XCircle className="w-3 h-3 mr-1" />
-                            Rejected
+                            {t('templates.status.rejected')}
                         </Badge>
                     );
                 case 'paused':
                     return (
                         <Badge className="bg-orange-500 text-white dark:bg-orange-600">
                             <PauseCircle className="w-3 h-3 mr-1" />
-                            Paused
+                            {t('templates.status.paused')}
                         </Badge>
                     );
                 case 'disabled':
                     return (
                         <Badge className="bg-gray-500 text-white dark:bg-gray-600">
                             <Ban className="w-3 h-3 mr-1" />
-                            Disabled
+                            {t('templates.status.disabled')}
                         </Badge>
                     );
                 default:
@@ -104,7 +105,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     );
             }
         },
-        [],
+        [t],
     );
 
     const getLocalStatus = useMemo(
@@ -112,35 +113,35 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
             if (template.isDeleted) return (
                 <Badge variant="destructive">
                     <DeleteIcon className="w-3 h-3 mr-1" />
-                    Deleted
+                    {t('templates.deleted')}
                 </Badge>
             );
             return template.platformStatus === 1 ? (
                 <Badge className="bg-green-500 text-white dark:bg-green-600">
                     <CheckCircle className="w-3 h-3 mr-1" />
-                    Active
+                    {t('templates.active')}
                 </Badge>
             ) : (
                 <Badge className="bg-gray-500 text-white dark:bg-gray-600">
                     <XCircle className="w-3 h-3 mr-1" />
-                    Inactive
+                    {t('templates.inactive')}
                 </Badge>
             );
         },
-        [],
+        [t],
     );
 
     return (
         <Table>
-            <TableCaption>A list of your templates.</TableCaption>
+            <TableCaption>{t('templates.caption')}</TableCaption>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[100px]">Name</TableHead>
-                    <TableHead>Platform Status</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Language</TableHead>
-                    <TableHead>Active</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[100px]">{t('templates.table.name')}</TableHead>
+                    <TableHead>{t('templates.table.platform_status')}</TableHead>
+                    <TableHead>{t('templates.table.category')}</TableHead>
+                    <TableHead>{t('templates.table.language')}</TableHead>
+                    <TableHead>{t('templates.table.active')}</TableHead>
+                    <TableHead className="text-right">{t('templates.table.actions')}</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -157,16 +158,20 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
+                                                <span className="sr-only">{t('templates.open_menu')}</span>
                                                 <MoreHorizontal />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                            <DropdownMenuLabel>{t('templates.actions')}</DropdownMenuLabel>
                                             <DropdownMenuItem asChild>
-                                                <Link href={route('message-templates.edit', template.id)}>Edit</Link>
+                                                <Link href={route('message-templates.edit', template.id)}>
+                                                    {t('templates.edit')}
+                                                </Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>Delete</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>
+                                                {t('templates.delete')}
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -175,7 +180,9 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">No templates found</TableCell>
+                        <TableCell colSpan={5} className="text-center">
+                            {t('templates.no_templates')}
+                        </TableCell>
                     </TableRow>
                 )}
             </TableBody>
@@ -185,6 +192,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
 
 export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
     const { props } = usePage<PageProps>();
+    const { t } = useTranslation('message_templates');
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         {
@@ -192,28 +200,28 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
             href: route('chatbots.edit', props.chatbot.id),
         },
         {
-            title: 'Message templates management',
+            title: t('templates.management'),
             href: route('message-templates.index', props.chatbot.id),
         },
-    ], [props.chatbot]);
+    ], [props.chatbot, t]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Message templates | List" />
+            <Head title={t('templates.page_title')} />
             <MessageTemplateLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <Card className="w-full p-3">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold">Message Templates</h2>
+                            <h2 className="text-2xl font-bold">{t('templates.title')}</h2>
                             <Link href={route('message-templates.create')}>
-                                <Button>Create Template</Button>
+                                <Button>{t('templates.create')}</Button>
                             </Link>
                         </div>
                         <Tabs defaultValue="template_library" className="w-full overflow-auto">
                             <TabsList>
-                                <TabsTrigger value="template_library">Template Library</TabsTrigger>
-                                <TabsTrigger value="active_templates">Active</TabsTrigger>
-                                <TabsTrigger value="deleted_templates">Deleted</TabsTrigger>
+                                <TabsTrigger value="template_library">{t('templates.tabs.library')}</TabsTrigger>
+                                <TabsTrigger value="active_templates">{t('templates.tabs.active')}</TabsTrigger>
+                                <TabsTrigger value="deleted_templates">{t('templates.tabs.deleted')}</TabsTrigger>
                             </TabsList>
                             <TabsContent value="template_library">
                                 <TemplateTable templates={allTemplates} />

@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property array|null $button_config Button configuration as JSON array
  * @property int $variables_count Number of variables in the template ({{1}}, {{2}}, etc.)
  * @property array|null $example_data Example data for the template variables
+ * @property array|null $variable_mappings Variable mappings from the platform to our variables
  * @property int $usage_count How many times this template has been used
  * @property Carbon|null $last_used_at When this template was last used
  * @property Carbon|null $approved_at When the template was approved by the platform
@@ -58,6 +59,7 @@ class MessageTemplate extends Model
         'button_config',
         'variables_count',
         'example_data',
+        'variable_mappings',
         'usage_count',
         'last_used_at',
         'approved_at',
@@ -67,6 +69,7 @@ class MessageTemplate extends Model
     protected $casts = [
         'button_config' => 'array',
         'example_data' => 'array',
+        'variable_mappings' => 'array',
         'variables_count' => 'integer',
         'usage_count' => 'integer',
         'platform_status' => 'integer',

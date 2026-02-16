@@ -34,6 +34,8 @@ class MessageTemplateFactory extends Factory
             'header_type' => 'none',
             'body_content' => $this->faker->sentence().' {{1}}',
             'variables_count' => 1,
+            'example_data' => [],
+            'variable_mappings' => [],
         ];
     }
 }

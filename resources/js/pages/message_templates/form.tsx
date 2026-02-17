@@ -63,6 +63,12 @@ const formSchema = z.object({
     button_config: z.array(buttonConfigItem).nullable(),
     variables_schema: z.array(variableSchemaItem).nullable(),
     variable_type: z.enum(['positional', 'named']).optional(),
+    variable_mappings: z.array(z.object({
+        placeholder: z.string(),
+        source: z.string(), // e.g., "contact.first_name"
+        label: z.string(), // e.g., "Contact: Name"
+        fallback_value: z.string().nullable().optional(),
+    })).nullable(),
 });
 
 export type TemplateFormValues = z.infer<typeof formSchema>;
@@ -106,7 +112,7 @@ const getNextPositionalNumber = (placeholders: string[]): number => {
 const WABA_CHANNEL_ID = 1;
 
 // --- Main Component ---
-export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages }: TemplateFormPageProps) {
+export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages, availableVariables }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
     const headerInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -131,6 +137,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 footer_content: template.footer_content || '',
                 button_config: template.button_config || null,
                 variable_type: template.variable_type || 'positional',
+                variable_mappings: template.variable_mappings || null,
             }
             : {
                 chatbot_channel_id: chatbotChannels[0]?.id || 0, // Set default if available, otherwise 0 for validation
@@ -147,6 +154,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 button_config: null,
                 variables_schema: null,
                 variable_type: 'positional',
+                variable_mappings: null,
             }
     );
 
@@ -185,6 +193,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     const watchedVariableType = form.watch('variable_type');
     const watchedVariablesSchema = form.watch('variables_schema');
     const selectedChabotChannelId = form.watch('chatbot_channel_id');
+    const watchedVariableMappings = form.watch('variable_mappings');
 
     // --- Header Variables Logic ---
     const detectedHeaderPlaceholders = useMemo(() => {
@@ -319,23 +328,25 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     // Add a new placeholder
     const handleAddPlaceholder = () => {
         let placeholder: string;
+        let placeholderName: string;
 
         if (watchedVariableType === 'positional') {
+            placeholderName = '';
             placeholder = `{{${nextPositionalNumber}}}`;
         } else {
             // Named
-            const trimmedName = namedVariableName.trim();
+            placeholderName = namedVariableName.trim();
 
             // check format
-            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(placeholderName)) {
                 form.setError('body_content', {
                     type: 'manual',
-                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores'
+                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores',
                 });
                 return;
             }
 
-            placeholder = `{{${trimmedName}}}`;
+            placeholder = `{{${placeholderName}}}`;
 
             // check duplicates
             const currentSchema = watchedVariablesSchema || [];
@@ -343,6 +354,15 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 form.setError('body_content', {
                     type: 'manual',
                     message: `Variable ${placeholder} already exists`
+                });
+                return;
+            }
+
+            const isDbVariableConflict = availableVariables.some(dbVar => dbVar.placeholder_name === placeholderName);
+            if (isDbVariableConflict) {
+                form.setError('body_content', {
+                    type: 'manual',
+                    message: `The name "${placeholderName}" is reserved for a database variable. Please choose a different name.`
                 });
                 return;
             }
@@ -358,8 +378,48 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         ], { shouldValidate: true });
 
         if (watchedVariableType === 'named') {
+            const currentMappings = watchedVariableMappings || [];
+            form.setValue(
+                'variable_mappings',
+                [
+                    ...currentMappings,
+                    {
+                        placeholder: placeholder,
+                        source: 'manual',
+                        label: `Manual: ${placeholderName}`, // Etiqueta descriptiva
+                        fallback_value: null,
+                    },
+                ],
+                { shouldValidate: true },
+            );
+
             setNamedVariableName('');
         }
+    };
+
+    const handleAddDbPlaceholder = (variable: typeof availableVariables[number]) => {
+        if (watchedVariableType === 'positional' && !hasVariables) {
+            form.setValue('variable_type', 'named', { shouldValidate: true });
+        }
+        const placeholderText = `{{${variable.placeholder_name}}}`;
+        insertPlaceholder(placeholderText);
+
+        const currentSchema = watchedVariablesSchema || [];
+        form.setValue('variables_schema', [
+            ...currentSchema,
+            { placeholder: placeholderText, example: '' }
+        ], { shouldValidate: true });
+
+        const currentMappings = watchedVariableMappings || [];
+        form.setValue('variable_mappings', [
+            ...currentMappings,
+            {
+                placeholder: placeholderText,
+                source: variable.source_path,
+                label: variable.label,
+                fallback_value: '',
+            }
+        ], { shouldValidate: true });
     };
 
     const handleRemoveVariable = (placeholder: string) => {
@@ -367,6 +427,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         const currentSchema = watchedVariablesSchema || [];
         const newSchema = currentSchema.filter(v => v.placeholder !== placeholder);
         form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+
+        const currentMappings = watchedVariableMappings || [];
+        const newMappings = currentMappings.filter(m => m.placeholder !== placeholder);
+        form.setValue('variable_mappings', newMappings.length > 0 ? newMappings : null, { shouldValidate: true });
 
         // Remove var from the textarea
         const currentBody = watchedBodyContent || '';
@@ -394,18 +458,72 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             form.clearErrors('body_content');
         }
 
-        const currentSchema = watchedVariablesSchema || [];
+         if (detectedType) {
+             if (form.getValues('variable_type') !== detectedType) {
+                 form.setValue('variable_type', detectedType, { shouldValidate: true });
+             }
+         }
 
-        const newSchema = placeholders.map(placeholder => {
-            const existing = currentSchema.find(v => v.placeholder === placeholder);
-            return existing || { placeholder, example: '' };
+        const currentSchema = watchedVariablesSchema || [];
+        const currentMappings = watchedVariableMappings || [];
+
+        const newSchema: typeof variableSchemaItem._type[] = [];
+        const newMappings: TemplateFormValues['variable_mappings'] = [];
+
+        // Sync all placeholders found in the text.
+        placeholders.forEach(placeholder => {
+            // Sync the example schema
+            const existingSchemaEntry = currentSchema.find(v => v.placeholder === placeholder);
+            newSchema.push(existingSchemaEntry || { placeholder, example: '' });
+
+            const placeholderName = placeholder.replace(/[{}]/g, '');
+
+            // Sync mappings only if type is 'named'
+            if (detectedType === 'named') {
+                let mappingFound = false;
+
+                // Re-use existing mapping if exists
+                const existingMapping = currentMappings.find(m => m.placeholder === placeholder);
+                if (existingMapping) {
+                    newMappings.push(existingMapping);
+                    mappingFound = true;
+                }
+
+                // if there is no mapping, detect if this is a DB variable.
+                if (!mappingFound) {
+                    const dbVar = availableVariables.find(v => v.placeholder_name === placeholderName);
+                    if (dbVar) {
+                        newMappings.push({
+                            placeholder: placeholder,
+                            source: dbVar.source_path,
+                            label: dbVar.label,
+                            fallback_value: '',
+                        });
+                        mappingFound = true;
+                    }
+                }
+
+                // if it is not one of the above, take it as a manual placeholder
+                if (!mappingFound) {
+                    newMappings.push({
+                        placeholder: placeholder,
+                        source: 'manual',
+                        label: `Manual: ${placeholderName}`,
+                        fallback_value: null,
+                    });
+                }
+            }
         });
 
-        const hasChanges = JSON.stringify(currentSchema.map(v => v.placeholder).sort()) !==
-                          JSON.stringify(newSchema.map(v => v.placeholder).sort());
-
-        if (hasChanges) {
+        // compare and update state only if there are changes to prevent re-renders
+        const schemaHasChanges = JSON.stringify(currentSchema) !== JSON.stringify(newSchema);
+        if (schemaHasChanges) {
             form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+        }
+
+        const mappingsHasChanges = JSON.stringify(currentMappings) !== JSON.stringify(newMappings);
+        if (mappingsHasChanges) {
+            form.setValue('variable_mappings', newMappings.length > 0 ? newMappings : null, { shouldValidate: true });
         }
     };
 
@@ -809,7 +927,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 )}
 
                                                 {/* Variable Type Selector + Add Placeholder */}
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex flex-wrap items-center gap-3 mt-2">
                                                     <TooltipProvider>
                                                         <Tooltip delayDuration={250}>
                                                             <TooltipTrigger asChild>
@@ -855,31 +973,72 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                         </Tooltip>
                                                     </TooltipProvider>
 
-                                                    {watchedVariableType === 'named' && (
-                                                        <Input
-                                                            placeholder="variable_name"
-                                                            value={namedVariableName}
-                                                            onChange={(e) => setNamedVariableName(e.target.value)}
-                                                            className="max-w-[200px]"
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.preventDefault();
-                                                                    handleAddPlaceholder();
-                                                                }
-                                                            }}
-                                                        />
-                                                    )}
+                                                    <div className="flex flex-wrap items-center gap-3">
+                                                        {watchedVariableType === 'named' && (
+                                                            <Input
+                                                                placeholder="variable_name"
+                                                                value={namedVariableName}
+                                                                onChange={(e) => setNamedVariableName(e.target.value)}
+                                                                className="max-w-[33%]"
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        handleAddPlaceholder();
+                                                                    }
+                                                                }}
+                                                            />
+                                                        )}
 
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={handleAddPlaceholder}
-                                                        disabled={watchedVariableType === 'named' && !namedVariableName.trim()}
-                                                    >
-                                                        + Add Placeholder
-                                                        {watchedVariableType === 'positional' && ` {{${nextPositionalNumber}}}`}
-                                                    </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={handleAddPlaceholder}
+                                                            disabled={watchedVariableType === 'named' && !namedVariableName.trim()}
+                                                        >
+                                                            + Add Placeholder
+                                                            {watchedVariableType === 'positional' && ` {{${nextPositionalNumber}}}`}
+                                                        </Button>
+
+                                                        {availableVariables && availableVariables.length > 0 && (
+                                                            <TooltipProvider>
+                                                                <Tooltip delayDuration={250}>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div className="inline-block">
+                                                                            <Select
+                                                                                onValueChange={(value) => {
+                                                                                    const selectedVar = availableVariables.find(v => v.source_path === value);
+                                                                                    if (selectedVar) {
+                                                                                        handleAddDbPlaceholder(selectedVar);
+                                                                                    }
+                                                                                }}
+                                                                                disabled={watchedVariableType === 'positional' && hasVariables}
+                                                                            >
+                                                                                <SelectTrigger className="max-w-[33%">
+                                                                                    <SelectValue placeholder="+ Insert DB Variable" />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    {availableVariables.map((variable) => (
+                                                                                        <SelectItem key={variable.source_path} value={variable.source_path}>
+                                                                                            {variable.label}
+                                                                                        </SelectItem>
+                                                                                    ))}
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    {watchedVariableType === 'positional' && hasVariables && (
+                                                                        <TooltipContent
+                                                                            className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                            side="bottom"
+                                                                        >
+                                                                            <p>Select "Named" variable type to use DB variables.</p>
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {/* Variables List */}

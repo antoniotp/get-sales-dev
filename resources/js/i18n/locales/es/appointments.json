@@ -1,0 +1,21 @@
+{
+  "title": "Agenda",
+  "breadcrumbs": {
+    "chatbots": "Chatbots",
+    "agenda": "Agenda"
+  },
+  "calendar": {
+    "today": "Hoy",
+    "month": "Mes",
+    "week": "Semana",
+    "day": "Día",
+    "agenda": "Agenda",
+    "date": "Fecha",
+    "time": "Hora",
+    "event": "Evento",
+    "no_events": "No hay citas en este rango."
+  },
+  "actions": {
+    "create": "Nueva cita"
+  }
+}

@@ -17,6 +17,8 @@ import esOrganization from './locales/es/organization.json';
 import enOrganization from './locales/en/organization.json';
 import esMessageTemplates from './locales/es/message_templates.json';
 import enMessageTemplates from './locales/en/message_templates.json';
+import esAppointments from './locales/es/appointments.json';
+import enAppointments from './locales/en/appointments.json';
 
 i18n
   .use(initReactI18next)
@@ -31,6 +33,7 @@ i18n
         contact: esContact,
         organization: esOrganization,
         message_templates: esMessageTemplates,
+        appointments: esAppointments,
       },
       en: {
         navigation: enNavigation,
@@ -41,6 +44,7 @@ i18n
         contact: enContact,
         organization: enOrganization,
         message_templates: enMessageTemplates,
+        appointments: enAppointments,
       },
     },
     lng: 'es',

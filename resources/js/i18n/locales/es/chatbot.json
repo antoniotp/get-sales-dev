@@ -100,5 +100,90 @@
         "title": "WhatsApp Web (QR)",
         "description": "Conecta un número escaneando un código QR, ideal para pruebas y uso a pequeña escala."
         }
+    },
+
+    "business": {
+        "breadcrumb_integrations": "Integraciones",
+        "breadcrumb_whatsapp": "WhatsApp Business API",
+
+        "page_title": "Integración con WhatsApp Business API",
+
+        "connected_number_title": "Número Conectado (API Oficial)",
+        "connected_number_description": "El número de WhatsApp conectado a este agente mediante la API Oficial de Business.",
+
+        "table_phone": "Número de Teléfono",
+        "table_display_name": "Nombre Visible",
+        "table_status": "Estado",
+        "table_actions": "Acciones",
+
+        "status_active": "Activo",
+        "status_inactive": "Inactivo",
+
+        "open_menu": "Abrir menú",
+        "delete": "Eliminar",
+
+        "no_number_connected": "No hay ningún número de WhatsApp conectado.",
+
+        "test_connection_title": "Probar Conexión",
+        "test_connection_description": "Escanea el código QR para iniciar una conversación.",
+
+        "no_qr_available": "No hay código QR disponible. Conecta un número primero."
+    },
+
+    "web": {
+        "headTitle": "Integración de WhatsApp Web",
+        "breadcrumbs": {
+            "integrations": "Integraciones",
+            "whatsappWeb": "WhatsApp Web"
+        }
+    },
+
+    "webConnection": {
+        "header": {
+        "title": "Conexión WhatsApp Web (No Oficial)",
+        "description": "Conecta un número de WhatsApp usando tu teléfono."
+        },
+        "status": {
+        "label": "Estado:",
+        "verifying": "Verificando estado de la conexión...",
+        "waitingQr": "Esperando código QR...",
+        "reconnectingWaiting": "Reconexión iniciada. Esperando eventos...",
+        "disconnected": "Desconectado",
+        "error": "Error"
+        },
+        "connected": {
+        "title": "Número Conectado",
+        "description": "Detalles del número conectado por WhatsApp Web.",
+        "noNumber": "No hay ningún número de WhatsApp Web conectado."
+        },
+        "disconnected": {
+        "scanQr": "Escanea el código QR para conectar.",
+        "lost": "La conexión se perdió. Por favor reconecta o inicia una nueva sesión."
+        },
+        "error": {
+        "description": "No se pudo verificar el estado de la conexión. Inténtalo nuevamente más tarde."
+        },
+        "table": {
+        "phone": "Número de Teléfono",
+        "displayName": "Nombre Visible",
+        "status": "Estado",
+        "actions": "Acciones",
+        "openMenu": "Abrir menú"
+        },
+        "test": {
+        "title": "Probar Conexión",
+        "description": "Escanea el código QR para iniciar una conversación.",
+        "noQr": "No hay código QR disponible. Conecta un número primero."
+        },
+        "actions": {
+        "delete": "Eliminar",
+        "generateQr": "Generar Código QR",
+        "reconnect": "Reconectar"
+        },
+        "common": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "na": "N/A"
+        }
     }
 }

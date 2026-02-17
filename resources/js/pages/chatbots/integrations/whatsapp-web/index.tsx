@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, usePage } from '@inertiajs/react';
 import AppContentDefaultLayout from '@/layouts/app/app-content-default-layout';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { BreadcrumbItem, ChatbotChannel, PageProps as GlobalPageProps } from '@/types';
 import { WhatsappWebConnection } from '@/components/chatbot/integrations/WhatsappWebConnection';
 import { WhatsappWebSettings } from '@/components/chatbot/integrations/WhatsappWebSettings';
@@ -14,7 +15,10 @@ interface PageProps extends GlobalPageProps {
 }
 
 export default function WhatsAppWebIntegration() {
-    const { chatbot, whatsAppWebChatbotChannel, callRejectionMessage } = usePage<PageProps>().props;
+    const { t } = useTranslation('chatbot');
+
+    const { chatbot, whatsAppWebChatbotChannel, callRejectionMessage } =
+        usePage<PageProps>().props;
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(
         () => [
@@ -23,15 +27,15 @@ export default function WhatsAppWebIntegration() {
                 href: route('chatbots.index'),
             },
             {
-                title: 'Integrations',
+                title: t('web.breadcrumbs.integrations'),
                 href: route('chatbots.integrations', { chatbot: chatbot.id }),
             },
             {
-                title: 'WhatsApp Web',
+                title: t('web.breadcrumbs.whatsappWeb'),
                 href: route('chatbots.integrations.whatsapp-web', { chatbot: chatbot.id }),
             },
         ],
-        [chatbot]
+        [chatbot, t]
     );
 
     const defaultCountry = useMemo(() => {
@@ -51,10 +55,13 @@ export default function WhatsAppWebIntegration() {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="WhatsApp Web Integration" />
+            <Head title={t('web.headTitle')} />
             <AppContentDefaultLayout>
                 <div className="flex flex-col gap-6">
-                    <WhatsappWebConnection chatbot={chatbot} chatbotChannel={whatsAppWebChatbotChannel} />
+                    <WhatsappWebConnection
+                        chatbot={chatbot}
+                        chatbotChannel={whatsAppWebChatbotChannel}
+                    />
 
                     {whatsAppWebChatbotChannel && (
                         <>

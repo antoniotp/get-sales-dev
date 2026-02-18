@@ -40,11 +40,25 @@ export interface Template {
     header_content?: string;
     header_variable?: VariableSchema | null;
     header_variable_type?: VariableType;
+    header_variable_mapping?: {
+        placeholder: string;
+        source: string;
+        label: string;
+        fallback_value?: string | null;
+    } | null;
     body_content: string;
     footer_content?: string;
     button_config?: ButtonConfig[] | null;
     variables_schema: VariableSchema[] | null;
     variable_type?: VariableType;
+    variable_mappings:
+        | {
+              placeholder: string;
+              source: string;
+              label: string;
+              fallback_value?: string | null;
+          }[]
+        | null;
 }
 
 // Prop types for components
@@ -53,6 +67,7 @@ export interface TemplateFormPageProps {
     chatbotChannels: ChatbotChannel[];
     template: Template | null;
     availableLanguages: { code: string; name: string }[];
+    availableVariables: { label: string; source_path: string, placeholder_name: string }[];
 }
 
 export interface HeaderTypeButtonProps {

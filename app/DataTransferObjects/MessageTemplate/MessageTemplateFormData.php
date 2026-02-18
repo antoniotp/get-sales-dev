@@ -20,11 +20,13 @@ class MessageTemplateFormData implements Arrayable
         public ?string $header_content,
         public ?array $header_variable, // { placeholder: string, example: string }
         public ?string $header_variable_type, // 'positional' | 'named'
+        public ?array $header_variable_mapping, // { placeholder: string, source: string, label: string, fallback_value?: string | null }
         public string $body_content,
         public ?string $footer_content,
         public ?array $button_config, // Array of ButtonConfig
         public ?array $variables_schema, // Array of { placeholder: string, example: string }
         public ?string $variable_type, // 'positional' | 'named'
+        public ?array $variable_mappings, // Array of { placeholder: string, source: string, label: string, fallback_value?: string | null }
     ) {}
 
     public static function fromMessageTemplate(MessageTemplate $template): self
@@ -33,6 +35,8 @@ class MessageTemplateFormData implements Arrayable
         $headerVariableType = null;
         $variablesSchema = null;
         $variableType = null;
+        $headerVariableMapping = null;
+        $bodyVariableMappings = null;
 
         // Reconstruct header_variable and header_variable_type from example_data
         $exampleData = $template->example_data ?? [];
@@ -96,6 +100,16 @@ class MessageTemplateFormData implements Arrayable
             $variablesSchema = ! empty($currentVariablesSchema) ? $currentVariablesSchema : null;
         }
 
+        $templateMappings = $template->variable_mappings ?? [];
+
+        if (isset($templateMappings['header'])) {
+            $headerVariableMapping = $templateMappings['header'];
+        }
+
+        if (isset($templateMappings['body'])) {
+            $bodyVariableMappings = $templateMappings['body'];
+        }
+
         return new self(
             id: $template->id,
             display_name: $template->display_name ?? $template->name,
@@ -107,11 +121,13 @@ class MessageTemplateFormData implements Arrayable
             header_content: $template->header_content,
             header_variable: $headerVariable,
             header_variable_type: $headerVariableType,
+            header_variable_mapping: $headerVariableMapping,
             body_content: $template->body_content,
             footer_content: $template->footer_content,
             button_config: $template->button_config,
             variables_schema: $variablesSchema,
             variable_type: $variableType,
+            variable_mappings: $bodyVariableMappings,
         );
     }
 
@@ -128,11 +144,13 @@ class MessageTemplateFormData implements Arrayable
             'header_content' => $this->header_content,
             'header_variable' => $this->header_variable,
             'header_variable_type' => $this->header_variable_type,
+            'header_variable_mapping' => $this->header_variable_mapping,
             'body_content' => $this->body_content,
             'footer_content' => $this->footer_content,
             'button_config' => $this->button_config,
             'variables_schema' => $this->variables_schema,
             'variable_type' => $this->variable_type,
+            'variable_mappings' => $this->variable_mappings,
         ];
     }
 }

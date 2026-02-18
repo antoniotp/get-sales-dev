@@ -58,11 +58,23 @@ const formSchema = z.object({
     header_content: z.string().optional(),
     header_variable: variableSchemaItem.nullable().optional(),
     header_variable_type: z.enum(['positional', 'named']).optional(),
+    header_variable_mapping: z.object({
+        placeholder: z.string(),
+        source: z.string(),
+        label: z.string(),
+        fallback_value: z.string().nullable().optional(),
+    }).nullable().optional(),
     body_content: z.string().min(1, 'Message content is required'),
     footer_content: z.string().optional(),
     button_config: z.array(buttonConfigItem).nullable(),
     variables_schema: z.array(variableSchemaItem).nullable(),
     variable_type: z.enum(['positional', 'named']).optional(),
+    variable_mappings: z.array(z.object({
+        placeholder: z.string(),
+        source: z.string(), // e.g., "contact.first_name"
+        label: z.string(), // e.g., "Contact: Name"
+        fallback_value: z.string().nullable().optional(),
+    })).nullable(),
 });
 
 export type TemplateFormValues = z.infer<typeof formSchema>;
@@ -106,7 +118,7 @@ const getNextPositionalNumber = (placeholders: string[]): number => {
 const WABA_CHANNEL_ID = 1;
 
 // --- Main Component ---
-export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages }: TemplateFormPageProps) {
+export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages, availableVariables }: TemplateFormPageProps) {
     const { props } = usePage<PageProps>();
     const headerInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -128,9 +140,11 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 header_content: template.header_content || '',
                 header_variable: template.header_variable || null,
                 header_variable_type: template.header_variable_type || 'positional',
+                header_variable_mapping: template.header_variable_mapping || null,
                 footer_content: template.footer_content || '',
                 button_config: template.button_config || null,
                 variable_type: template.variable_type || 'positional',
+                variable_mappings: template.variable_mappings || null,
             }
             : {
                 chatbot_channel_id: chatbotChannels[0]?.id || 0, // Set default if available, otherwise 0 for validation
@@ -142,11 +156,13 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 header_content: '',
                 header_variable: null,
                 header_variable_type: 'positional',
+                header_variable_mapping: null,
                 body_content: '',
                 footer_content: '',
                 button_config: null,
                 variables_schema: null,
                 variable_type: 'positional',
+                variable_mappings: null,
             }
     );
 
@@ -185,6 +201,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     const watchedVariableType = form.watch('variable_type');
     const watchedVariablesSchema = form.watch('variables_schema');
     const selectedChabotChannelId = form.watch('chatbot_channel_id');
+    const watchedVariableMappings = form.watch('variable_mappings');
 
     // --- Header Variables Logic ---
     const detectedHeaderPlaceholders = useMemo(() => {
@@ -217,26 +234,68 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         }
 
         let placeholder: string;
+        let placeholderName: string = '';
+
         if (watchedHeaderVariableType === 'positional') {
             placeholder = '{{1}}';
         } else {
-            const trimmedName = namedHeaderVariableName.trim();
-            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+            placeholderName = namedHeaderVariableName.trim();
+
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(placeholderName)) {
                 form.setError('header_content', {
                     type: 'manual',
                     message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores.'
                 });
                 return;
             }
-            placeholder = `{{${trimmedName}}}`;
+
+            const isDbVariableConflict = availableVariables.some(dbVar => dbVar.placeholder_name === placeholderName);
+            if (isDbVariableConflict) {
+                form.setError('header_content', {
+                    type: 'manual',
+                    message: `The name "${placeholderName}" is reserved for a database variable. Please choose a different name.`
+                });
+                return;
+            }
+
+            placeholder = `{{${placeholderName}}}`;
         }
 
         insertHeaderPlaceholder(placeholder);
         form.setValue('header_variable', { placeholder, example: '' }, { shouldValidate: true });
 
         if (watchedHeaderVariableType === 'named') {
+            form.setValue('header_variable_mapping', {
+                placeholder: placeholder,
+                source: 'manual',
+                label: `Manual: ${placeholderName}`,
+                fallback_value: null,
+            }, { shouldValidate: true });
+
             setNamedHeaderVariableName('');
+        } else {
+            form.setValue('header_variable_mapping', null, { shouldValidate: true });
         }
+    };
+
+    const handleAddDbHeaderPlaceholder = (variable: (typeof availableVariables)[number]) => {
+        form.setValue('header_variable_type', 'named', { shouldValidate: true });
+
+        const placeholderText = `{{${variable.placeholder_name}}}`;
+        insertHeaderPlaceholder(placeholderText);
+
+        form.setValue('header_variable', { placeholder: placeholderText, example: '' }, { shouldValidate: true });
+
+        form.setValue(
+            'header_variable_mapping',
+            {
+                placeholder: placeholderText,
+                source: variable.source_path,
+                label: variable.label,
+                fallback_value: '',
+            },
+            { shouldValidate: true },
+        );
     };
 
     const handleRemoveHeaderVariable = () => {
@@ -251,6 +310,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         const newHeader = currentHeader.replace(regex, '');
         form.setValue('header_content', newHeader, { shouldValidate: true });
         form.clearErrors('header_content');
+        form.setValue('header_variable_mapping', null, { shouldValidate: true });
     };
 
     const syncHeaderVariable = () => {
@@ -267,12 +327,67 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         }
 
         const placeholder = placeholders[0] || null;
+
+        // Get the current values of header_variable and header_variable_mapping
+        const currentHeaderVariable = form.getValues('header_variable');
+        const currentHeaderVariableMapping = form.getValues('header_variable_mapping');
+
         if (placeholder) {
-            if (!watchedHeaderVariable || watchedHeaderVariable.placeholder !== placeholder) {
-                form.setValue('header_variable', { placeholder, example: watchedHeaderVariable?.example || '' }, { shouldValidate: true });
+            let newHeaderVariableMapping = null;
+            const placeholderName = placeholder.replace(/[{}]/g, '');
+
+            // 1. Reuse existing mapping if any
+            if (currentHeaderVariableMapping && currentHeaderVariableMapping.placeholder === placeholder) {
+                newHeaderVariableMapping = currentHeaderVariableMapping;
+            } else {
+                // 2. If there is no mapping, detect if it is a DB variable
+                const dbVar = availableVariables.find(v => v.placeholder_name === placeholderName);
+                if (dbVar) {
+                    newHeaderVariableMapping = {
+                        placeholder: placeholder,
+                        source: dbVar.source_path,
+                        label: dbVar.label,
+                        fallback_value: '',
+                    };
+                    // If we detect a DB var, the type must be 'named'
+                    form.setValue('header_variable_type', 'named', { shouldValidate: true });
+                } else {
+                    // 3. If none of the above, it is a manual placeholder
+                    // And the type must be 'named' if it is not positional
+                    if (!/^\d+$/.test(placeholderName)) { // If it is not a number (i.e., it is not positional)
+                        newHeaderVariableMapping = {
+                            placeholder: placeholder,
+                            source: 'manual',
+                            label: `Manual: ${placeholderName}`,
+                            fallback_value: null,
+                        };
+                        form.setValue('header_variable_type', 'named', { shouldValidate: true });
+                    } else {
+                        // It is a positional placeholder, it does not need mapping in header_variable_mapping
+                        form.setValue('header_variable_type', 'positional', { shouldValidate: true });
+                    }
+                }
             }
-        } else if (watchedHeaderVariable) {
-            form.setValue('header_variable', null, { shouldValidate: true });
+
+            // Update header_variable if necessary
+            if (!currentHeaderVariable || currentHeaderVariable.placeholder !== placeholder) {
+                form.setValue('header_variable', { placeholder, example: currentHeaderVariable?.example || '' }, { shouldValidate: true });
+            }
+
+            // Update header_variable_mapping if it has changed
+            if (JSON.stringify(currentHeaderVariableMapping) !== JSON.stringify(newHeaderVariableMapping)) {
+                form.setValue('header_variable_mapping', newHeaderVariableMapping, { shouldValidate: true });
+            }
+
+        } else { // There is no placeholder in the header
+            if (currentHeaderVariable) {
+                form.setValue('header_variable', null, { shouldValidate: true });
+            }
+            if (currentHeaderVariableMapping) {
+                form.setValue('header_variable_mapping', null, { shouldValidate: true });
+            }
+            // Reset the type to positional if there are no variables (default behavior)
+            form.setValue('header_variable_type', 'positional', { shouldValidate: true });
         }
     };
 
@@ -319,23 +434,25 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     // Add a new placeholder
     const handleAddPlaceholder = () => {
         let placeholder: string;
+        let placeholderName: string;
 
         if (watchedVariableType === 'positional') {
+            placeholderName = '';
             placeholder = `{{${nextPositionalNumber}}}`;
         } else {
             // Named
-            const trimmedName = namedVariableName.trim();
+            placeholderName = namedVariableName.trim();
 
             // check format
-            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(trimmedName)) {
+            if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(placeholderName)) {
                 form.setError('body_content', {
                     type: 'manual',
-                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores'
+                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores',
                 });
                 return;
             }
 
-            placeholder = `{{${trimmedName}}}`;
+            placeholder = `{{${placeholderName}}}`;
 
             // check duplicates
             const currentSchema = watchedVariablesSchema || [];
@@ -343,6 +460,15 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 form.setError('body_content', {
                     type: 'manual',
                     message: `Variable ${placeholder} already exists`
+                });
+                return;
+            }
+
+            const isDbVariableConflict = availableVariables.some(dbVar => dbVar.placeholder_name === placeholderName);
+            if (isDbVariableConflict) {
+                form.setError('body_content', {
+                    type: 'manual',
+                    message: `The name "${placeholderName}" is reserved for a database variable. Please choose a different name.`
                 });
                 return;
             }
@@ -358,8 +484,48 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         ], { shouldValidate: true });
 
         if (watchedVariableType === 'named') {
+            const currentMappings = watchedVariableMappings || [];
+            form.setValue(
+                'variable_mappings',
+                [
+                    ...currentMappings,
+                    {
+                        placeholder: placeholder,
+                        source: 'manual',
+                        label: `Manual: ${placeholderName}`, // Etiqueta descriptiva
+                        fallback_value: null,
+                    },
+                ],
+                { shouldValidate: true },
+            );
+
             setNamedVariableName('');
         }
+    };
+
+    const handleAddDbPlaceholder = (variable: typeof availableVariables[number]) => {
+        if (watchedVariableType === 'positional' && !hasVariables) {
+            form.setValue('variable_type', 'named', { shouldValidate: true });
+        }
+        const placeholderText = `{{${variable.placeholder_name}}}`;
+        insertPlaceholder(placeholderText);
+
+        const currentSchema = watchedVariablesSchema || [];
+        form.setValue('variables_schema', [
+            ...currentSchema,
+            { placeholder: placeholderText, example: '' }
+        ], { shouldValidate: true });
+
+        const currentMappings = watchedVariableMappings || [];
+        form.setValue('variable_mappings', [
+            ...currentMappings,
+            {
+                placeholder: placeholderText,
+                source: variable.source_path,
+                label: variable.label,
+                fallback_value: '',
+            }
+        ], { shouldValidate: true });
     };
 
     const handleRemoveVariable = (placeholder: string) => {
@@ -367,6 +533,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         const currentSchema = watchedVariablesSchema || [];
         const newSchema = currentSchema.filter(v => v.placeholder !== placeholder);
         form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+
+        const currentMappings = watchedVariableMappings || [];
+        const newMappings = currentMappings.filter(m => m.placeholder !== placeholder);
+        form.setValue('variable_mappings', newMappings.length > 0 ? newMappings : null, { shouldValidate: true });
 
         // Remove var from the textarea
         const currentBody = watchedBodyContent || '';
@@ -394,18 +564,72 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             form.clearErrors('body_content');
         }
 
-        const currentSchema = watchedVariablesSchema || [];
+         if (detectedType) {
+             if (form.getValues('variable_type') !== detectedType) {
+                 form.setValue('variable_type', detectedType, { shouldValidate: true });
+             }
+         }
 
-        const newSchema = placeholders.map(placeholder => {
-            const existing = currentSchema.find(v => v.placeholder === placeholder);
-            return existing || { placeholder, example: '' };
+        const currentSchema = watchedVariablesSchema || [];
+        const currentMappings = watchedVariableMappings || [];
+
+        const newSchema: typeof variableSchemaItem._type[] = [];
+        const newMappings: TemplateFormValues['variable_mappings'] = [];
+
+        // Sync all placeholders found in the text.
+        placeholders.forEach(placeholder => {
+            // Sync the example schema
+            const existingSchemaEntry = currentSchema.find(v => v.placeholder === placeholder);
+            newSchema.push(existingSchemaEntry || { placeholder, example: '' });
+
+            const placeholderName = placeholder.replace(/[{}]/g, '');
+
+            // Sync mappings only if type is 'named'
+            if (detectedType === 'named') {
+                let mappingFound = false;
+
+                // Re-use existing mapping if exists
+                const existingMapping = currentMappings.find(m => m.placeholder === placeholder);
+                if (existingMapping) {
+                    newMappings.push(existingMapping);
+                    mappingFound = true;
+                }
+
+                // if there is no mapping, detect if this is a DB variable.
+                if (!mappingFound) {
+                    const dbVar = availableVariables.find(v => v.placeholder_name === placeholderName);
+                    if (dbVar) {
+                        newMappings.push({
+                            placeholder: placeholder,
+                            source: dbVar.source_path,
+                            label: dbVar.label,
+                            fallback_value: '',
+                        });
+                        mappingFound = true;
+                    }
+                }
+
+                // if it is not one of the above, take it as a manual placeholder
+                if (!mappingFound) {
+                    newMappings.push({
+                        placeholder: placeholder,
+                        source: 'manual',
+                        label: `Manual: ${placeholderName}`,
+                        fallback_value: null,
+                    });
+                }
+            }
         });
 
-        const hasChanges = JSON.stringify(currentSchema.map(v => v.placeholder).sort()) !==
-                          JSON.stringify(newSchema.map(v => v.placeholder).sort());
-
-        if (hasChanges) {
+        // compare and update state only if there are changes to prevent re-renders
+        const schemaHasChanges = JSON.stringify(currentSchema) !== JSON.stringify(newSchema);
+        if (schemaHasChanges) {
             form.setValue('variables_schema', newSchema.length > 0 ? newSchema : null, { shouldValidate: true });
+        }
+
+        const mappingsHasChanges = JSON.stringify(currentMappings) !== JSON.stringify(newMappings);
+        if (mappingsHasChanges) {
+            form.setValue('variable_mappings', newMappings.length > 0 ? newMappings : null, { shouldValidate: true });
         }
     };
 
@@ -663,9 +887,9 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                     />
                                                 )}
                                                 {watchedHeaderType === 'text' && (
-                                                    <div className="space-y-3 rounded-lg border p-3">
+                                                    <div className="space-y-3">
                                                         <Label className="text-sm">Header Variable</Label>
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex flex-wrap items-center gap-3 mt-2">
                                                             <TooltipProvider>
                                                                 <Tooltip delayDuration={250}>
                                                                     <TooltipTrigger asChild>
@@ -704,70 +928,128 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 </Tooltip>
                                                             </TooltipProvider>
 
-                                                            {watchedHeaderVariableType === 'named' && (
-                                                                <Input
-                                                                    placeholder="variable_name"
-                                                                    value={namedHeaderVariableName}
-                                                                    onChange={(e) => setNamedHeaderVariableName(e.target.value)}
-                                                                    className="max-w-[150px]"
-                                                                    disabled={hasHeaderVariable}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') {
-                                                                            e.preventDefault();
-                                                                            handleAddHeaderPlaceholder();
-                                                                        }
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={handleAddHeaderPlaceholder}
-                                                                disabled={
-                                                                    hasHeaderVariable ||
-                                                                    (watchedHeaderVariableType === 'named' && !namedHeaderVariableName.trim())
-                                                                }
-                                                            >
-                                                                + Add Placeholder
-                                                                {watchedHeaderVariableType === 'positional' && ' {{1}}'}
-                                                            </Button>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-center">
+                                                                {watchedHeaderVariableType === 'named' && (
+                                                                    <Input
+                                                                        placeholder="variable_name"
+                                                                        value={namedHeaderVariableName}
+                                                                        onChange={(e) => setNamedHeaderVariableName(e.target.value)}
+                                                                        className="w-full"
+                                                                        disabled={hasHeaderVariable}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === 'Enter') {
+                                                                                e.preventDefault();
+                                                                                handleAddHeaderPlaceholder();
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="w-full"
+                                                                    onClick={handleAddHeaderPlaceholder}
+                                                                    disabled={
+                                                                        hasHeaderVariable ||
+                                                                        (watchedHeaderVariableType === 'named' && !namedVariableName.trim())
+                                                                    }
+                                                                >
+                                                                    + Add Placeholder
+                                                                    {watchedHeaderVariableType === 'positional' && ' {{1}}'}
+                                                                </Button>
+                                                                {availableVariables && availableVariables.length > 0 && (
+                                                                    <div
+                                                                        className={`
+                                                                            w-full
+                                                                            md:col-span-2
+                                                                            xl:col-span-1
+                                                                            ${watchedHeaderVariableType !== 'named' ? 'md:col-span-1 xl:col-span-1' : ''}
+                                                                        `}
+                                                                    >
+                                                                        <TooltipProvider>
+                                                                            <Tooltip delayDuration={250}>
+                                                                                <TooltipTrigger asChild>
+                                                                                    <div className="inline-block w-full">
+                                                                                        <Select
+                                                                                            onValueChange={(value) => {
+                                                                                                const selectedVar = availableVariables.find(
+                                                                                                    (v) => v.source_path === value,
+                                                                                                );
+                                                                                                if (selectedVar) {
+                                                                                                    handleAddDbHeaderPlaceholder(selectedVar);
+                                                                                                }
+                                                                                            }}
+                                                                                            disabled={hasHeaderVariable}
+                                                                                        >
+                                                                                            <SelectTrigger className="w-full">
+                                                                                                <SelectValue placeholder="+ Insert DB Variable" />
+                                                                                            </SelectTrigger>
+                                                                                            <SelectContent>
+                                                                                                {availableVariables.map((variable) => (
+                                                                                                    <SelectItem
+                                                                                                        key={variable.source_path}
+                                                                                                        value={variable.source_path}
+                                                                                                    >
+                                                                                                        {variable.label}
+                                                                                                    </SelectItem>
+                                                                                                ))}
+                                                                                            </SelectContent>
+                                                                                        </Select>
+                                                                                    </div>
+                                                                                </TooltipTrigger>
+                                                                                {hasHeaderVariable && (
+                                                                                    <TooltipContent
+                                                                                        className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                                        side="bottom"
+                                                                                    >
+                                                                                        <p>Remove the existing variable to add a new one.</p>
+                                                                                    </TooltipContent>
+                                                                                )}
+                                                                            </Tooltip>
+                                                                        </TooltipProvider>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         {hasHeaderVariable && watchedHeaderVariable && (
-                                                            <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center">
-                                                                <FormField
-                                                                    control={form.control}
-                                                                    name="header_variable.example"
-                                                                    render={({field}) => (
-                                                                        <>
-                                                                            <span className="font-mono text-sm font-medium">
-                                                                                {watchedHeaderVariable.placeholder}
-                                                                            </span>
-                                                                            <FormItem className="space-y-0">
-                                                                                <FormControl>
-                                                                                    <Input
-                                                                                        placeholder="Enter example value..."
-                                                                                        value={field.value}
-                                                                                        onChange={(e) => {
-                                                                                            handleHeaderExampleChange(e.target.value)
-                                                                                            field.onChange(e);
-                                                                                        }}
-                                                                                        onBlur={field.onBlur}
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage className="text-xs" />
-                                                                            </FormItem>
-                                                                            <Button
-                                                                                type="button"
-                                                                                variant="ghost"
-                                                                                size="icon"
-                                                                                onClick={handleRemoveHeaderVariable}
-                                                                            >
-                                                                                <Trash2 className="h-4 w-4" />
-                                                                            </Button>
-                                                                        </>
-                                                                    )}
-                                                                />
+                                                            <div className="space-y-3 rounded-lg border p-3">
+                                                                <div className="flex flex-col xl:flex-row xl:items-center gap-2">
+                                                                    <span className="font-mono text-sm font-medium">
+                                                                        {watchedHeaderVariable.placeholder}
+                                                                    </span>
+
+                                                                    <div className="flex items-center gap-2 flex-grow">
+                                                                        <FormField
+                                                                            control={form.control}
+                                                                            name="header_variable.example"
+                                                                            render={({ field }) => (
+                                                                                <FormItem className="flex-grow space-y-0">
+                                                                                    <FormControl>
+                                                                                        <Input
+                                                                                            placeholder="Enter example value..."
+                                                                                            value={field.value}
+                                                                                            onChange={(e) => {
+                                                                                                handleHeaderExampleChange(e.target.value);
+                                                                                                field.onChange(e);
+                                                                                            }}
+                                                                                            onBlur={field.onBlur}
+                                                                                        />
+                                                                                    </FormControl>
+                                                                                    <FormMessage className="text-xs" />
+                                                                                </FormItem>
+                                                                            )}
+                                                                        />
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            onClick={handleRemoveHeaderVariable}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -809,7 +1091,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 )}
 
                                                 {/* Variable Type Selector + Add Placeholder */}
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex flex-wrap items-center gap-3 mt-2">
                                                     <TooltipProvider>
                                                         <Tooltip delayDuration={250}>
                                                             <TooltipTrigger asChild>
@@ -855,71 +1137,127 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                         </Tooltip>
                                                     </TooltipProvider>
 
-                                                    {watchedVariableType === 'named' && (
-                                                        <Input
-                                                            placeholder="variable_name"
-                                                            value={namedVariableName}
-                                                            onChange={(e) => setNamedVariableName(e.target.value)}
-                                                            className="max-w-[200px]"
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter') {
-                                                                    e.preventDefault();
-                                                                    handleAddPlaceholder();
-                                                                }
-                                                            }}
-                                                        />
-                                                    )}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-center">
+                                                        {watchedVariableType === 'named' && (
+                                                            <Input
+                                                                placeholder="variable_name"
+                                                                value={namedVariableName}
+                                                                onChange={(e) => setNamedVariableName(e.target.value)}
+                                                                className="w-full"
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault();
+                                                                        handleAddPlaceholder();
+                                                                    }
+                                                                }}
+                                                            />
+                                                        )}
 
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={handleAddPlaceholder}
-                                                        disabled={watchedVariableType === 'named' && !namedVariableName.trim()}
-                                                    >
-                                                        + Add Placeholder
-                                                        {watchedVariableType === 'positional' && ` {{${nextPositionalNumber}}}`}
-                                                    </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="w-full"
+                                                            onClick={handleAddPlaceholder}
+                                                            disabled={watchedVariableType === 'named' && !namedVariableName.trim()}
+                                                        >
+                                                            + Add Placeholder
+                                                            {watchedVariableType === 'positional' && ` {{${nextPositionalNumber}}}`}
+                                                        </Button>
+
+                                                        {availableVariables && availableVariables.length > 0 && (
+                                                            <div
+                                                                className={`
+                                                                    w-full
+                                                                    md:col-span-2
+                                                                    xl:col-span-1
+                                                                    ${watchedVariableType !== 'named' ? 'md:col-span-1 xl:col-span-1' : ''}
+                                                                `}
+                                                            >
+                                                                <TooltipProvider>
+                                                                    <Tooltip delayDuration={250}>
+                                                                        <TooltipTrigger asChild>
+                                                                            <div className="inline-block w-full">
+                                                                                <Select
+                                                                                    onValueChange={(value) => {
+                                                                                        const selectedVar = availableVariables.find(v => v.source_path === value);
+                                                                                        if (selectedVar) {
+                                                                                            handleAddDbPlaceholder(selectedVar);
+                                                                                        }
+                                                                                    }}
+                                                                                    disabled={watchedVariableType === 'positional' && hasVariables}
+                                                                                >
+                                                                                    <SelectTrigger className="w-full">
+                                                                                        <SelectValue placeholder="+ Insert DB Variable" />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        {availableVariables.map((variable) => (
+                                                                                            <SelectItem key={variable.source_path} value={variable.source_path}>
+                                                                                                {variable.label}
+                                                                                            </SelectItem>
+                                                                                        ))}
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </div>
+                                                                        </TooltipTrigger>
+                                                                        {watchedVariableType === 'positional' && hasVariables && (
+                                                                            <TooltipContent
+                                                                                className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                                side="bottom"
+                                                                            >
+                                                                                <p>Select "Named" variable type to use DB variables.</p>
+                                                                            </TooltipContent>
+                                                                        )}
+                                                                    </Tooltip>
+                                                                </TooltipProvider>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
 
                                                 {/* Variables List */}
                                                 {watchedVariablesSchema && watchedVariablesSchema.length > 0 && (
                                                     <div className="space-y-3">
                                                         <Label className="text-sm">Detected Variables ({watchedVariablesSchema.length})</Label> *<small>All are required</small>
-                                                        <div className="grid grid-cols-[auto_1fr_auto] gap-2 items-center rounded-lg border p-3">
+                                                        <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] gap-2 items-center rounded-lg border p-3">
                                                             {watchedVariablesSchema.map((variable, index) => (
                                                                 <Fragment key={index}>
-                                                                    <span className="font-mono text-sm font-medium">
+                                                                    <span className="font-mono text-sm font-medium col-span-full xl:col-span-1">
                                                                         {variable.placeholder}
                                                                     </span>
-                                                                    <FormField
-                                                                        control={form.control}
-                                                                        name={`variables_schema.${index}.example`}
-                                                                        render={({ field }) => (
-                                                                            <FormItem className="space-y-0">
-                                                                                <FormControl>
-                                                                                    <Input
-                                                                                        placeholder="Enter example value..."
-                                                                                        value={field.value}
-                                                                                        onChange={(e) => {
-                                                                                            handleExampleChange(variable.placeholder, e.target.value)
-                                                                                            field.onChange(e)
-                                                                                        }}
-                                                                                        onBlur={field.onBlur}
-                                                                                    />
-                                                                                </FormControl>
-                                                                                <FormMessage className="text-xs" />
-                                                                            </FormItem>
-                                                                        )}
-                                                                    />{' '}
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() => handleRemoveVariable(variable.placeholder)}
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
+                                                                    <div className="col-span-full xl:col-span-2 flex items-center gap-2">
+                                                                        <div className="flex-grow">
+                                                                            <FormField
+                                                                                control={form.control}
+                                                                                name={`variables_schema.${index}.example`}
+                                                                                render={({ field }) => (
+                                                                                    <FormItem className="space-y-0">
+                                                                                        <FormControl>
+                                                                                            <Input
+                                                                                                placeholder="Enter example value..."
+                                                                                                value={field.value}
+                                                                                                onChange={(e) => {
+                                                                                                    handleExampleChange(variable.placeholder, e.target.value)
+                                                                                                    field.onChange(e)
+                                                                                                }}
+                                                                                                onBlur={field.onBlur}
+                                                                                            />
+                                                                                        </FormControl>
+                                                                                        <FormMessage className="text-xs" />
+                                                                                    </FormItem>
+                                                                                )}
+                                                                            />
+                                                                        </div>
+                                                                        {/* El Button */}
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            onClick={() => handleRemoveVariable(variable.placeholder)}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </div>
                                                                 </Fragment>
                                                             ))}
                                                         </div>

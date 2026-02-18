@@ -13,15 +13,24 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     chatbot: Chatbot;
     chatbotChannel: ChatbotChannel | null;
 }
 
-type ConnectionStatus = 'VERIFYING' | 'CONNECTED' | 'DISCONNECTED' | 'ERROR' | 'CONNECTING_NEW_SESSION' | 'RECONNECTING_WAITING_FOR_EVENTS';
+type ConnectionStatus =
+    | 'VERIFYING'
+    | 'CONNECTED'
+    | 'DISCONNECTED'
+    | 'ERROR'
+    | 'CONNECTING_NEW_SESSION'
+    | 'RECONNECTING_WAITING_FOR_EVENTS';
 
 export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
+    const { t } = useTranslation('chatbot');
+
     const [status, setStatus] = useState<ConnectionStatus>('VERIFYING');
     const [qrCode, setQrCode] = useState<string | null>(null);
     const [sessionId, setSessionId] = useState<string | null>(null);
@@ -45,7 +54,6 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
     // Initial status check or set up for a new connection
     useEffect(() => {
         if (chatbotChannel && chatbotChannel?.data?.phone_number) {
-            // Existing channel, fetch its status
             setStatus('VERIFYING');
             axios
                 .get(route('chatbots.integrations.whatsapp-web.status', { chatbot: chatbot.id }))
@@ -59,16 +67,17 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                     setStatus('ERROR');
                 });
         } else {
-            // No existing channel, ready to start a new session
-            setStatus('DISCONNECTED'); // Or 'IDLE'
+            setStatus('DISCONNECTED');
         }
     }, [chatbot.id, chatbotChannel]);
 
     const handleStartNewSession = async () => {
         setStatus('CONNECTING_NEW_SESSION');
-        setQrCode(null); // Reset QR code on a new attempt
+        setQrCode(null);
         try {
-            const response = await axios.post(route('chatbots.integrations.whatsapp-web.start', { chatbot: chatbot.id }));
+            const response = await axios.post(
+                route('chatbots.integrations.whatsapp-web.start', { chatbot: chatbot.id })
+            );
             if (response.data.session_id) {
                 setSessionId(response.data.session_id);
             }
@@ -80,11 +89,13 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
 
     const handleReconnect = async () => {
         setReconnecting(true);
-        setQrCode(null); // Clear any old QR code
+        setQrCode(null);
         try {
-            const response = await axios.post(route('chatbots.integrations.whatsapp-web.reconnect', { chatbot: chatbot.id }));
+            const response = await axios.post(
+                route('chatbots.integrations.whatsapp-web.reconnect', { chatbot: chatbot.id })
+            );
             if (response.status === 200) {
-                if (! response.data.success) {
+                if (!response.data.success) {
                     if (response.data.message === 'session_not_found') {
                         handleStartNewSession();
                     }
@@ -94,40 +105,37 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
             }
         } catch (error) {
             console.error('Failed to send reconnect command', error);
-            setStatus('ERROR'); // Set the status to error if the reconnect command fails
+            setStatus('ERROR');
         } finally {
             setReconnecting(false);
         }
     };
 
-    // Listen for QR code and connection status updates
     useEffect(() => {
         if (sessionId && echoRef.current) {
             const channelName = echoRef.current.private(`whatsapp-web.${sessionId}`);
 
-            // Listen for QR code event
             channelName.listen('.qr-code.received', (e: { qrCode: string }) => {
                 setQrCode(e.qrCode);
-                setStatus('DISCONNECTED'); // QR code means we are disconnected and need to scan
+                setStatus('DISCONNECTED');
             });
 
-            // Listen for connection status updated event
             channelName.listen('.connection.status.updated', (e: { status: number }) => {
                 switch (e.status) {
-                    case 0: // STATUS_DISCONNECTED
+                    case 0:
                         setStatus('DISCONNECTED');
-                        setQrCode(null); // Clear QR code on disconnect
-                        setSessionId(null); // Clear session ID if fully disconnected
+                        setQrCode(null);
+                        setSessionId(null);
                         break;
-                    case 1: // STATUS_CONNECTED
+                    case 1:
                         setStatus('CONNECTED');
-                        setQrCode(null); // Clear QR code on connected
+                        setQrCode(null);
                         break;
-                    case 2: // STATUS_CONNECTING
-                        setStatus('VERIFYING'); // Use VERIFYING for the CONNECTING state
+                    case 2:
+                        setStatus('VERIFYING');
                         break;
                     default:
-                        setStatus('DISCONNECTED'); // Fallback
+                        setStatus('DISCONNECTED');
                         break;
                 }
             });
@@ -156,48 +164,79 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                     <div className="flex items-center justify-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span>
-                            {status === 'VERIFYING' && 'Verifying connection status...'}
-                            {status === 'CONNECTING_NEW_SESSION' && !qrCode && 'Waiting for QR code...'}
-                            {status === 'RECONNECTING_WAITING_FOR_EVENTS' && 'Reconnection initiated. Waiting for events...'}
+                            {status === 'VERIFYING' &&
+                                t('webConnection.status.verifying')}
+                            {status === 'CONNECTING_NEW_SESSION' &&
+                                !qrCode &&
+                                t('webConnection.status.waitingQr')}
+                            {status === 'RECONNECTING_WAITING_FOR_EVENTS' &&
+                                t('webConnection.status.reconnectingWaiting')}
                         </span>
                     </div>
                 );
+
             case 'CONNECTED':
                 return (
-                    <div className="grid gap-6 md:grid-cols-2"> {/* Added grid layout */}
-                        <Card> {/* Card for the table */}
+                    <div className="grid gap-6 md:grid-cols-2">
+                        <Card>
                             <CardHeader>
-                                <CardTitle>Connected Number</CardTitle>
-                                <CardDescription>Details of the connected WhatsApp Web number.</CardDescription>
+                                <CardTitle>
+                                    {t('webConnection.connected.title')}
+                                </CardTitle>
+                                <CardDescription>
+                                    {t('webConnection.connected.description')}
+                                </CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead>Phone Number</TableHead>
-                                            <TableHead>Display Name</TableHead>
-                                            <TableHead>Status</TableHead>
                                             <TableHead>
-                                                <span className="sr-only">Actions</span>
+                                                {t('webConnection.table.phone')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('webConnection.table.displayName')}
+                                            </TableHead>
+                                            <TableHead>
+                                                {t('webConnection.table.status')}
+                                            </TableHead>
+                                            <TableHead>
+                                                <span className="sr-only">
+                                                    {t('webConnection.table.actions')}
+                                                </span>
                                             </TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {(chatbotChannel && chatbotChannel.data?.phone_number) ? (
+                                        {chatbotChannel?.data?.phone_number ? (
                                             <TableRow>
-                                                <TableCell>{chatbotChannel.data?.display_phone_number || 'N/A'}</TableCell>
-                                                <TableCell>{chatbotChannel.data?.phone_number_verified_name || 'N/A'}</TableCell>
-                                                <TableCell>{chatbotChannel.status === 1 ? 'Active' : 'Inactive'}</TableCell>
+                                                <TableCell>
+                                                    {chatbotChannel.data?.display_phone_number ||
+                                                        t('webConnection.common.na')}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {chatbotChannel.data?.phone_number_verified_name ||
+                                                        t('webConnection.common.na')}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {chatbotChannel.status === 1
+                                                        ? t('webConnection.common.active')
+                                                        : t('webConnection.common.inactive')}
+                                                </TableCell>
                                                 <TableCell>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                                                <span className="sr-only">Open menu</span>
+                                                                <span className="sr-only">
+                                                                    {t('webConnection.table.openMenu')}
+                                                                </span>
                                                                 <MoreHorizontal className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                            <DropdownMenuItem>
+                                                                {t('webConnection.actions.delete')}
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </TableCell>
@@ -205,7 +244,9 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                                         ) : (
                                             <TableRow>
                                                 <TableCell colSpan={4} className="text-center">
-                                                    <p className="py-4">No WhatsApp Web number connected.</p>
+                                                    <p className="py-4">
+                                                        {t('webConnection.connected.noNumber')}
+                                                    </p>
                                                 </TableCell>
                                             </TableRow>
                                         )}
@@ -214,66 +255,89 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                             </CardContent>
                         </Card>
 
-                        <Card> {/* Card for the test QR code */}
+                        <Card>
                             <CardHeader>
-                                <CardTitle>Test Connection</CardTitle>
-                                <CardDescription>Scan the QR code to start a conversation.</CardDescription>
+                                <CardTitle>
+                                    {t('webConnection.test.title')}
+                                </CardTitle>
+                                <CardDescription>
+                                    {t('webConnection.test.description')}
+                                </CardDescription>
                             </CardHeader>
                             <CardContent className="flex items-center justify-center">
-                                {/* Placeholder for test QR code */}
                                 <div className="w-32 h-32 bg-gray-200 flex items-center justify-center text-gray-500">
                                     {whatsAppLink ? (
-                                      <QRCodeSVG value={whatsAppLink} size={128} />
+                                        <QRCodeSVG value={whatsAppLink} size={128} />
                                     ) : (
-                                      <p>No QR code available. Please connect a number first.</p>
+                                        <p>
+                                            {t('webConnection.test.noQr')}
+                                        </p>
                                     )}
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
                 );
+
             case 'DISCONNECTED':
                 return (
                     <div>
                         <p>
-                            Status: <span className="font-semibold text-red-600">Disconnected</span>
+                            {t('webConnection.status.label')}{' '}
+                            <span className="font-semibold text-red-600">
+                                {t('webConnection.status.disconnected')}
+                            </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            {qrCode ? 'Scan the QR code to connect.' : 'The connection was lost. Please reconnect or start a new session.'}
+                            {qrCode
+                                ? t('webConnection.disconnected.scanQr')
+                                : t('webConnection.disconnected.lost')}
                         </p>
+
                         {qrCode && (
                             <div className="flex flex-col items-center gap-4 mt-4">
                                 <QRCodeSVG value={qrCode} size={256} />
                             </div>
                         )}
-                        {!qrCode && !chatbotChannel?.data?.phone_number && ( // Show "Generate QR Code" only if no chatbotChannel exists
+
+                        {!qrCode && !chatbotChannel?.data?.phone_number && (
                             <Button className="mt-4" onClick={handleStartNewSession} disabled={reconnecting}>
-                                Generate QR Code
+                                {t('webConnection.actions.generateQr')}
                             </Button>
                         )}
-                        {!qrCode && chatbotChannel?.data?.phone_number && ( // Show "Reconnect" only if chatbotChannel exists and no QR
+
+                        {!qrCode && chatbotChannel?.data?.phone_number && (
                             <Button className="mt-4" onClick={handleReconnect} disabled={reconnecting}>
-                                {reconnecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Reconnect
+                                {reconnecting && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                {t('webConnection.actions.reconnect')}
                             </Button>
                         )}
                     </div>
                 );
+
             case 'ERROR':
                 return (
                     <div>
                         <p>
-                            Status: <span className="font-semibold text-red-600">Error</span>
+                            {t('webConnection.status.label')}{' '}
+                            <span className="font-semibold text-red-600">
+                                {t('webConnection.status.error')}
+                            </span>
                         </p>
                         <p className="text-sm text-muted-foreground">
-                            Could not verify the connection status. Please try again later.
+                            {t('webConnection.error.description')}
                         </p>
                         <Button className="mt-4" onClick={handleReconnect} disabled={reconnecting}>
-                            {reconnecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Reconnect
+                            {reconnecting && (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            {t('webConnection.actions.reconnect')}
                         </Button>
                     </div>
                 );
+
             default:
                 return null;
         }
@@ -282,11 +346,14 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>WhatsApp Web (Unofficial) Connection</CardTitle>
-                <CardDescription>Connect a WhatsApp number using your phone.</CardDescription>
+                <CardTitle>
+                    {t('webConnection.header.title')}
+                </CardTitle>
+                <CardDescription>
+                    {t('webConnection.header.description')}
+                </CardDescription>
             </CardHeader>
             <CardContent>{renderContent()}</CardContent>
         </Card>
     );
 }
-

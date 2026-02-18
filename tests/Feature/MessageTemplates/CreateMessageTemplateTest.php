@@ -51,19 +51,19 @@ class CreateMessageTemplateTest extends TestCase
     #[Test]
     public function it_successfully_calls_the_service_to_create_a_template()
     {
-        $mockedTemplate = MessageTemplate::factory()->make( [
-            'id'                 => 1,
-            'chatbot_id'         => $this->chatbot->id,
+        $mockedTemplate = MessageTemplate::factory()->make([
+            'id' => 1,
+            'chatbot_id' => $this->chatbot->id,
             'chatbot_channel_id' => $this->channel->id,
-            'category_id'        => $this->category->id,
-            'language'           => 'en_US',
-            'header_type'        => 'none',
-            'body_content'       => 'dummy',
-            'status'             => 'pending',
-            'platform_status'    => 1,
-            'name'               => 'welcome_message',
-            'display_name'       => 'Welcome Message',
-        ] );
+            'category_id' => $this->category->id,
+            'language' => 'en_US',
+            'header_type' => 'none',
+            'body_content' => 'dummy',
+            'status' => 'pending',
+            'platform_status' => 1,
+            'name' => 'welcome_message',
+            'display_name' => 'Welcome Message',
+        ]);
 
         // Mock the service to isolate the controller and request validation
         $this->mock(MessageTemplateServiceInterface::class, function (MockInterface $mock) use ($mockedTemplate) {
@@ -73,7 +73,12 @@ class CreateMessageTemplateTest extends TestCase
                     // We can assert here that the data received by the service is correct
                     return $data['name'] === 'welcome_message' &&
                            $data['display_name'] === 'Welcome Message' &&
-                           $chatbot->id === $this->chatbot->id;
+                           $chatbot->id === $this->chatbot->id &&
+                           isset($data['header_variable_mapping']) &&
+                           $data['header_variable_mapping']['source'] === 'contact.first_name' &&
+                           isset($data['variable_mappings']) &&
+                           count($data['variable_mappings']) === 1 &&
+                           $data['variable_mappings'][0]['source'] === 'organization.name';
                 })
                 ->andReturn($mockedTemplate);
         });
@@ -98,6 +103,20 @@ class CreateMessageTemplateTest extends TestCase
                 ['placeholder' => '{{name}}', 'example' => 'Jane Doe'],
             ],
             'variable_type' => 'named',
+            'header_variable_mapping' => [
+                'placeholder' => '{{1}}',
+                'source' => 'contact.first_name',
+                'label' => 'Contacto: Nombre',
+                'fallback_value' => 'Guest',
+            ],
+            'variable_mappings' => [
+                [
+                    'placeholder' => '{{name}}',
+                    'source' => 'organization.name',
+                    'label' => 'Organización: Nombre',
+                    'fallback_value' => '',
+                ],
+            ],
         ];
 
         $response = $this->post(route('message-templates.store', $this->chatbot->id), $templateData);
@@ -143,5 +162,31 @@ class CreateMessageTemplateTest extends TestCase
         $response = $this->post(route('message-templates.store', $this->chatbot->id), $templateData);
 
         $response->assertSessionHasErrors(['button_config.0.url']);
+    }
+
+    #[Test]
+    public function it_returns_validation_errors_for_invalid_variable_mappings_structure()
+    {
+        $templateData = [
+            'name' => 'test_mappings_validation',
+            'display_name' => 'Test Mappings Validation',
+            'chatbot_channel_id' => $this->channel->id,
+            'category_id' => $this->category->id,
+            'language' => 'en_US',
+            'header_type' => 'none',
+            'body_content' => 'Message with invalid mapping',
+            'variable_type' => 'named',
+            'variable_mappings' => [
+                [
+                    // do not include the 'source' key to trigger the error
+                    'placeholder' => '{{test_placeholder}}',
+                    'label' => 'Test Label',
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('message-templates.store', $this->chatbot->id), $templateData);
+
+        $response->assertSessionHasErrors(['variable_mappings.0.source']);
     }
 }

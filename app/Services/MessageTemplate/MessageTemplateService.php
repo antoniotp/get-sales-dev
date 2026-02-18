@@ -116,6 +116,17 @@ class MessageTemplateService implements MessageTemplateServiceInterface
             }
         }
 
+        $finalMappings = [];
+        $headerMapping = Arr::get($data, 'header_variable_mapping');
+        $bodyMappings = Arr::get($data, 'variable_mappings', []);
+
+        if ($headerMapping) {
+            $finalMappings['header'] = $headerMapping;
+        }
+        if (! empty($bodyMappings)) {
+            $finalMappings['body'] = $bodyMappings;
+        }
+
         // Calculate variables_count
         $variablesCount = 0;
         if (Arr::get($data, 'body_content')) {
@@ -131,10 +142,12 @@ class MessageTemplateService implements MessageTemplateServiceInterface
             'header_variable_type',
             'variables_schema',
             'variable_type',
+            'header_variable_mapping',
         ]);
 
         // Add constructed and calculated fields
         $processedData['example_data'] = ! empty($exampleData) ? $exampleData : null;
+        $processedData['variable_mappings'] = ! empty($finalMappings) ? $finalMappings : null;
         $processedData['status'] = 'pending'; // Default status for new/updated templates
         $processedData['platform_status'] = 1; // Default internal status
         $processedData['variables_count'] = $variablesCount;

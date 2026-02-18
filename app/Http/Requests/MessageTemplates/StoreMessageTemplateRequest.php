@@ -64,6 +64,16 @@ class StoreMessageTemplateRequest extends FormRequest
             'variables_schema.*.placeholder' => 'required_with:variables_schema|string',
             'variables_schema.*.example' => 'required_with:variables_schema|string',
             'variable_type' => 'nullable|string|in:positional,named', // General type for body variables
+            'header_variable_mapping' => 'nullable|array',
+            'header_variable_mapping.placeholder' => 'required_with:header_variable_mapping|string',
+            'header_variable_mapping.source' => 'required_with:header_variable_mapping|string',
+            'header_variable_mapping.label' => 'required_with:header_variable_mapping|string',
+            'header_variable_mapping.fallback_value' => 'nullable|string',
+            'variable_mappings' => 'nullable|array',
+            'variable_mappings.*.placeholder' => 'required_with:variable_mappings|string',
+            'variable_mappings.*.source' => 'required_with:variable_mappings|string',
+            'variable_mappings.*.label' => 'required_with:variable_mappings|string',
+            'variable_mappings.*.fallback_value' => 'nullable|string',
         ];
     }
 }

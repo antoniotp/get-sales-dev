@@ -17,9 +17,13 @@ class MessageTemplatePersistenceTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Chatbot $chatbot;
+
     private MessageTemplateCategory $category;
+
     private ChatbotChannel $channel;
+
     private MessageTemplateCategory $marketingCategory;
 
     protected function setUp(): void
@@ -78,13 +82,13 @@ class MessageTemplatePersistenceTest extends TestCase
         // Expected example_data structure
         $expectedExampleData = [
             'header_text_named_params' => [
-                ['param_name' => 'campaign', 'example' => 'Summer Sale']
+                ['param_name' => 'campaign', 'example' => 'Summer Sale'],
             ],
             'body_text_named_params' => [
                 ['param_name' => 'store', 'example' => 'the end of August'],
                 ['param_name' => 'promo_code', 'example' => '25OFF'],
-                ['param_name' => 'discount', 'example' => '25%']
-            ]
+                ['param_name' => 'discount', 'example' => '25%'],
+            ],
         ];
 
         // Assert all relevant fields
@@ -109,7 +113,7 @@ class MessageTemplatePersistenceTest extends TestCase
     {
         $templateData = [
             'name' => 'seasonal_promotion_positional', // Different name to avoid conflict
-            'display_name' => 'Seasonal Promotion Positional', //Adapted from name
+            'display_name' => 'Seasonal Promotion Positional', // Adapted from name
             'chatbot_channel_id' => $this->channel->id,
             'category_id' => $this->marketingCategory->id,
             'language' => 'en_US',
@@ -159,5 +163,124 @@ class MessageTemplatePersistenceTest extends TestCase
         $this->assertEquals('pending', $createdTemplate->status);
         $this->assertEquals(1, $createdTemplate->platform_status);
         $this->assertEquals($expectedExampleData, $createdTemplate->example_data);
+    }
+
+    #[Test]
+    public function it_correctly_persists_a_plain_text_template_with_no_variables()
+    {
+        $templateData = [
+            'name' => 'plain_text_template',
+            'display_name' => 'Plain Text Template',
+            'chatbot_channel_id' => $this->channel->id,
+            'category_id' => $this->category->id,
+            'language' => 'en_US',
+            'header_type' => 'text',
+            'header_content' => 'This is a simple text header.',
+            // No header_variable or header_variable_type
+            'body_content' => 'This is the main message content without any variables.',
+            'footer_content' => 'Simple footer.',
+            'button_config' => [], // No buttons
+            // No variables_schema or variable_type
+            // No header_variable_mapping or variable_mappings
+        ];
+
+        $response = $this->post(route('message-templates.store', $this->chatbot->id), $templateData);
+        $response->assertSessionHasNoErrors();
+        $response->assertStatus(302);
+
+        $createdTemplate = MessageTemplate::latest('id')->first();
+        $this->assertNotNull($createdTemplate);
+
+        // Assert that variable-related fields are null/empty
+        $this->assertEquals(0, $createdTemplate->variables_count);
+        $this->assertNull($createdTemplate->example_data);
+        $this->assertNull($createdTemplate->variable_mappings);
+
+        // Assert content fields are correct
+        $this->assertEquals($templateData['name'], $createdTemplate->name);
+        $this->assertEquals($templateData['display_name'], $createdTemplate->display_name);
+        $this->assertEquals($templateData['header_content'], $createdTemplate->header_content);
+        $this->assertEquals($templateData['body_content'], $createdTemplate->body_content);
+        $this->assertEquals($templateData['footer_content'], $createdTemplate->footer_content);
+        $this->assertNull($createdTemplate->button_config);
+        $this->assertEquals('pending', $createdTemplate->status);
+        $this->assertEquals(1, $createdTemplate->platform_status);
+    }
+
+    #[Test]
+    public function it_correctly_persists_variable_mappings_from_form_submission()
+    {
+        $templateData = [
+            'name' => 'template_with_mappings',
+            'display_name' => 'Template With Mappings',
+            'chatbot_channel_id' => $this->channel->id,
+            'category_id' => $this->category->id,
+            'language' => 'es',
+            'header_type' => 'text',
+            'header_content' => '{{contact_first_name}}',
+            'header_variable' => ['placeholder' => '{{contact_first_name}}', 'example' => 'Cris'],
+            'header_variable_type' => 'named',
+            'body_content' => '{{organization_name}}! {{contact_email}}',
+            'footer_content' => '',
+            'button_config' => [],
+            'variables_schema' => [
+                ['placeholder' => '{{organization_name}}', 'example' => 'Jobomas'],
+                ['placeholder' => '{{contact_email}}', 'example' => 'cgonzalez@example.com'],
+            ],
+            'variable_type' => 'named',
+            // --- new mapping data ---
+            'header_variable_mapping' => [
+                'placeholder' => '{{contact_first_name}}',
+                'source' => 'contact.first_name',
+                'label' => 'Contacto: Nombre',
+                'fallback_value' => '',
+            ],
+            'variable_mappings' => [
+                [
+                    'placeholder' => '{{organization_name}}',
+                    'source' => 'organization.name',
+                    'label' => 'Organización: Nombre',
+                    'fallback_value' => '',
+                ],
+                [
+                    'placeholder' => '{{contact_email}}',
+                    'source' => 'contact.email',
+                    'label' => 'Contacto: Email',
+                    'fallback_value' => '',
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('message-templates.store', $this->chatbot->id), $templateData);
+        $response->assertSessionHasNoErrors();
+
+        $createdTemplate = MessageTemplate::latest('id')->first();
+        $this->assertNotNull($createdTemplate);
+
+        // expected structure in `variable_mappings` column
+        $expectedVariableMappings = [
+            'header' => [
+                'placeholder' => '{{contact_first_name}}',
+                'source' => 'contact.first_name',
+                'label' => 'Contacto: Nombre',
+                'fallback_value' => '',
+            ],
+            'body' => [
+                [
+                    'placeholder' => '{{organization_name}}',
+                    'source' => 'organization.name',
+                    'label' => 'Organización: Nombre',
+                    'fallback_value' => '',
+                ],
+                [
+                    'placeholder' => '{{contact_email}}',
+                    'source' => 'contact.email',
+                    'label' => 'Contacto: Email',
+                    'fallback_value' => '',
+                ],
+            ],
+        ];
+
+        $this->assertEquals($expectedVariableMappings, $createdTemplate->variable_mappings);
     }
 }

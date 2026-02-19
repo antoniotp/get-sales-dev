@@ -147,6 +147,7 @@ export interface Chat {
     recipient: string | null
     type: string | null
     channel_id: number
+    chatbot_channel_id: number
 }
 
 interface Message {

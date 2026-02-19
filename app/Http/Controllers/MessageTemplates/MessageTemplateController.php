@@ -14,6 +14,8 @@ use App\Models\Chatbot;
 use App\Models\MessageTemplate;
 use App\Models\MessageTemplateCategory;
 use App\Models\Organization;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -131,5 +133,18 @@ class MessageTemplateController extends Controller
 
         return redirect()->route('message-templates.index', $chatbot->id)
             ->with('success', 'Template deleted successfully.');
+    }
+
+    public function approved(Request $request, Chatbot $chatbot): JsonResponse
+    {
+        $request->validate([
+            'chatbot_channel_id' => 'required|integer|exists:chatbot_channels,id,chatbot_id,'.$chatbot->id,
+        ]);
+        $templates = MessageTemplate::query()
+            ->where('chatbot_channel_id', $request->chatbot_channel_id)
+            ->approved()
+            ->get(['id', 'name', 'display_name', 'variable_mappings']);
+
+        return response()->json($templates);
     }
 }

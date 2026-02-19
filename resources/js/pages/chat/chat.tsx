@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import LinkifyText from '@/components/chat/LinkifyText';
 import MessageStatus from '@/components/chat/MessageStatus';
+import TemplateMessageSelector from "@/components/chat/TemplateMessageSelector";
 
 interface NewMessageEvent {
     message: Message;
@@ -73,6 +74,7 @@ export default function Chat(
     const [view, setView] = useState<'list' | 'new'>('list');
     const [conversationMode, setConversationMode] = useState<'ai' | 'human'>('ai');
     const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
+    const [isOpenTemplateMessageSelector, setIsOpenTemplateMessageSelector] = useState(false);
 
     const route = useRoute();
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -412,8 +414,8 @@ export default function Chat(
     }, [selectedChat, messages]);
 
     const handleOpenTemplateSelector = () => {
-        // TODO: Implement dialog opening logic
         console.log('Opening template selector...');
+        setIsOpenTemplateMessageSelector(true);
     };
 
     // Auto-scroll when new messages arrive
@@ -693,6 +695,7 @@ export default function Chat(
                                     )}
                                 </div>
                             </form>
+                            <TemplateMessageSelector isOpen={isOpenTemplateMessageSelector} onClose={()=>setIsOpenTemplateMessageSelector(false)} chatbotId={chatbot.id} chatbotChannelId={selectedChat.chatbot_channel_id} onSent={(message)=>console.log('Template sent: ', message)}/>
                         </div>
                     ) : (
                         <div className="hidden lg:flex w-2/3 items-center justify-center">

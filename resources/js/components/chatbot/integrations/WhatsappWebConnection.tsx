@@ -54,6 +54,7 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
     // Initial status check or set up for a new connection
     useEffect(() => {
         if (chatbotChannel && chatbotChannel?.data?.phone_number) {
+            // Existing channel, fetch its status
             setStatus('VERIFYING');
             axios
                 .get(route('chatbots.integrations.whatsapp-web.status', { chatbot: chatbot.id }))
@@ -67,13 +68,14 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                     setStatus('ERROR');
                 });
         } else {
-            setStatus('DISCONNECTED');
+            // No existing channel, ready to start a new session
+            setStatus('DISCONNECTED'); // Or 'IDLE'
         }
     }, [chatbot.id, chatbotChannel]);
 
     const handleStartNewSession = async () => {
         setStatus('CONNECTING_NEW_SESSION');
-        setQrCode(null);
+        setQrCode(null); // Reset QR code on a new attempt
         try {
             const response = await axios.post(
                 route('chatbots.integrations.whatsapp-web.start', { chatbot: chatbot.id })
@@ -89,7 +91,7 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
 
     const handleReconnect = async () => {
         setReconnecting(true);
-        setQrCode(null);
+        setQrCode(null); // Clear any old QR code
         try {
             const response = await axios.post(
                 route('chatbots.integrations.whatsapp-web.reconnect', { chatbot: chatbot.id })
@@ -105,37 +107,40 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
             }
         } catch (error) {
             console.error('Failed to send reconnect command', error);
-            setStatus('ERROR');
+            setStatus('ERROR'); // Set the status to error if the reconnect command fails
         } finally {
             setReconnecting(false);
         }
     };
 
+    // Listen for QR code and connection status updates
     useEffect(() => {
         if (sessionId && echoRef.current) {
             const channelName = echoRef.current.private(`whatsapp-web.${sessionId}`);
 
+            // Listen for QR code event
             channelName.listen('.qr-code.received', (e: { qrCode: string }) => {
                 setQrCode(e.qrCode);
                 setStatus('DISCONNECTED');
             });
 
+            // Listen for connection status updated event
             channelName.listen('.connection.status.updated', (e: { status: number }) => {
                 switch (e.status) {
-                    case 0:
+                    case 0: // STATUS_DISCONNECTED
                         setStatus('DISCONNECTED');
-                        setQrCode(null);
-                        setSessionId(null);
+                        setQrCode(null); // Clear QR code on disconnect
+                        setSessionId(null); // Clear session ID if fully disconnected
                         break;
-                    case 1:
+                    case 1: // STATUS_CONNECTED
                         setStatus('CONNECTED');
-                        setQrCode(null);
+                        setQrCode(null); // Clear QR code on connected
                         break;
-                    case 2:
-                        setStatus('VERIFYING');
+                    case 2: // STATUS_CONNECTING
+                        setStatus('VERIFYING'); // Use VERIFYING for the CONNECTING state
                         break;
                     default:
-                        setStatus('DISCONNECTED');
+                        setStatus('DISCONNECTED'); // Fallback
                         break;
                 }
             });
@@ -177,8 +182,8 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
 
             case 'CONNECTED':
                 return (
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <Card>
+                    <div className="grid gap-6 md:grid-cols-2"> {/* Added grid layout */}
+                        <Card> {/* Card for the table */}
                             <CardHeader>
                                 <CardTitle>
                                     {t('webConnection.connected.title')}
@@ -255,7 +260,7 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card> {/* Card for the test QR code */}
                             <CardHeader>
                                 <CardTitle>
                                     {t('webConnection.test.title')}
@@ -265,6 +270,7 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="flex items-center justify-center">
+                                {/* Placeholder for test QR code */}
                                 <div className="w-32 h-32 bg-gray-200 flex items-center justify-center text-gray-500">
                                     {whatsAppLink ? (
                                         <QRCodeSVG value={whatsAppLink} size={128} />
@@ -300,13 +306,13 @@ export function WhatsappWebConnection({ chatbot, chatbotChannel }: Props) {
                             </div>
                         )}
 
-                        {!qrCode && !chatbotChannel?.data?.phone_number && (
+                        {!qrCode && !chatbotChannel?.data?.phone_number && ( // Show "Generate QR Code" only if no chatbotChannel exists
                             <Button className="mt-4" onClick={handleStartNewSession} disabled={reconnecting}>
                                 {t('webConnection.actions.generateQr')}
                             </Button>
                         )}
 
-                        {!qrCode && chatbotChannel?.data?.phone_number && (
+                        {!qrCode && chatbotChannel?.data?.phone_number && ( // Show "Reconnect" only if chatbotChannel exists and no QR
                             <Button className="mt-4" onClick={handleReconnect} disabled={reconnecting}>
                                 {reconnecting && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

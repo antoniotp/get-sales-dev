@@ -20,6 +20,7 @@ class ConversationData implements Arrayable
         public ?string $assigned_user_name,
         public ?string $recipient,
         public string $type,
+        public int $channel_id,
     ) {
     }
 
@@ -48,6 +49,7 @@ class ConversationData implements Arrayable
             assigned_user_name: $conversation->assignedUser?->name,
             recipient: $conversation->chatbotChannel->credentials['phone_number'] ?? '',
             type: $conversation->type->value,
+            channel_id: $conversation->chatbotChannel->channel_id,
         );
     }
 
@@ -66,6 +68,7 @@ class ConversationData implements Arrayable
             'assigned_user_name' => $this->assigned_user_name,
             'recipient' => $this->recipient,
             'type' => $this->type,
+            'channel_id' => $this->channel_id,
         ];
     }
 }

@@ -146,6 +146,7 @@ export interface Chat {
     assigned_user_name: string | null
     recipient: string | null
     type: string | null
+    channel_id: number
 }
 
 interface Message {

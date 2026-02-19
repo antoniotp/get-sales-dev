@@ -393,6 +393,29 @@ export default function Chat(
         }
     }, [conversationMode, handleModeChange]);
 
+    // Check if WABA 24h window is closed
+    const isWabaWindowClosed = useMemo(() => {
+        if (!selectedChat || selectedChat.channel_id !== 1) return false;
+
+        const lastIncomingMessage = [...messages]
+            .reverse()
+            .find(msg => msg.type === 'incoming');
+
+        if (!lastIncomingMessage) return true; // No incoming messages yet, must use template
+
+        const lastIncomingTime = new Date(lastIncomingMessage.timestamp).getTime();
+        const currentTime = new Date().getTime();
+        const hoursSinceLastIncoming = (currentTime - lastIncomingTime) / (1000 * 60 * 60);
+
+        // We use 23 hours as a safety margin before the hard 24h limit
+        return hoursSinceLastIncoming > 23;
+    }, [selectedChat, messages]);
+
+    const handleOpenTemplateSelector = () => {
+        // TODO: Implement dialog opening logic
+        console.log('Opening template selector...');
+    };
+
     // Auto-scroll when new messages arrive
     useEffect(() => {
         if (messages.length > 0) {
@@ -646,18 +669,28 @@ export default function Chat(
                                         type="text"
                                         value={newMessage}
                                         onChange={handleInputChange}
-                                        placeholder="Type a message..."
-                                        disabled={isSending}
+                                        placeholder={isWabaWindowClosed ? "24h window closed. Use a template to reply." : "Type a message..."}
+                                        disabled={isSending || isWabaWindowClosed}
                                         className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                                         autoComplete="off"
                                     />
-                                    <button
-                                        type="submit"
-                                        disabled={isSending || !newMessage.trim()}
-                                        className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 transition-colors"
-                                    >
-                                        {isSending ? 'Sending...' : 'Send'}
-                                    </button>
+                                    {isWabaWindowClosed ? (
+                                        <Button
+                                            type="button"
+                                            onClick={handleOpenTemplateSelector}
+                                            className="btn-whatsapp"
+                                        >
+                                            Select Template
+                                        </Button>
+                                    ) : (
+                                        <button
+                                            type="submit"
+                                            disabled={isSending || !newMessage.trim()}
+                                            className="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 focus:outline-none flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 transition-colors"
+                                        >
+                                            {isSending ? 'Sending...' : 'Send'}
+                                        </button>
+                                    )}
                                 </div>
                             </form>
                         </div>

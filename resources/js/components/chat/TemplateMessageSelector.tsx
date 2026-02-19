@@ -6,15 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import axios from 'axios';
+import { ButtonConfig, HeaderType } from '@/types/message-template';
+import { WhatsAppBubble, PreviewBody, PreviewHeader, PreviewFooter, PreviewButtons } from '@/components/message_templates/MessagePreview';
 
 interface Template {
     id: number;
     name: string;
+    header_type: HeaderType;
     display_name: string;
     variable_mappings: {
         header?: { placeholder: string; source: string; label: string };
         body: Array<{ placeholder: string; source: string; label: string }>;
     } | null;
+    button_config?: ButtonConfig[] | null;
 }
 
 interface Props {
@@ -131,10 +135,13 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
                     {preview && (
                         <div className="space-y-2">
                             <Label>Preview</Label>
-                            <div className="rounded-lg border bg-white p-3 text-sm whitespace-pre-wrap dark:bg-gray-800">
-                                {preview.header && <div className="mb-1 border-b pb-1 font-bold">{preview.header}</div>}
-                                <div>{preview.body}</div>
-                                {preview.footer && <div className="mt-2 text-xs text-gray-500">{preview.footer}</div>}
+                            <div className="w-full bg-[#E5DDD5] p-6 flex justify-end rounded-lg">
+                                <WhatsAppBubble>
+                                    <PreviewHeader type={selectedTemplate?.header_type || 'text'} content={preview.header} />
+                                    <PreviewBody bodyContent={preview.body} />
+                                    <PreviewFooter footerContent={preview.footer} />
+                                    <PreviewButtons buttons={selectedTemplate?.button_config || []} />
+                                </WhatsAppBubble>
                             </div>
                         </div>
                     )}

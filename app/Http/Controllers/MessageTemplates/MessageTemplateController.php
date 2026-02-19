@@ -143,7 +143,7 @@ class MessageTemplateController extends Controller
         $templates = MessageTemplate::query()
             ->where('chatbot_channel_id', $request->chatbot_channel_id)
             ->approved()
-            ->get(['id', 'name', 'display_name', 'variable_mappings']);
+            ->get(['id', 'name', 'header_type', 'display_name', 'variable_mappings', 'button_config']);
 
         return response()->json($templates);
     }

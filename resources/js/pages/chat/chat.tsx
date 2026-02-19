@@ -695,7 +695,7 @@ export default function Chat(
                                     )}
                                 </div>
                             </form>
-                            <TemplateMessageSelector isOpen={isOpenTemplateMessageSelector} onClose={()=>setIsOpenTemplateMessageSelector(false)} chatbotId={chatbot.id} chatbotChannelId={selectedChat.chatbot_channel_id} onSent={(message)=>console.log('Template sent: ', message)}/>
+                            <TemplateMessageSelector isOpen={isOpenTemplateMessageSelector} onClose={()=>setIsOpenTemplateMessageSelector(false)} chatbotId={chatbot.id} chatbotChannelId={selectedChat.chatbot_channel_id} contactId={selectedChat.contact_id} onSent={(message)=>console.log('Template sent: ', message)}/>
                         </div>
                     ) : (
                         <div className="hidden lg:flex w-2/3 items-center justify-center">

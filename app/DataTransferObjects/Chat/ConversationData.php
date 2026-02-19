@@ -23,6 +23,7 @@ class ConversationData implements Arrayable
         public string $type,
         public int $channel_id,
         public int $chatbot_channel_id,
+        public int $contact_id,
     ) {}
 
     public static function fromConversation(Conversation $conversation): self
@@ -51,6 +52,7 @@ class ConversationData implements Arrayable
             type: $conversation->type->value,
             channel_id: $conversation->chatbotChannel->channel_id,
             chatbot_channel_id: $conversation->chatbot_channel_id,
+            contact_id: $conversation->contactChannel->contact_id ?? 0,
         );
     }
 
@@ -71,6 +73,7 @@ class ConversationData implements Arrayable
             'type' => $this->type,
             'channel_id' => $this->channel_id,
             'chatbot_channel_id' => $this->chatbot_channel_id,
+            'contact_id' => $this->contact_id,
         ];
     }
 }

@@ -12,6 +12,7 @@ use App\Http\Controllers\ChatbotChannel\ChatbotChannelSettingController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
+use App\Http\Controllers\MessageTemplates\MessageTemplatePreviewController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\Notification\PushSubscriptionController;
 use App\Http\Controllers\Organizations\InvitationController;
@@ -79,6 +80,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
     Route::post('/message_templates/{template}/send-for-review', [MessageTemplateController::class, 'sendForReview'])->middleware('ensure.chatbot')->name('message-templates.send-for-review');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
+    Route::post('/message_templates/{template}/resolve-preview', [MessageTemplatePreviewController::class, 'resolve'])->name('message-templates.resolve-preview');
 
     Route::post('/messages/{message}/retry', [ChatController::class, 'retryMessage'])->name('messages.retry');
 

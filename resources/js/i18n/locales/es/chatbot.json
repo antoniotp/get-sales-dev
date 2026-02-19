@@ -93,12 +93,22 @@
         "connect": "Conectar",
         "manage": "Administrar",
         "whatsappBusiness": {
-        "title": "WhatsApp Business API",
-        "description": "Conéctate mediante la API oficial de Meta para una comunicación escalable y confiable."
+            "title": "WhatsApp Business API",
+            "description": "Conéctate mediante la API oficial de Meta para una comunicación escalable y confiable."
         },
         "whatsappWeb": {
-        "title": "WhatsApp Web (QR)",
-        "description": "Conecta un número escaneando un código QR, ideal para pruebas y uso a pequeña escala."
+            "title": "WhatsApp Web (QR)",
+            "description": "Conecta un número escaneando un código QR, ideal para pruebas y uso a pequeña escala."
+        },
+        "settings": {
+            "title": "Configuración",
+            "description": "Configura ajustes adicionales para tu conexión de WhatsApp Web.",
+            "incoming_call_title": "Respuesta automática para llamadas entrantes",
+            "incoming_call_description": "Define un mensaje que se enviará automáticamente cuando recibas llamadas en este número.",
+            "auto_reply_label": "Mensaje de respuesta automática",
+            "auto_reply_placeholder": "Escribe el mensaje que se enviará cuando se reciba una llamada...",
+            "save": "Guardar configuración",
+            "default_message": "Lo siento, no puedo atender llamadas en este momento. Por favor, deja un mensaje."
         }
     },
 

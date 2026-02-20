@@ -109,6 +109,20 @@
             "auto_reply_placeholder": "Enter the message to send when a call is received...",
             "save": "Save Settings",
             "default_message": "Sorry, I cannot take calls right now. Please leave a message."
+        },
+        "generator": {
+            "title": "Start Conversation Link",
+            "description": "Generate a URL to start a conversation directly with a specific number.",
+            "url_structure": "URL Structure",
+            "fill_fields": "Fill in the fields below to generate an example link:",
+            "phone_number": "Phone Number",
+            "phone_placeholder": "Enter phone number",
+            "initial_message": "Initial Message (Optional)",
+            "message_placeholder": "Enter a pre-filled message for the user...",
+            "generated_url": "Generated URL",
+            "copy": "Copy",
+            "copied": "Copied!",
+            "create": "Create URL"
         }
     },
 

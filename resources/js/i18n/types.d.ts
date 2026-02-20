@@ -8,6 +8,7 @@ import contact from './locales/es/contact.json';
 import organization from './locales/es/organization.json';
 import messageTemplates from './locales/es/message_templates.json';
 import appointments from './locales/es/appointments.json';
+import chat from './locales/es/chat.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -21,6 +22,7 @@ declare module 'i18next' {
       organization: typeof organization;
       message_templates: typeof messageTemplates;
       appointments: typeof appointments;
+      chat: typeof chat;
     };
   }
 }

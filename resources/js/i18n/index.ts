@@ -19,6 +19,8 @@ import esMessageTemplates from './locales/es/message_templates.json';
 import enMessageTemplates from './locales/en/message_templates.json';
 import esAppointments from './locales/es/appointments.json';
 import enAppointments from './locales/en/appointments.json';
+import eschat from './locales/es/chat.json';
+import enchat from './locales/en/chat.json';
 
 i18n
   .use(initReactI18next)
@@ -34,6 +36,7 @@ i18n
         organization: esOrganization,
         message_templates: esMessageTemplates,
         appointments: esAppointments,
+        chat: eschat,
       },
       en: {
         navigation: enNavigation,
@@ -45,6 +48,7 @@ i18n
         organization: enOrganization,
         message_templates: enMessageTemplates,
         appointments: enAppointments,
+        chat: enchat,
       },
     },
     lng: 'es',

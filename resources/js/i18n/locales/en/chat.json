@@ -1,0 +1,7 @@
+{
+  "agent": {
+    "unassigned": "Unassigned",
+    "assigned_success": "Agent assigned successfully.",
+    "assigned_error": "Failed to assign agent."
+  }
+}

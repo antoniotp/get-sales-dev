@@ -109,6 +109,20 @@
             "auto_reply_placeholder": "Escribe el mensaje que se enviará cuando se reciba una llamada...",
             "save": "Guardar configuración",
             "default_message": "Lo siento, no puedo atender llamadas en este momento. Por favor, deja un mensaje."
+        },
+        "generator": {
+            "title": "Enlace para iniciar conversación",
+            "description": "Genera una URL para iniciar una conversación directamente con un número específico.",
+            "url_structure": "Estructura de la URL",
+            "fill_fields": "Completa los siguientes campos para generar un enlace de ejemplo:",
+            "phone_number": "Número de teléfono",
+            "phone_placeholder": "Ingresa el número de teléfono",
+            "initial_message": "Mensaje inicial (Opcional)",
+            "message_placeholder": "Escribe un mensaje precargado para el usuario...",
+            "generated_url": "URL generada",
+            "copy": "Copiar",
+            "copied": "¡Copiado!",
+            "create": "Crear URL"
         }
     },
 

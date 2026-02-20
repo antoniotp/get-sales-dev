@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Copy } from 'lucide-react';
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     chatbotId: number;
@@ -15,6 +16,9 @@ interface Props {
 }
 
 export function WhatsappWebURLGenerator({ chatbotId, chatbotChannelId, defaultCountry }: Props) {
+
+    const { t } = useTranslation('chatbot');
+
     const [phoneNumber, setPhoneNumber] = useState('');
     const [message, setMessage] = useState('');
     const [generatedUrl, setGeneratedUrl] = useState('');
@@ -53,37 +57,50 @@ export function WhatsappWebURLGenerator({ chatbotId, chatbotChannelId, defaultCo
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Start Conversation Link</CardTitle>
-                <CardDescription>Generate a URL to start a conversation directly with a specific number.</CardDescription>
+                <CardTitle>
+                    {t('integrations.generator.title')}
+                </CardTitle>
+                <CardDescription>
+                    {t('integrations.generator.description')}
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
-                    <h4 className="text-sm font-medium mb-2">URL Structure</h4>
+                    <h4 className="text-sm font-medium mb-2">
+                        {t('integrations.generator.url_structure')}
+                    </h4>
                     <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
                         {baseUrl}&amp;text=YOUR_MESSAGE
                     </code>
                 </div>
                 {/* NEW BORDERED GROUP */}
                 <div className="rounded-md border p-4 space-y-4">
-                    <CardDescription>Fill in the fields below to generate an example link:</CardDescription>
+                    <CardDescription>
+                        {t('integrations.generator.fill_fields')}
+                    </CardDescription>
+
                     {/* Phone Number Input (inline) */}
                     <div className="flex items-center gap-2">
-                        <Label htmlFor="phone-number" className="flex-none w-32">Phone Number</Label>
+                        <Label htmlFor="phone-number" className="flex-none w-32">
+                            {t('integrations.generator.phone_number')}
+                        </Label>
                         <PhoneInput
                             country={defaultCountry}
                             value={phoneNumber}
                             onChange={(phone) => setPhoneNumber(phone)}
                             inputClass="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                            placeholder="Enter phone number"
+                            placeholder={t('integrations.generator.phone_placeholder')}
                         />
                     </div>
 
                     {/* Initial Message Textarea */}
                     <div className="space-y-2">
-                        <Label htmlFor="initial-message">Initial Message (Optional)</Label>
+                        <Label htmlFor="initial-message">
+                            {t('integrations.generator.initial_message')}
+                        </Label>
                         <Textarea
                             id="initial-message"
-                            placeholder="Enter a pre-filled message for the user..."
+                            placeholder={t('integrations.generator.message_placeholder')}
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
                         />
@@ -92,12 +109,16 @@ export function WhatsappWebURLGenerator({ chatbotId, chatbotChannelId, defaultCo
                     {/* Generated URL Display (MOVED HERE) */}
                     {generatedUrl && (
                         <div className="w-full space-y-2">
-                            <Label htmlFor="generated-url">Generated URL</Label>
+                            <Label htmlFor="generated-url">
+                                {t('integrations.generator.generated_url')}
+                            </Label>
                             <div className="flex w-full items-center space-x-2">
                                 <Input id="generated-url" value={generatedUrl} readOnly />
                                 <Button variant="secondary" type="button" onClick={handleCopy}>
                                     <Copy className="h-4 w-4 mr-2" />
-                                    {copied ? 'Copied!' : 'Copy'}
+                                    {copied
+                                        ? t('integrations.generator.copied')
+                                        : t('integrations.generator.copy')}
                                 </Button>
                             </div>
                         </div>
@@ -105,7 +126,9 @@ export function WhatsappWebURLGenerator({ chatbotId, chatbotChannelId, defaultCo
 
                     {/* Create URL Button */}
                     <div className="flex justify-end">
-                         <Button onClick={handleCreateUrl} type="button">Create URL</Button>
+                        <Button onClick={handleCreateUrl} type="button">
+                            {t('integrations.generator.create')}
+                        </Button>
                     </div>
                 </div>
             </CardContent>

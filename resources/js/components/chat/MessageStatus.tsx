@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import axios from 'axios';
 import { useRoute } from 'ziggy-js';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MessageStatusProps {
     message: Message;
@@ -11,6 +12,7 @@ interface MessageStatusProps {
 
 const MessageStatus = ({ message }: MessageStatusProps) => {
     const route = useRoute();
+    const { t } = useTranslation();
     const [isRetrying, setIsRetrying] = useState(false);
 
     if (message.type !== 'outgoing') {
@@ -43,25 +45,35 @@ const MessageStatus = ({ message }: MessageStatusProps) => {
                 onClick={() => handleRetry(message.id)}
                 disabled={isRetrying}
                 className="flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                aria-label="Retry sending message"
+                aria-label={t('chat.message.retry_aria')}
             >
                 <XCircle className="h-5 w-5 text-red-500" />
-                <span className="text-red-500 text-sm">Retry</span>
+                <span className="text-red-500 text-sm">
+                    {t('chat.message.retry')}
+                </span>
             </button>
         );
-        statusText = `Failed: ${message.error_message || 'Unknown error'}`;
+        statusText = t('chat.message.failed', {
+            error: message.error_message || t('chat.message.unknown_error'),
+        });
     } else if (message.read_at) {
         statusIcon = <CheckCheck className="h-5 w-5 text-blue-800" />;
-        statusText = `Read at ${new Date(message.read_at).toLocaleString()}`;
+        statusText = t('chat.message.read_at', {
+            date: new Date(message.read_at).toLocaleString(),
+        });
     } else if (message.delivered_at) {
         statusIcon = <CheckCheck className="h-5 w-5 text-gray-100" />;
-        statusText = `Delivered at ${new Date(message.delivered_at).toLocaleString()}`;
+        statusText = t('chat.message.delivered_at', {
+            date: new Date(message.delivered_at).toLocaleString(),
+        });
     } else if (message.sent_at) {
         statusIcon = <Check className="h-5 w-5 text-gray-100" />;
-        statusText = `Sent at ${new Date(message.sent_at).toLocaleString()}`;
+        statusText = t('chat.message.sent_at', {
+            date: new Date(message.sent_at).toLocaleString(),
+        });
     } else {
         statusIcon = <Clock className="h-5 w-5 text-gray-100" />;
-        statusText = 'Sending...';
+        statusText = t('chat.message.sending');
     }
 
     return (

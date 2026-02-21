@@ -13,38 +13,40 @@ import {
     Layers, /*LayoutGrid, */ MessagesSquare, Settings, BotMessageSquare, Users, Unplug, CalendarDays
 } from 'lucide-react';
 import { OrgSwitcher } from '@/components/org-switcher';
-import {PageProps} from '@/types';
+import { PageProps } from '@/types';
 import { AgentSwitcher } from '@/components/agent-switcher';
+import { useTranslation } from 'react-i18next';
 
 const footerNavItems: NavItem[] = [];
 
 export function AppSidebar() {
     const { props } = usePage<PageProps>();
+    const { t } = useTranslation('sidebar');
     const chatbot = props.chatbot as { id: number };
     const user = props.auth.user;
     const userLevel = user?.level || 0;
 
     const mainNavItems: NavItems[] = [
         {
-            title: 'Agents',
+            title: t('side.agents'),
             href: route('chatbots.index'),
             icon: BotMessageSquare,
         },{
-            title: 'All Contacts',
+            title: t('side.all_contacts'),
             href: route('contacts.index'),
             icon: Users,
         },{
-            title: 'Organization Settings',
+            title: t('side.organization_settings'),
             icon: Settings,
             href: '#',
             items: [
                 {
-                    title: 'General',
+                    title: t('side.general'),
                     href: route('organizations.edit'),
                     isActive: false,
                 },
                 {
-                    title: 'Members',
+                    title: t('side.members'),
                     href: route('organizations.members.index'),
                     isActive: false,
                 },
@@ -56,32 +58,32 @@ export function AppSidebar() {
 
     const chatbotNavItems: NavItems[] = [
         {
-            title: 'Agent Switcher',
+            title: t('side.agent_switcher'),
             href: '#',
             component: AgentSwitcher,
         },
         {
-            title: 'Chats',
+            title: t('side.chats'),
             href: isChatbotContext ? route('chats', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: MessagesSquare,
         },
         {
-            title: 'Agenda',
+            title: t('side.agenda'),
             href: isChatbotContext ? route('appointments.index', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: CalendarDays,
         },
         {
-            title: 'Template Messages',
+            title: t('side.template_messages'),
             href: isChatbotContext ? route('message-templates.index', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Layers,
         },
         {
-            title: 'Integrations',
+            title: t('side.integrations'),
             href: isChatbotContext ? route('chatbots.integrations', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Unplug,
         },
         {
-            title: 'Agent Configuration',
+            title: t('side.agent_configuration'),
             href: isChatbotContext && userLevel > 40 ? route('chatbots.edit', { chatbot: chatbot?.id || 0 }) : "disabled",
             icon: Settings,
         },
@@ -100,8 +102,7 @@ export function AppSidebar() {
 
             <SidebarContent className="mt-3">
                 <NavMain items={chatbotNavItems} groupLabel='' />
-                <NavMain items={mainNavItems} groupLabel='Organization' />
-
+                <NavMain items={mainNavItems} groupLabel={t('side.organization')} />
             </SidebarContent>
 
             <SidebarFooter>

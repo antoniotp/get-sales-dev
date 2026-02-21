@@ -1,7 +1,17 @@
 {
-  "agent": {
-    "unassigned": "Unassigned",
-    "assigned_success": "Agent assigned successfully.",
-    "assigned_error": "Failed to assign agent."
-  }
+    "agent": {
+        "unassigned": "Sin asignar",
+        "assigned_success": "Agente asignado correctamente.",
+        "assigned_error": "No se pudo asignar el agente."
+    },
+    "message": {
+        "retry": "Retry",
+        "retry_aria": "Retry sending message",
+        "unknown_error": "Unknown error",
+        "failed": "Failed: {{error}}",
+        "read_at": "Read at {{date}}",
+        "delivered_at": "Delivered at {{date}}",
+        "sent_at": "Sent at {{date}}",
+        "sending": "Sending..."
+    }
 }

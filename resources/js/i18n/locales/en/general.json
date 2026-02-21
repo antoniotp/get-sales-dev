@@ -1,0 +1,8 @@
+{
+    "pagination": {
+        "previous": "Previous",
+        "next": "Next",
+        "go_previous": "Go to previous page",
+        "go_next": "Go to next page"
+    }
+}

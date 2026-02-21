@@ -19,43 +19,75 @@ import esMessageTemplates from './locales/es/message_templates.json';
 import enMessageTemplates from './locales/en/message_templates.json';
 import esAppointments from './locales/es/appointments.json';
 import enAppointments from './locales/en/appointments.json';
-import eschat from './locales/es/chat.json';
-import enchat from './locales/en/chat.json';
+import esChat from './locales/es/chat.json';
+import enChat from './locales/en/chat.json';
+import esGeneral from './locales/es/general.json';
+import enGeneral from './locales/en/general.json';
+import esSideBar from './locales/es/sidebar.json';
+import enSideBar from './locales/en/sidebar.json';
 
 i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      es: {
-        navigation: esNavigation,
-        home: esHome,
-        login: esLogin,
-        register: esRegister,
-        chatbot: esChatbot,
-        contact: esContact,
-        organization: esOrganization,
-        message_templates: esMessageTemplates,
-        appointments: esAppointments,
-        chat: eschat,
-      },
-      en: {
-        navigation: enNavigation,
-        home: enHome,
-        login: enLogin,
-        register: enRegister,
-        chatbot: enChatbot,
-        contact: enContact,
-        organization: enOrganization,
-        message_templates: enMessageTemplates,
-        appointments: enAppointments,
-        chat: enchat,
-      },
-    },
-    lng: 'es',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-  });
+    .use(initReactI18next)
+    .init({
+        resources: {
+            es: {
+                navigation: esNavigation,
+                home: esHome,
+                login: esLogin,
+                register: esRegister,
+                chatbot: esChatbot,
+                contact: esContact,
+                organization: esOrganization,
+                messageTemplates: esMessageTemplates,
+                appointments: esAppointments,
+                chat: esChat,
+                general: esGeneral,
+                sidebar: esSideBar,
+            },
+            en: {
+                navigation: enNavigation,
+                home: enHome,
+                login: enLogin,
+                register: enRegister,
+                chatbot: enChatbot,
+                contact: enContact,
+                organization: enOrganization,
+                messageTemplates: enMessageTemplates,
+                appointments: enAppointments,
+                chat: enChat,
+                general: enGeneral,
+                sidebar: enSideBar,
+            },
+        },
+
+        ns: [
+            'navigation',
+            'home',
+            'login',
+            'register',
+            'chatbot',
+            'contact',
+            'organization',
+            'messageTemplates',
+            'appointments',
+            'chat',
+            'general',
+            'sidebar',
+        ],
+
+        defaultNS: 'navigation',
+        fallbackNS: 'general',
+
+        lng: 'es',
+        fallbackLng: 'en',
+
+        interpolation: {
+            escapeValue: false,
+        },
+
+        react: {
+            useSuspense: false,
+        },
+    });
 
 export default i18n;

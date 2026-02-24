@@ -8,6 +8,7 @@ import { AlertCircle, BellOff, Loader2, MoreVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useTranslation } from 'react-i18next';
 
 interface Notification {
     id: string;
@@ -24,6 +25,8 @@ interface NotificationDropdownProps {
 }
 
 export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: NotificationDropdownProps) => {
+    const { t } = useTranslation('general');
+
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -38,11 +41,11 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
             onUpdateUnreadCount(fetchedNotifications.filter(n => !n.read_at).length);
         } catch (err) {
             console.error('Failed to fetch notifications:', err);
-            setError('Failed to load notifications.');
+            setError(t('dropdown.failed_load'));
         } finally {
             setLoading(false);
         }
-    }, [onUpdateUnreadCount]);
+    }, [onUpdateUnreadCount, t]);
 
     useEffect(() => {
         fetchNotifications();
@@ -60,7 +63,7 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
             });
         } catch (err) {
             console.error('Failed to mark notification as read:', err);
-            setError('Failed to mark notification as read.');
+            setError(t('dropdown.failed_mark_read'));
         }
     };
 
@@ -73,7 +76,7 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
             onUpdateUnreadCount(0); // All marked as read
         } catch (err) {
             console.error('Failed to mark all notifications as read:', err);
-            setError('Failed to mark all notifications as read.');
+            setError(t('dropdown.failed_mark_all'));
         }
     };
 
@@ -87,7 +90,7 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
             });
         } catch (err) {
             console.error('Failed to clear read notifications:', err);
-            setError('Failed to clear read notifications.');
+            setError(t('dropdown.failed_clear_read'));
         }
     };
 
@@ -100,14 +103,14 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
             onUpdateUnreadCount(0); // All cleared
         } catch (err) {
             console.error('Failed to clear all notifications:', err);
-            setError('Failed to clear all notifications.');
+            setError(t('dropdown.failed_clear_all'));
         }
     };
 
     return (
         <div>
             <div className="flex items-center justify-between p-4">
-                <h4 className="font-medium text-sm">Notifications</h4>
+                <h4 className="font-medium text-sm">{t('dropdown.title')}</h4>
                 {notifications.length > 0 && ( // Only show menu if there are notifications
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -117,13 +120,13 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={markAllAsRead} disabled={!notifications.some((n) => !n.read_at)}>
-                                Mark all as read
+                                {t('dropdown.mark_all_read')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleClearRead} disabled={!notifications.some((n) => n.read_at)}>
-                                Clear read notifications
+                                {t('dropdown.clear_read')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleClearAll} disabled={notifications.length === 0}>
-                                Clear all notifications
+                                {t('dropdown.clear_all')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -133,7 +136,7 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
             <ScrollArea className="h-72">
                 {loading ? (
                     <div className="p-4 flex justify-center items-center text-muted-foreground">
-                        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" /> {t('dropdown.loading')}
                     </div>
                 ) : error ? (
                     <div className="p-4 text-destructive flex items-center">
@@ -142,7 +145,7 @@ export const NotificationDropdown = ({ onClose, onUpdateUnreadCount }: Notificat
                 ) : notifications.length === 0 ? (
                     <div className="p-4 text-muted-foreground text-center">
                         <BellOff className="h-8 w-8 mx-auto mb-2" />
-                        No new notifications.
+                        {t('dropdown.empty')}
                     </div>
                 ) : (
                     <div className="flex flex-col">

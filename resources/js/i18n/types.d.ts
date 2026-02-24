@@ -11,6 +11,7 @@ import appointments from './locales/es/appointments.json';
 import chat from './locales/es/chat.json';
 import general from './locales/es/general.json';
 import sideBar from './locales/es/sidebar.json';
+import settings from './locales/es/settings.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -27,6 +28,7 @@ declare module 'i18next' {
       chat: typeof chat;
       general: typeof general;
       sidebar: typeof sideBar;
+      settings: typeof settings
     };
   }
 }

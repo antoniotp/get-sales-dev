@@ -72,6 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');
     Route::put('/chats/{conversation}/mode', [ChatController::class, 'updateConversationMode'])->name('chats.mode.update');
     Route::put('/chats/{conversation}/assignment', [ChatAssignmentController::class, 'update'])->name('chats.assignment.update');
+    Route::post('/chats/{conversation}/send-template', [ChatController::class, 'sendTemplate'])->name('chats.messages.send-template');
     Route::get('/chatbots/{chatbot}/message_templates', [MessageTemplateController::class, 'index'])->name('message-templates.index');
     Route::get('/chatbots/{chatbot}/message_templates/approved', [MessageTemplateController::class, 'approved'])->name('message-templates.approved');
     Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->middleware('ensure.chatbot')->name('message-templates.create');

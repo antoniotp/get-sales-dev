@@ -30,7 +30,7 @@ interface Props {
     onSent: (message: string) => void;
 }
 
-export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, chatbotChannelId, contactId }: Props) {
+export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, chatbotChannelId, contactId, onSent }: Props) {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
     const [manualValues, setManualValues] = useState<Record<string, string>>({});
@@ -78,8 +78,18 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
     const handleSend = async () => {
         if (!selectedTemplate) return;
         setIsSending(true);
-        console.log('sending template:', selectedTemplate);
-        setTimeout(() => setIsSending(false), 2000);
+        try {
+            const response = await axios.post(route('chats.messages.send-template', { conversation: contactId }), {
+                template_id: selectedTemplate.id,
+                manual_values: manualValues
+            });
+            onSent(response.data.message);
+            onClose();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSending(false);
+        }
     };
 
     return (

@@ -19,49 +19,167 @@ class WhatsAppService implements WhatsAppServiceInterface
     {
         try {
             $channel = $message->conversation->chatbotChannel;
-            $to = $message->conversation->contact_phone;
-            $content = $message->content;
 
             if ($channel->channel->slug !== 'whatsapp' || ! $channel->status) {
                 throw new MessageSendException('Invalid or inactive WhatsApp channel');
             }
 
-            $credentials = $channel->credentials;
-            $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
-            $accessToken = $credentials['phone_number_access_token'];
-
-            Log::info('Sending WhatsApp message to '.$to);
-
-            // Send a message using the channel-specific credentials
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$accessToken,
-            ])->post($apiUrl.'/messages', [
-                'messaging_product' => 'whatsapp',
-                'recipient_type' => 'individual',
-                'to' => $to,
-                'type' => 'text',
-                'text' => [
-                    'preview_url' => false,
-                    'body' => $content,
-                ],
-            ]);
-
-            if (! $response->successful()) {
-                throw new MessageSendException('Failed to send WhatsApp message: '.$response->body());
+            if ($message->isFromTemplate()) {
+                return $this->processTemplateSend($message);
             }
 
-            $responseBody = $response->json();
-            $externalId = $responseBody['messages'][0]['id'] ?? null;
-
-            Log::info('WhatsApp message sent successfully');
-
-            return new MessageSendResult($externalId);
+            return $this->processTextSend($message);
 
         } catch (Exception $e) {
             Log::error('WhatsApp message sending failed for channel '.$channel->id.': '.$e->getMessage());
             // Re-throw as a specific exception for the listener to catch
             throw new MessageSendException($e->getMessage(), $e->getCode(), $e);
         }
+    }
+
+    private function processTextSend(Message $message): MessageSendResult
+    {
+        $channel = $message->conversation->chatbotChannel;
+        $to = $message->conversation->contact_phone;
+        $content = $message->content;
+
+        $credentials = $channel->credentials;
+        $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
+        $accessToken = $credentials['phone_number_access_token'];
+
+        Log::info('Sending WhatsApp message to '.$to);
+
+        // Send a message using the channel-specific credentials
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer '.$accessToken,
+        ])->post($apiUrl.'/messages', [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $to,
+            'type' => 'text',
+            'text' => [
+                'preview_url' => false,
+                'body' => $content,
+            ],
+        ]);
+
+        if (! $response->successful()) {
+            throw new MessageSendException('Failed to send WhatsApp message: '.$response->body());
+        }
+
+        $responseBody = $response->json();
+        $externalId = $responseBody['messages'][0]['id'] ?? null;
+
+        Log::info('WhatsApp message sent successfully');
+
+        return new MessageSendResult($externalId);
+    }
+
+    private function processTemplateSend(Message $message): MessageSendResult
+    {
+        $conversation = $message->conversation;
+        $channel = $conversation->chatbotChannel;
+        $credentials = $channel->credentials;
+        $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
+        $accessToken = $credentials['phone_number_access_token'];
+
+        $templateId = $message->metadata['template_id'];
+        $resolvedValues = $message->metadata['resolved_variables'];
+        $template = MessageTemplate::findOrFail($templateId);
+
+        $exampleData = $template->example_data ?? [];
+        $components = [];
+
+        // --- 1. Header Parameters ---
+        if (! empty($resolvedValues['header'])) {
+            $headerIsNamed = isset($exampleData['header_text_named_params']);
+            $headerType = $template->header_type === 'text' ? 'text' : $template->header_type;
+
+            $headerParam = [
+                'type' => $headerType,
+            ];
+
+            if ($headerType === 'text') {
+                $headerParam['text'] = (string) $resolvedValues['header']['value'];
+            } else {
+                $headerParam[$headerType] = [
+                    'id' => (string) $resolvedValues['header']['value'],
+                ];
+            }
+
+            if ($headerIsNamed) {
+                $headerParam['parameter_name'] = str_replace(['{{', '}}'], '', $resolvedValues['header']['placeholder']);
+            }
+
+            $components[] = [
+                'type' => 'header',
+                'parameters' => [$headerParam],
+            ];
+        }
+
+        // --- 2. Body Parameters ---
+        if (! empty($resolvedValues['body'])) {
+            $bodyIsNamed = isset($exampleData['body_text_named_params']);
+            $bodyParams = $resolvedValues['body'];
+
+            if ($bodyIsNamed) {
+                $parameters = array_map(function ($var) {
+                    return [
+                        'type' => 'text',
+                        'parameter_name' => str_replace(['{{', '}}'], '', $var['placeholder']),
+                        'text' => (string) $var['value'],
+                    ];
+                }, $bodyParams);
+            } else {
+                usort($bodyParams, function ($a, $b) {
+                    $numA = (int) str_replace(['{{', '}}'], '', $a['placeholder']);
+                    $numB = (int) str_replace(['{{', '}}'], '', $b['placeholder']);
+
+                    return $numA <=> $numB;
+                });
+
+                $parameters = array_map(function ($var) {
+                    return [
+                        'type' => 'text',
+                        'text' => (string) $var['value'],
+                    ];
+                }, $bodyParams);
+            }
+
+            $components[] = [
+                'type' => 'body',
+                'parameters' => $parameters,
+            ];
+        }
+
+        $payload = [
+            'messaging_product' => 'whatsapp',
+            'recipient_type' => 'individual',
+            'to' => $conversation->contact_phone,
+            'type' => 'template',
+            'template' => [
+                'name' => $template->name,
+                'language' => ['code' => $template->language],
+                'components' => $components,
+            ],
+        ];
+
+        Log::info(
+            "Sending WABA Template: {$template->name}. HeaderNamed: ".($headerIsNamed ?? 'N/A').', BodyNamed: '.($bodyIsNamed ? 'Yes' : 'No')
+        );
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer '.$accessToken,
+        ])->post($apiUrl.'/messages', $payload);
+
+        if (! $response->successful()) {
+            throw new MessageSendException('WABA Template Error: '.$response->body());
+        }
+
+        Log::info('WABA Response: '.$response->body());
+        $externalId = $response->json()['messages'][0]['id'] ?? null;
+
+        return new MessageSendResult($externalId);
     }
 
     public function submitTemplateForReview(MessageTemplate $template): array

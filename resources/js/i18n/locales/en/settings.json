@@ -1,0 +1,15 @@
+{
+    "notifications": {
+        "heading_title": "Push Notifications",
+        "heading_description": "Manage your real-time message notifications.",
+        "status_title": "Notification Status",
+        "not_supported": "Push notifications are not supported by your browser.",
+        "blocked": "You have blocked notifications. Please enable them in your browser settings to receive updates.",
+        "enable_prompt": "Enable push notifications to get real-time updates for new messages.",
+        "enabled": "Push notifications are enabled. You will receive updates.",
+        "enable_now": "Enable Now",
+        "enabling": "Enabling...",
+        "receive_label": "Receive new message notifications",
+        "error_prefix": "Error:"
+    }
+}

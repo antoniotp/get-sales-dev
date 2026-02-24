@@ -12,7 +12,7 @@ interface MessageStatusProps {
 
 const MessageStatus = ({ message }: MessageStatusProps) => {
     const route = useRoute();
-    const { t } = useTranslation();
+    const { t } = useTranslation('chat');
     const [isRetrying, setIsRetrying] = useState(false);
 
     if (message.type !== 'outgoing') {
@@ -45,35 +45,35 @@ const MessageStatus = ({ message }: MessageStatusProps) => {
                 onClick={() => handleRetry(message.id)}
                 disabled={isRetrying}
                 className="flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                aria-label={t('chat.message.retry_aria')}
+                aria-label={t('message.retry_aria')}
             >
                 <XCircle className="h-5 w-5 text-red-500" />
                 <span className="text-red-500 text-sm">
-                    {t('chat.message.retry')}
+                    {t('message.retry')}
                 </span>
             </button>
         );
-        statusText = t('chat.message.failed', {
-            error: message.error_message || t('chat.message.unknown_error'),
+        statusText = t('message.failed', {
+            error: message.error_message || t('message.unknown_error'),
         });
     } else if (message.read_at) {
         statusIcon = <CheckCheck className="h-5 w-5 text-blue-800" />;
-        statusText = t('chat.message.read_at', {
+        statusText = t('message.read_at', {
             date: new Date(message.read_at).toLocaleString(),
         });
     } else if (message.delivered_at) {
         statusIcon = <CheckCheck className="h-5 w-5 text-gray-100" />;
-        statusText = t('chat.message.delivered_at', {
+        statusText = t('message.delivered_at', {
             date: new Date(message.delivered_at).toLocaleString(),
         });
     } else if (message.sent_at) {
         statusIcon = <Check className="h-5 w-5 text-gray-100" />;
-        statusText = t('chat.message.sent_at', {
+        statusText = t('message.sent_at', {
             date: new Date(message.sent_at).toLocaleString(),
         });
     } else {
         statusIcon = <Clock className="h-5 w-5 text-gray-100" />;
-        statusText = t('chat.message.sending');
+        statusText = t('message.sending');
     }
 
     return (

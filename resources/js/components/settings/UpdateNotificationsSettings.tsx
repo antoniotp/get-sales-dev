@@ -6,8 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const UpdateNotificationsSettings = () => {
+    const { t } = useTranslation('settings');
+
     const { isSupported, permissionStatus, isSubscribed, subscribe, unsubscribe, loading, error } = usePushNotifications();
     const [localIsSubscribed, setLocalIsSubscribed] = useState(isSubscribed);
 
@@ -31,39 +34,41 @@ export const UpdateNotificationsSettings = () => {
     let statusIcon = null;
 
     if (!isSupported) {
-        statusMessage = "Push notifications are not supported by your browser.";
+        statusMessage = t('notifications.not_supported');
         statusVariant = 'destructive';
         statusIcon = <AlertCircle className="h-4 w-4" />;
     } else if (permissionStatus === 'denied') {
-        statusMessage = "You have blocked notifications. Please enable them in your browser settings to receive updates.";
+        statusMessage = t('notifications.blocked');
         statusVariant = 'destructive';
         statusIcon = <AlertCircle className="h-4 w-4" />;
     } else if (permissionStatus === 'default' && !isSubscribed) {
-        statusMessage = "Enable push notifications to get real-time updates for new messages.";
+        statusMessage = t('notifications.enable_prompt');
         statusVariant = 'default';
         statusIcon = <Info className="h-4 w-4" />;
     } else if (isSubscribed) {
-        statusMessage = "Push notifications are enabled. You will receive updates.";
+        statusMessage = t('notifications.enabled');
         statusVariant = 'default';
     }
 
-
     return (
         <div className="space-y-6">
-            <HeadingSmall title="Push Notifications" description="Manage your real-time message notifications." />
+            <HeadingSmall
+                title={t('notifications.heading_title')}
+                description={t('notifications.heading_description')}
+            />
 
             {!isSupported || permissionStatus === 'denied' || (permissionStatus === 'default' && !isSubscribed) ? (
                 <Alert variant={statusVariant}>
                     {statusIcon}
-                    <AlertTitle>Notification Status</AlertTitle>
+                    <AlertTitle>{t('notifications.status_title')}</AlertTitle>
                     <AlertDescription>
                         {statusMessage}
                         {(permissionStatus === 'default' && isSupported) && (
                             <Button onClick={() => subscribe()} disabled={loading} className="ml-4">
-                                {loading ? 'Enabling...' : 'Enable Now'}
+                                {loading ? t('notifications.enabling') : t('notifications.enable_now')}
                             </Button>
                         )}
-                        {error && <p className="text-red-500 mt-2">Error: {error}</p>}
+                        {error && <p className="text-red-500 mt-2">{t('notifications.error_prefix')} {error}</p>}
                     </AlertDescription>
                 </Alert>
             ) : (
@@ -75,9 +80,9 @@ export const UpdateNotificationsSettings = () => {
                         disabled={loading}
                     />
                     <Label htmlFor="push-notifications-toggle">
-                        Receive new message notifications
+                        {t('notifications.receive_label')}
                     </Label>
-                    {error && <p className="text-red-500 mt-2">Error: {error}</p>}
+                    {error && <p className="text-red-500 mt-2">{t('notifications.error_prefix')} {error}</p>}
                 </div>
             )}
         </div>

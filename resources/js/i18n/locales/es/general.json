@@ -4,5 +4,28 @@
         "next": "Siguiente",
         "go_previous": "Ir a la página anterior",
         "go_next": "Ir a la página siguiente"
+    },
+
+    "bell": {
+        "title": "¿Deseas recibir notificaciones?",
+        "description": "Te enviaremos notificaciones cuando recibas nuevos mensajes, incluso cuando la aplicación no esté abierta.",
+        "not_now": "Ahora no",
+        "confirm": "¡Sí, por favor!",
+        "enabling": "Activando...",
+        "error_prefix": "Error"
+    },
+
+    "dropdown": {
+        "title": "Notificaciones",
+        "mark_all_read": "Marcar todas como leídas",
+        "clear_read": "Eliminar notificaciones leídas",
+        "clear_all": "Eliminar todas las notificaciones",
+        "loading": "Cargando...",
+        "empty": "No hay notificaciones nuevas.",
+        "failed_load": "No se pudieron cargar las notificaciones.",
+        "failed_mark_read": "No se pudo marcar la notificación como leída.",
+        "failed_mark_all": "No se pudieron marcar todas como leídas.",
+        "failed_clear_read": "No se pudieron eliminar las notificaciones leídas.",
+        "failed_clear_all": "No se pudieron eliminar todas las notificaciones."
     }
 }

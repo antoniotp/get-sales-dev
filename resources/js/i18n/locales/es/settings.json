@@ -1,0 +1,15 @@
+{
+    "notifications": {
+        "heading_title": "Notificaciones Push",
+        "heading_description": "Administra tus notificaciones de mensajes en tiempo real.",
+        "status_title": "Estado de las notificaciones",
+        "not_supported": "Las notificaciones push no son compatibles con tu navegador.",
+        "blocked": "Has bloqueado las notificaciones. Por favor habilítalas en la configuración de tu navegador para recibir actualizaciones.",
+        "enable_prompt": "Activa las notificaciones push para recibir actualizaciones en tiempo real de nuevos mensajes.",
+        "enabled": "Las notificaciones push están activadas. Recibirás actualizaciones.",
+        "enable_now": "Activar ahora",
+        "enabling": "Activando...",
+        "receive_label": "Recibir notificaciones de nuevos mensajes",
+        "error_prefix": "Error:"
+    }
+}

@@ -4,5 +4,28 @@
         "next": "Next",
         "go_previous": "Go to previous page",
         "go_next": "Go to next page"
+    },
+
+    "bell": {
+        "title": "Do you want to receive notifications?",
+        "description": "We'll send you notifications when you receive new messages, even when the app isn't open.",
+        "not_now": "Not for now",
+        "confirm": "Yes, please!",
+        "enabling": "Enabling...",
+        "error_prefix": "Error"
+    },
+
+    "dropdown": {
+        "title": "Notifications",
+        "mark_all_read": "Mark all as read",
+        "clear_read": "Clear read notifications",
+        "clear_all": "Clear all notifications",
+        "loading": "Loading...",
+        "empty": "No new notifications.",
+        "failed_load": "Failed to load notifications.",
+        "failed_mark_read": "Failed to mark notification as read.",
+        "failed_mark_all": "Failed to mark all notifications as read.",
+        "failed_clear_read": "Failed to clear read notifications.",
+        "failed_clear_all": "Failed to clear all notifications."
     }
 }

@@ -25,10 +25,10 @@ export function CustomPagination({
     nextLabel,
 }: PaginationProps) {
 
-    const { t } = useTranslation();
+    const { t } = useTranslation('general');
 
-    const prevText = previousLabel ?? t('general.pagination.previous');
-    const nextText = nextLabel ?? t('general.pagination.next');
+    const prevText = previousLabel ?? t('pagination.previous');
+    const nextText = nextLabel ?? t('pagination.next');
 
     function handlePaginationClick(url: string | null) {
         if (!url) return;
@@ -78,7 +78,7 @@ export function CustomPagination({
                     <>
                         <PaginationItem>
                             <PaginationLink
-                                aria-label={t('general.pagination.go_previous')}
+                                aria-label={t('pagination.go_previous')}
                                 size="default"
                                 href={links[0].url || ''}
                                 className={cn("gap-1 px-2.5 sm:pl-2.5", !links[0].url ? 'opacity-50 cursor-not-allowed' : '')}
@@ -120,7 +120,7 @@ export function CustomPagination({
 
                         <PaginationItem>
                             <PaginationLink
-                                aria-label={t('general.pagination.go_next')}
+                                aria-label={t('pagination.go_next')}
                                 size="default"
                                 href={links[links.length - 1].url || ''}
                                 className={cn("gap-1 px-2.5 sm:pr-2.5", !links[links.length - 1].url ? 'opacity-50 cursor-not-allowed' : '')}

@@ -17,9 +17,12 @@ import { NotificationDropdown } from './NotificationDropdown';
 import axios from 'axios';
 import { usePage } from '@inertiajs/react';
 import { PageProps } from '@/types';
+import { useTranslation } from 'react-i18next';
 
 export const NotificationBell = () => {
     const { isSupported, permissionStatus, isSubscribed, subscribe, loading, error } = usePushNotifications();
+    const { t } = useTranslation('general');
+
     const [showPrompt, setShowPrompt] = useState(false);
     const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -121,20 +124,23 @@ export const NotificationBell = () => {
                 </PopoverContent>
             </Popover>
 
-
             {/* AlertDialog for the subscription prompt */}
             <AlertDialog open={showPrompt} onOpenChange={setShowPrompt}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Do you want to receive notifications?</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            {t('bell.title')}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                            We'll send you notifications when you receive new messages, even when the app isn't open.
+                            {t('bell.description')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Not for now</AlertDialogCancel>
+                        <AlertDialogCancel>
+                            {t('bell.not_now')}
+                        </AlertDialogCancel>
                         <AlertDialogAction onClick={handleSubscribe} disabled={loading}>
-                            {loading ? 'Enabling...' : 'Yes, please!'}
+                            {loading ? t('bell.enabling') : t('bell.confirm')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -142,7 +148,7 @@ export const NotificationBell = () => {
 
             {error && (
                 <div className="fixed bottom-4 right-4 bg-red-500 text-white p-3 rounded-md shadow-lg flex items-center gap-2">
-                    <span>Error: {error}</span>
+                    <span>{t('bell.error_prefix')}: {error}</span>
                     <Button variant="ghost" size="icon" onClick={() => setShowPrompt(false)} className="h-auto w-auto p-1">
                         <X className="h-4 w-4" />
                     </Button>

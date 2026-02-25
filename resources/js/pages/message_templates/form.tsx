@@ -36,15 +36,27 @@ const variableSchemaItem = z.object({
 const buttonConfigItem = z.object({
     type: z.enum(['QUICK_REPLY', 'URL', 'PHONE_NUMBER', 'COPY_CODE']),
     text: z.string().min(1, 'Button text is required'),
-    url: z.string().url('Must be a valid URL').nullable().optional(),
+    url: z.string().nullable().optional(),
     phone_number: z.string().optional(),
 }).superRefine((data, ctx) => {
-    if (data.type === 'URL' && (!data.url || data.url.trim() === '')) {
-        ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'URL is required for URL buttons.',
-            path: ['url'],
-        });
+    if (data.type === 'URL') {
+        if (!data.url || data.url.trim() === '') {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: 'URL is required for URL buttons.',
+                path: ['url'],
+            });
+        } else {
+            const urlSchema = z.string().url();
+            const result = urlSchema.safeParse(data.url);
+            if (!result.success) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: 'Must be a valid URL.',
+                    path: ['url'],
+                });
+            }
+        }
     }
 });
 
@@ -178,6 +190,15 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         });
         return () => subscription.unsubscribe();
     }, [form, setInertiaData]);
+
+    useEffect(() => {
+        const errors = form.formState.errors;
+        if (Object.keys(errors).length > 0) {
+            console.log('--- Form Validation Errors ---');
+            console.log(errors);
+        }
+    }, [form.formState.errors]);
+
 
     const onSubmit = () => {
         if (template?.id) {

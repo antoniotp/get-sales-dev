@@ -13,8 +13,10 @@ import { useChatbots } from '@/context/ChatbotProvider';
 import { router, usePage } from '@inertiajs/react';
 import { BotMessageSquare, ChevronsUpDown } from 'lucide-react';
 import * as React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function AgentSwitcher() {
+    const { t } = useTranslation('common');
     const { chatbot } = usePage<PageProps>().props;
     const { state } = useSidebar();
     const isMobile = useIsMobile();
@@ -43,7 +45,7 @@ export function AgentSwitcher() {
                             <BotMessageSquare className="size-4" />
                         </div>
                         <div className="grid flex-1 text-left text-sm overflow-hidden whitespace-nowrap">
-                            {chatbot?.name || "Select An Agent"}
+                            {chatbot?.name || t('agentSwitcher.selectAgent')}
                         </div>
                         <ChevronsUpDown className="ml-auto" />
                     </SidebarMenuButton>
@@ -54,10 +56,12 @@ export function AgentSwitcher() {
                     side={isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'}
                 >
                     <DropdownMenuLabel className="text-muted-foreground text-xs">
-                        Agents
+                        {t('agentSwitcher.agents')}
                     </DropdownMenuLabel>
                     {isLoading ? (
-                        <DropdownMenuItem disabled>Cargando...</DropdownMenuItem>
+                        <DropdownMenuItem disabled>
+                            {t('agentSwitcher.loading')}
+                        </DropdownMenuItem>
                     ) : (
                         switcherChatbots && switcherChatbots.map((chatbotOption) => (
                             <DropdownMenuItem
@@ -65,7 +69,6 @@ export function AgentSwitcher() {
                                 onClick={() => handleSwitch(chatbotOption)}
                                 className="gap-2 p-2"
                             >
-
                                 {chatbotOption.name}
                             </DropdownMenuItem>
                         ))

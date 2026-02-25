@@ -1,0 +1,24 @@
+{
+    "carousel": {
+        "previous": "Diapositiva anterior",
+        "next": "Siguiente diapositiva"
+    },
+
+    "pagination": {
+        "navigation": "Paginación",
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "previous_aria": "Ir a la página anterior",
+        "next_aria": "Ir a la página siguiente",
+        "more_pages": "Más páginas"
+    },
+
+    "sidebar": {
+        "title": "Barra lateral",
+        "mobileDescription": "Muestra la barra lateral en dispositivos móviles.",
+        "toggle": "Mostrar u ocultar barra lateral",
+        "errors": {
+            "mustBeUsedWithinProvider": "useSidebar debe usarse dentro de un SidebarProvider."
+        }
+    }
+}

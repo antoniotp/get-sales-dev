@@ -12,6 +12,8 @@ import chat from './locales/es/chat.json';
 import general from './locales/es/general.json';
 import sideBar from './locales/es/sidebar.json';
 import settings from './locales/es/settings.json';
+import ui from './locales/es/ui.json';
+import common from './locales/es/common.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -28,7 +30,9 @@ declare module 'i18next' {
       chat: typeof chat;
       general: typeof general;
       sidebar: typeof sideBar;
-      settings: typeof settings
+      settings: typeof settings;
+      ui: typeof ui;
+      common: typeof common;
     };
   }
 }

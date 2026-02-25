@@ -27,6 +27,10 @@ import esSideBar from './locales/es/sidebar.json';
 import enSideBar from './locales/en/sidebar.json';
 import esSettings from './locales/es/settings.json';
 import enSettings from './locales/en/settings.json';
+import esUi from './locales/es/ui.json';
+import enUi from './locales/en/ui.json';
+import esCommon from './locales/es/common.json';
+import enCommon from './locales/en/common.json';
 
 i18n
     .use(initReactI18next)
@@ -46,6 +50,8 @@ i18n
                 general: esGeneral,
                 sidebar: esSideBar,
                 settings: esSettings,
+                ui: esUi,
+                common: esCommon,
             },
             en: {
                 navigation: enNavigation,
@@ -61,6 +67,8 @@ i18n
                 general: enGeneral,
                 sidebar: enSideBar,
                 settings: enSettings,
+                ui: enUi,
+                common: enCommon,
             },
         },
 
@@ -77,7 +85,9 @@ i18n
             'chat',
             'general',
             'sidebar',
-            'settings'
+            'settings',
+            'ui',
+            'common'
         ],
 
         defaultNS: 'navigation',

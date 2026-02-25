@@ -64,7 +64,7 @@ class MessageService implements MessageServiceInterface
         return $message;
     }
 
-    private function createMessage(Conversation $conversation, array $messageData): Message
+    public function createMessage(Conversation $conversation, array $messageData): Message
     {
         $message = $conversation->messages()->create([
             'external_message_id' => $messageData['external_id'] ?? null,

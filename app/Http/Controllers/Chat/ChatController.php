@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Chat;
 
 use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
 use App\DataTransferObjects\Chat\ConversationData;
 use App\DataTransferObjects\Chat\MessageData;
 use App\Events\MessageSent;
 use App\Events\NewWhatsAppMessage;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Chat\SendMessageTemplateRequest;
 use App\Http\Requests\Chat\StoreChatRequest;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\MessageTemplate;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -29,7 +32,8 @@ class ChatController extends Controller
 {
     public function __construct(
         private readonly Organization $organization,
-        private readonly ConversationServiceInterface $conversationService
+        private readonly ConversationServiceInterface $conversationService,
+        private readonly MessageTemplateServiceInterface $messageTemplateService,
     ) {}
 
     public function index(Request $request, Chatbot $chatbot, ?Conversation $conversation = null): RedirectResponse|Response
@@ -234,5 +238,24 @@ class ChatController extends Controller
         event(new MessageSent($message));
 
         return response()->json(['success' => true, 'message' => 'Message is being retried.']);
+    }
+
+    public function sendTemplate(
+        SendMessageTemplateRequest $request,
+        Conversation $conversation,
+    ) {
+        $template = MessageTemplate::findOrFail($request->input('template_id'));
+
+        $message = $this->messageTemplateService->sendMessageTemplate(
+            $template,
+            $conversation,
+            $request->input('manual_values', []),
+            $request->user()
+        );
+
+        return response()->json([
+            'message' => MessageData::fromMessage($message)->toArray(),
+        ]);
+
     }
 }

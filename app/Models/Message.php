@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -80,6 +81,16 @@ class Message extends Model
     public function senderContact(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'sender_contact_id');
+    }
+
+    public function messageTemplateSend(): HasOne
+    {
+        return $this->hasOne(MessageTemplateSend::class);
+    }
+
+    public function isFromTemplate(): bool
+    {
+        return (bool) ($this->metadata['is_template'] ?? false);
     }
 
     /**

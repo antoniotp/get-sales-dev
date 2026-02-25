@@ -2,6 +2,7 @@
 
 namespace App\DataTransferObjects\Chat;
 
+use App\Enums\Conversation\Type;
 use App\Models\Conversation;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -20,13 +21,14 @@ class ConversationData implements Arrayable
         public ?string $assigned_user_name,
         public ?string $recipient,
         public string $type,
-    ) {
-    }
+        public int $channel_id,
+        public int $chatbot_channel_id,
+        public int $contact_id,
+    ) {}
 
     public static function fromConversation(Conversation $conversation): self
     {
-        $conversationName = '';
-        if ($conversation->type === \App\Enums\Conversation\Type::GROUP) {
+        if ($conversation->type === Type::GROUP) {
             $conversationName = $conversation->name ?? 'Unknown Group';
         } else {
             $conversationName = $conversation->contact_name ?? $conversation->contact_phone ?? 'Unknown';
@@ -48,6 +50,9 @@ class ConversationData implements Arrayable
             assigned_user_name: $conversation->assignedUser?->name,
             recipient: $conversation->chatbotChannel->credentials['phone_number'] ?? '',
             type: $conversation->type->value,
+            channel_id: $conversation->chatbotChannel->channel_id,
+            chatbot_channel_id: $conversation->chatbot_channel_id,
+            contact_id: $conversation->contactChannel->contact_id ?? 0,
         );
     }
 
@@ -66,6 +71,9 @@ class ConversationData implements Arrayable
             'assigned_user_name' => $this->assigned_user_name,
             'recipient' => $this->recipient,
             'type' => $this->type,
+            'channel_id' => $this->channel_id,
+            'chatbot_channel_id' => $this->chatbot_channel_id,
+            'contact_id' => $this->contact_id,
         ];
     }
 }

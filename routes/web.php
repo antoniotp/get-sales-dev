@@ -12,6 +12,7 @@ use App\Http\Controllers\ChatbotChannel\ChatbotChannelSettingController;
 use App\Http\Controllers\Contacts\ContactController;
 use App\Http\Controllers\Facebook\FacebookController;
 use App\Http\Controllers\MessageTemplates\MessageTemplateController;
+use App\Http\Controllers\MessageTemplates\MessageTemplatePreviewController;
 use App\Http\Controllers\Notification\NotificationController;
 use App\Http\Controllers\Notification\PushSubscriptionController;
 use App\Http\Controllers\Organizations\InvitationController;
@@ -71,13 +72,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chats/{conversation}/messages', [ChatController::class, 'storeMessage'])->name('chats.messages.store');
     Route::put('/chats/{conversation}/mode', [ChatController::class, 'updateConversationMode'])->name('chats.mode.update');
     Route::put('/chats/{conversation}/assignment', [ChatAssignmentController::class, 'update'])->name('chats.assignment.update');
+    Route::post('/chats/{conversation}/send-template', [ChatController::class, 'sendTemplate'])->name('chats.messages.send-template');
     Route::get('/chatbots/{chatbot}/message_templates', [MessageTemplateController::class, 'index'])->name('message-templates.index');
+    Route::get('/chatbots/{chatbot}/message_templates/approved', [MessageTemplateController::class, 'approved'])->name('message-templates.approved');
     Route::get('/message_templates/create', [MessageTemplateController::class, 'create'])->middleware('ensure.chatbot')->name('message-templates.create');
     Route::post('/message_templates', [MessageTemplateController::class, 'store'])->middleware('ensure.chatbot')->name('message-templates.store');
     Route::get('/message_templates/{template}/edit', [MessageTemplateController::class, 'edit'])->middleware('ensure.chatbot')->name('message-templates.edit');
     Route::put('/message_templates/{template}', [MessageTemplateController::class, 'update'])->name('message-templates.update');
     Route::post('/message_templates/{template}/send-for-review', [MessageTemplateController::class, 'sendForReview'])->middleware('ensure.chatbot')->name('message-templates.send-for-review');
     Route::delete('/message_templates/{template}', [MessageTemplateController::class, 'destroy'])->name('message-templates.destroy');
+    Route::post('/message_templates/{template}/resolve-preview', [MessageTemplatePreviewController::class, 'resolve'])->name('message-templates.resolve-preview');
 
     Route::post('/messages/{message}/retry', [ChatController::class, 'retryMessage'])->name('messages.retry');
 

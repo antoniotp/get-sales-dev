@@ -2,16 +2,29 @@
 
 namespace App\Services\MessageTemplate;
 
+use App\Contracts\Services\Chat\MessageServiceInterface;
+use App\Contracts\Services\MessageTemplate\MessageTemplateResolverServiceInterface;
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
+use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Events\MessageTemplateCreated;
 use App\Models\Chatbot;
+use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\MessageTemplate;
+use App\Models\MessageTemplateSend;
+use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class MessageTemplateService implements MessageTemplateServiceInterface
 {
+    public function __construct(
+        private readonly MessageTemplateResolverServiceInterface $resolverService,
+        private readonly MessageServiceInterface $messageService,
+        private readonly WhatsAppServiceInterface $whatsAppService,
+    ) {}
+
     /**
      * Create a new message template.
      *
@@ -158,5 +171,68 @@ class MessageTemplateService implements MessageTemplateServiceInterface
         }
 
         return $processedData;
+    }
+
+    public function sendMessageTemplate(
+        MessageTemplate $template,
+        Conversation $conversation,
+        array $manualValues,
+        User $user
+    ): Message {
+        $resolvedValues = $this->resolverService->resolveValues($template, $conversation->contactChannel->contact, $manualValues, $user);
+        $rendered = $this->resolverService->render($template, $resolvedValues);
+        // TODO: Add a function to generate rendered with all its components
+
+        $message = $this->messageService->createMessage($conversation, [
+            'content' => $rendered['body'],
+            'type' => 'outgoing',
+            'sender_type' => 'human',
+            'sender_user_id' => $user->id,
+            'metadata' => [
+                'is_template' => true,
+                'template_id' => $template->id,
+                'resolved_variables' => $resolvedValues,
+            ],
+        ]);
+
+        $templateSend = MessageTemplateSend::create([
+            'message_template_id' => $template->id,
+            'conversation_id' => $conversation->id,
+            'message_id' => $message->id,
+            'variables_data' => $resolvedValues,
+            'rendered_content' => $rendered['body'],
+            'send_status' => 'pending',
+        ]);
+
+        try {
+            $result = $this->whatsAppService->sendMessage($message);
+
+            $message->update([
+                'external_message_id' => $result->externalId,
+                'sent_at' => now(),
+            ]);
+
+            $templateSend->update([
+                'send_status' => 'sent',
+                'platform_message_id' => $result->externalId,
+                'sent_at' => now(),
+            ]);
+
+            $template->increment('usage_count');
+
+        } catch (\Exception $e) {
+            $message->update([
+                'failed_at' => now(),
+                'error_message' => $e->getMessage(),
+            ]);
+
+            $templateSend->update([
+                'send_status' => 'failed',
+                'error_message' => $e->getMessage(),
+                'failed_at' => now(),
+            ]);
+        }
+
+        return $message;
     }
 }

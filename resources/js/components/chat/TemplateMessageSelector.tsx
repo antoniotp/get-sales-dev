@@ -28,9 +28,10 @@ interface Props {
     chatbotChannelId: number
     contactId: number | null;
     onSent: (message: string) => void;
+    conversationId: number
 }
 
-export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, chatbotChannelId, contactId, onSent }: Props) {
+export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, chatbotChannelId, contactId, onSent, conversationId }: Props) {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
     const [manualValues, setManualValues] = useState<Record<string, string>>({});
@@ -79,7 +80,7 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
         if (!selectedTemplate) return;
         setIsSending(true);
         try {
-            const response = await axios.post(route('chats.messages.send-template', { conversation: contactId }), {
+            const response = await axios.post(route('chats.messages.send-template', { conversation: conversationId }), {
                 template_id: selectedTemplate.id,
                 manual_values: manualValues
             });

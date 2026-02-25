@@ -8,6 +8,7 @@ use App\Exceptions\MessageSendException;
 use App\Models\ChatbotChannel;
 use App\Models\Message;
 use App\Models\MessageTemplate;
+use App\Models\MessageTemplateCategory;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -199,7 +200,11 @@ class WhatsAppService implements WhatsAppServiceInterface
             Log::info('API URL: '.$apiUrl);
 
             $components = [];
-            $exampleData = $template->example_data ?? []; // Get the full example_data
+            $exampleData = $template->example_data ?? [];
+
+            // --- Determine Parameter Format ---
+            $isNamed = isset($exampleData['header_text_named_params']) || isset($exampleData['body_text_named_params']);
+            $parameterFormat = $isNamed ? 'named' : 'positional';
 
             // --- HEADER Component ---
             if ($template->header_type !== 'none' && ! empty($template->header_content)) {
@@ -211,6 +216,7 @@ class WhatsAppService implements WhatsAppServiceInterface
                 if ($template->header_type === 'text') {
                     $headerComponent['text'] = $template->header_content;
                 }
+
                 // Add the example object for the header part if present in example_data
                 $headerExample = Arr::only($exampleData, ['header_text', 'header_text_named_params', 'header_handle']);
                 if (! empty($headerExample)) {
@@ -224,6 +230,7 @@ class WhatsAppService implements WhatsAppServiceInterface
                 'type' => 'BODY',
                 'text' => $template->body_content,
             ];
+
             // Add the example object for the body part if present in example_data
             $bodyExample = Arr::only($exampleData, ['body_text', 'body_text_named_params']);
             if (! empty($bodyExample)) {
@@ -272,8 +279,10 @@ class WhatsAppService implements WhatsAppServiceInterface
                 'name' => $template->name,
                 'category' => strtoupper($categoryName), // Meta expects category in uppercase
                 'language' => $template->language,
+                'parameter_format' => $parameterFormat,
                 'components' => $components,
             ];
+
             Log::info('Submitting template payload: '.json_encode($payload));
 
             $response = Http::withHeaders([
@@ -289,8 +298,15 @@ class WhatsAppService implements WhatsAppServiceInterface
             // Update template with external ID if provided in response
             $responseData = $response->json();
             if (isset($responseData['id'])) {
+                $categorySlug = strtolower($responseData['category'] ?? '');
+                $category = MessageTemplateCategory::where('slug', $categorySlug)->first();
+
                 $template->update([
                     'external_template_id' => $responseData['id'],
+                    'status' => isset($responseData['status']) ? strtolower(
+                        $responseData['status']
+                    ) : $template->status,
+                    'category_id' => $category?->id ?? $template->category_id,
                 ]);
             }
 

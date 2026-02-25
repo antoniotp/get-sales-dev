@@ -97,6 +97,7 @@ class WhatsAppServiceTest extends TestCase
             'name' => 'seasonal_promotion',
             'language' => 'en_US',
             'category' => 'MARKETING', // Category name
+            'parameter_format' => 'positional',
             'components' => [
                 [
                     'type' => 'HEADER',
@@ -186,6 +187,7 @@ class WhatsAppServiceTest extends TestCase
             'name' => 'promo_link',
             'language' => 'en_US',
             'category' => 'MARKETING',
+            'parameter_format' => 'positional',
             'components' => [
                 [
                     'type' => 'BODY',
@@ -271,6 +273,7 @@ class WhatsAppServiceTest extends TestCase
             'name' => 'seasonal_promotion',
             'language' => 'en_US',
             'category' => 'MARKETING',
+            'parameter_format' => 'named',
             'components' => [
                 [
                     'type' => 'HEADER',

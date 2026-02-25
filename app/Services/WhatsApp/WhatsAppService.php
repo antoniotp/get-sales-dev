@@ -183,6 +183,9 @@ class WhatsAppService implements WhatsAppServiceInterface
         return new MessageSendResult($externalId);
     }
 
+    /**
+     * Submits a template for review (Create or Update).
+     */
     public function submitTemplateForReview(MessageTemplate $template): array
     {
         try {
@@ -193,131 +196,161 @@ class WhatsAppService implements WhatsAppServiceInterface
             }
 
             $credentials = $channel->credentials;
-            $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'template');
             $accessToken = $credentials['whatsapp_business_access_token'];
+            $isUpdate = !empty($template->external_template_id);
 
-            Log::info('Submitting WhatsApp template for review: '.$template->name);
-            Log::info('API URL: '.$apiUrl);
+            // --- Determine API URL ---
+            if ($isUpdate) {
+                // Update Endpoint: POST /<TEMPLATE_ID>
+                $apiUrl = rtrim($channel->webhook_url, '/') . '/' . $template->external_template_id;
+            } else {
+                // Creation Endpoint: POST /<WABA_ID>/message_templates
+                $wabaId = $credentials['whatsapp_business_account_id'];
+                $apiUrl = rtrim($channel->webhook_url, '/') . '/' . $wabaId . '/message_templates';
+            }
 
-            $components = [];
+            // --- Build Components and Format ---
+            $components = $this->buildTemplateComponents($template);
             $exampleData = $template->example_data ?? [];
-
-            // --- Determine Parameter Format ---
             $isNamed = isset($exampleData['header_text_named_params']) || isset($exampleData['body_text_named_params']);
             $parameterFormat = $isNamed ? 'named' : 'positional';
+            $categoryName = strtoupper($template->category->slug ?? 'UTILITY');
 
-            // --- HEADER Component ---
-            if ($template->header_type !== 'none' && ! empty($template->header_content)) {
-                $headerComponent = [
-                    'type' => 'HEADER',
-                    'format' => strtoupper($template->header_type),
+            // --- Build Payload ---
+            if ($isUpdate) {
+                // According to Meta, for updates we only send components and category
+                $payload = [
+                    'components' => $components,
+                    'category' => $categoryName,
+                    'parameter_format' => $parameterFormat,
                 ];
-
-                if ($template->header_type === 'text') {
-                    $headerComponent['text'] = $template->header_content;
-                }
-
-                // Add the example object for the header part if present in example_data
-                $headerExample = Arr::only($exampleData, ['header_text', 'header_text_named_params', 'header_handle']);
-                if (! empty($headerExample)) {
-                    $headerComponent['example'] = $headerExample;
-                }
-                $components[] = $headerComponent;
-            }
-
-            // --- BODY Component (Required) ---
-            $bodyComponent = [
-                'type' => 'BODY',
-                'text' => $template->body_content,
-            ];
-
-            // Add the example object for the body part if present in example_data
-            $bodyExample = Arr::only($exampleData, ['body_text', 'body_text_named_params']);
-            if (! empty($bodyExample)) {
-                $bodyComponent['example'] = $bodyExample;
-            }
-            $components[] = $bodyComponent;
-
-            // --- FOOTER Component ---
-            if (! empty($template->footer_content)) {
-                $components[] = [
-                    'type' => 'FOOTER',
-                    'text' => $template->footer_content,
+            } else {
+                $payload = [
+                    'name' => $template->name,
+                    'category' => $categoryName,
+                    'language' => $template->language,
+                    'parameter_format' => $parameterFormat,
+                    'components' => $components,
                 ];
             }
 
-            // --- BUTTONS Component ---
-            if (! empty($template->button_config)) {
-                $buttons = [];
-                foreach ($template->button_config as $button) {
-                    $buttonPayload = [
-                        'text' => $button['text'],
-                        'type' => $button['type'],
-                    ];
-
-                    if ($button['type'] === 'URL') {
-                        // Only add the 'url' field if the type is URL and it's not empty
-                        if (! empty($button['url'])) {
-                            $buttonPayload['url'] = $button['url'];
-                        }
-                    }
-
-                    $buttons[] = $buttonPayload;
-                }
-
-                if (! empty($buttons)) {
-                    $components[] = [
-                        'type' => 'BUTTONS',
-                        'buttons' => $buttons,
-                    ];
-                }
-            }
-
-            // Submit template to WhatsApp API
-            $categoryName = $template->category->name ?? 'UTILITY'; // Fallback for safety
-            $payload = [
-                'name' => $template->name,
-                'category' => strtoupper($categoryName), // Meta expects category in uppercase
-                'language' => $template->language,
-                'parameter_format' => $parameterFormat,
-                'components' => $components,
-            ];
-
-            Log::info('Submitting template payload: '.json_encode($payload));
+            Log::info(($isUpdate ? 'Updating' : 'Creating') . ' WhatsApp template: ' . $template->name);
+            Log::info('API URL: ' . $apiUrl);
 
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer '.$accessToken,
-            ])->post($apiUrl.'/message_templates', $payload);
+                'Authorization' => 'Bearer ' . $accessToken,
+            ])->post($apiUrl, $payload);
 
-            if (! $response->successful()) {
-                throw new Exception('Failed to submit WhatsApp template: '.$response->body());
+            if (!$response->successful()) {
+                throw new Exception('Failed to ' . ($isUpdate ? 'update' : 'submit') . ' WhatsApp template: ' . $response->body());
             }
 
-            Log::info('WhatsApp template submitted successfully');
-
-            // Update template with external ID if provided in response
             $responseData = $response->json();
-            if (isset($responseData['id'])) {
+
+            // --- Handle Success and Database Update ---
+            if (!$isUpdate && isset($responseData['id'])) {
+                // New template created
                 $categorySlug = strtolower($responseData['category'] ?? '');
                 $category = MessageTemplateCategory::where('slug', $categorySlug)->first();
 
                 $template->update([
                     'external_template_id' => $responseData['id'],
-                    'status' => isset($responseData['status']) ? strtolower(
-                        $responseData['status']
-                    ) : $template->status,
+                    'status' => isset($responseData['status']) ? strtolower($responseData['status']) : 'pending',
                     'category_id' => $category?->id ?? $template->category_id,
                 ]);
+            } elseif ($isUpdate && isset($responseData['success']) && $responseData['success'] === true) {
+                // Template updated successfully.
+                // We set status to 'pending' because it usually goes back to review
+                $template->update(['status' => 'pending']);
             }
 
             // Update last activity
             $channel->update(['last_activity_at' => now()]);
 
             return $responseData;
+
         } catch (Exception $e) {
             Log::error('WhatsApp template submission failed for template '.$template->id.': '.$e->getMessage());
             throw $e;
         }
+    }
+
+    /**
+     * Internal helper to build a Meta-compliant components array.
+     */
+    private function buildTemplateComponents(MessageTemplate $template): array
+    {
+        $components = [];
+        $exampleData = $template->example_data ?? [];
+
+        // --- HEADER Component ---
+        if ($template->header_type !== 'none' && ! empty($template->header_content)) {
+            $headerComponent = [
+                'type' => 'HEADER',
+                'format' => strtoupper($template->header_type),
+            ];
+
+            if ($template->header_type === 'text') {
+                $headerComponent['text'] = $template->header_content;
+            }
+
+            // Add the example object for the header part if present in example_data
+            $headerExample = Arr::only($exampleData, ['header_text', 'header_text_named_params', 'header_handle']);
+            if (! empty($headerExample)) {
+                $headerComponent['example'] = $headerExample;
+            }
+            $components[] = $headerComponent;
+        }
+
+        // --- BODY Component (Required) ---
+        $bodyComponent = [
+            'type' => 'BODY',
+            'text' => $template->body_content,
+        ];
+
+        // Add the example object for the body part if present in example_data
+        $bodyExample = Arr::only($exampleData, ['body_text', 'body_text_named_params']);
+        if (! empty($bodyExample)) {
+            $bodyComponent['example'] = $bodyExample;
+        }
+        $components[] = $bodyComponent;
+
+        // --- FOOTER Component ---
+        if (! empty($template->footer_content)) {
+            $components[] = [
+                'type' => 'FOOTER',
+                'text' => $template->footer_content,
+            ];
+        }
+
+        // --- BUTTONS Component ---
+        if (! empty($template->button_config)) {
+            $buttons = [];
+            foreach ($template->button_config as $button) {
+                $buttonPayload = [
+                    'text' => $button['text'],
+                    'type' => $button['type'],
+                ];
+
+                if ($button['type'] === 'URL') {
+                    // Only add the 'url' field if the type is URL and it's not empty
+                    if (! empty($button['url'])) {
+                        $buttonPayload['url'] = $button['url'];
+                    }
+                }
+
+                $buttons[] = $buttonPayload;
+            }
+
+            if (! empty($buttons)) {
+                $components[] = [
+                    'type' => 'BUTTONS',
+                    'buttons' => $buttons,
+                ];
+            }
+        }
+
+        return $components;
     }
 
     public function getMediaInfo(string $mediaId, ChatbotChannel $channel): ?array

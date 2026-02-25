@@ -844,6 +844,8 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 label="Text"
                                                                 currentType={watchedHeaderType}
                                                             />
+                                                            {/*
+                                                            TODO: Implement a file uploader and a file sender to send the uploaded file to WABA API.
                                                             <HeaderTypeButton
                                                                 field={field}
                                                                 value="image"
@@ -864,7 +866,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 icon={<File size={16} />}
                                                                 label="File"
                                                                 currentType={watchedHeaderType}
-                                                            />
+                                                            />*/}
                                                         </div>
                                                     )}
                                                 />

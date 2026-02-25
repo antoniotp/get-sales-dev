@@ -1,0 +1,14 @@
+{
+    "agentSwitcher": {
+        "selectAgent": "Select an agent",
+        "agents": "Agents",
+        "loading": "Loading..."
+    },
+
+    "navigation": {
+        "dashboard": "Dashboard",
+        "repository": "Repository",
+        "documentation": "Documentation",
+        "menu": "Navigation Menu"
+    }
+}

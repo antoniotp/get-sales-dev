@@ -3,6 +3,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { Menu, PanelLeft } from "lucide-react"
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export function CustomSidebarTrigger({
                                    className,
@@ -10,6 +11,7 @@ export function CustomSidebarTrigger({
                                    ...props
                                }: React.ComponentProps<typeof Button>) {
     const { toggleSidebar } = useSidebar()
+    const { t } = useTranslation('common');
 
     return (
         <Button
@@ -29,7 +31,9 @@ export function CustomSidebarTrigger({
 
             {/* Desktop: panel icon */}
             <PanelLeft className="hidden md:block" />
-            <span className="sr-only">Toggle Sidebar</span>
+            <span className="sr-only">
+                {t('sidebar.toggle')}
+            </span>
         </Button>
     )
 }

@@ -1,12 +1,9 @@
 <?php
 
-namespace App\Contracts\Services\MessageTemplate;
+namespace App\Contracts\Services\MessageTemplate; // Updated namespace
 
 use App\Models\Chatbot;
-use App\Models\Conversation;
-use App\Models\Message;
 use App\Models\MessageTemplate;
-use App\Models\User;
 
 interface MessageTemplateServiceInterface
 {
@@ -32,16 +29,4 @@ interface MessageTemplateServiceInterface
      * @param  MessageTemplate  $template  The message template instance to send for review.
      */
     public function sendForReview(MessageTemplate $template): MessageTemplate;
-
-    /**
-     * Send a message template to a user.
-     *
-     * @param  MessageTemplate  $template  The message template instance to send
-     */
-    public function sendMessageTemplate(
-        MessageTemplate $template,
-        Conversation $conversation,
-        array $manualValues,
-        User $user
-    ): Message;
 }

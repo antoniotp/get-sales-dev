@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { Pilcrow, AlertCircle, Trash2/*, File, Image as ImageIcon, Video*/ } from 'lucide-react';
+import { File, Image as ImageIcon, Pilcrow, Trash2, Video, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -36,27 +36,15 @@ const variableSchemaItem = z.object({
 const buttonConfigItem = z.object({
     type: z.enum(['QUICK_REPLY', 'URL', 'PHONE_NUMBER', 'COPY_CODE']),
     text: z.string().min(1, 'Button text is required'),
-    url: z.string().nullable().optional(),
+    url: z.string().url('Must be a valid URL').nullable().optional(),
     phone_number: z.string().optional(),
 }).superRefine((data, ctx) => {
-    if (data.type === 'URL') {
-        if (!data.url || data.url.trim() === '') {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: 'URL is required for URL buttons.',
-                path: ['url'],
-            });
-        } else {
-            const urlSchema = z.string().url();
-            const result = urlSchema.safeParse(data.url);
-            if (!result.success) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: 'Must be a valid URL.',
-                    path: ['url'],
-                });
-            }
-        }
+    if (data.type === 'URL' && (!data.url || data.url.trim() === '')) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'URL is required for URL buttons.',
+            path: ['url'],
+        });
     }
 });
 
@@ -137,8 +125,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     const [namedVariableName, setNamedVariableName] = useState('');
     const [namedHeaderVariableName, setNamedHeaderVariableName] = useState('');
     const [variableTypeError, setVariableTypeError] = useState<string | null>(null);
-    const [dbSelectValue, setDbSelectValue] = useState<string>('');
-    const [headerDbSelectValue, setHeaderDbSelectValue] = useState<string>('');
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         { title: 'Message Templates', href: route('message-templates.index', props.chatbot.id) },
@@ -153,11 +139,11 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 display_name: template.display_name || template.name,
                 header_content: template.header_content || '',
                 header_variable: template.header_variable || null,
-                header_variable_type: template.header_variable_type || template.variable_type || 'named',
+                header_variable_type: template.header_variable_type || 'positional',
                 header_variable_mapping: template.header_variable_mapping || null,
                 footer_content: template.footer_content || '',
                 button_config: template.button_config || null,
-                variable_type: template.variable_type || 'named',
+                variable_type: template.variable_type || 'positional',
                 variable_mappings: template.variable_mappings || null,
             }
             : {
@@ -169,13 +155,13 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                 header_type: 'none',
                 header_content: '',
                 header_variable: null,
-                header_variable_type: 'named',
+                header_variable_type: 'positional',
                 header_variable_mapping: null,
                 body_content: '',
                 footer_content: '',
                 button_config: null,
                 variables_schema: null,
-                variable_type: 'named',
+                variable_type: 'positional',
                 variable_mappings: null,
             }
     );
@@ -192,15 +178,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         });
         return () => subscription.unsubscribe();
     }, [form, setInertiaData]);
-
-    useEffect(() => {
-        const errors = form.formState.errors;
-        if (Object.keys(errors).length > 0) {
-            console.log('--- Form Validation Errors ---');
-            console.log(errors);
-        }
-    }, [form.formState.errors]);
-
 
     const onSubmit = () => {
         if (template?.id) {
@@ -830,56 +807,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 </h3>
                                             </div>
 
-                                            <div className="space-y-3 border-b pb-6 mb-6">
-                                                <div>
-                                                    <Label className="text-base font-semibold">Variable Format</Label>
-                                                </div>
-                                                <TooltipProvider>
-                                                    <Tooltip delayDuration={250}>
-                                                        <TooltipTrigger asChild>
-                                                            <div>
-                                                                <FormField
-                                                                    control={form.control}
-                                                                    name="variable_type"
-                                                                    render={({ field }) => (
-                                                                        <RadioGroup
-                                                                            onValueChange={(value) => {
-                                                                                field.onChange(value);
-                                                                                form.setValue('header_variable_type', value as 'named' | 'positional');
-                                                                            }}
-                                                                            value={field.value}
-                                                                            className="flex flex-col space-y-2"
-                                                                            disabled={hasVariables || hasHeaderVariable}
-                                                                        >
-                                                                            <div className="flex items-center space-x-3">
-                                                                                <RadioGroupItem value="named" id="master-named" />
-                                                                                <Label htmlFor="master-named" className="font-normal cursor-pointer">
-                                                                                    <strong>Named:</strong> Use descriptive names like {"{{customer_name}}"}. (Recommended)
-                                                                                </Label>
-                                                                            </div>
-                                                                            <div className="flex items-center space-x-3">
-                                                                                <RadioGroupItem value="positional" id="master-positional" />
-                                                                                <Label htmlFor="master-positional" className="font-normal cursor-pointer">
-                                                                                    <strong>Positional:</strong> Use numbers like {"{{1}}"}.
-                                                                                </Label>
-                                                                            </div>
-                                                                        </RadioGroup>
-                                                                    )}
-                                                                />
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        {(hasVariables || hasHeaderVariable) && (
-                                                            <TooltipContent
-                                                                className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
-                                                                side="bottom"
-                                                            >
-                                                                <p>Remove all variables to change the format</p>
-                                                            </TooltipContent>
-                                                        )}
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-
                                             <div className="space-y-2">
                                                 <Label>
                                                     Header <span className="text-gray-500">(Optional)</span>
@@ -896,8 +823,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 label="Text"
                                                                 currentType={watchedHeaderType}
                                                             />
-                                                            {/*
-                                                            TODO: Implement a file uploader and a file sender to send the uploaded file to WABA API.
                                                             <HeaderTypeButton
                                                                 field={field}
                                                                 value="image"
@@ -918,7 +843,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 icon={<File size={16} />}
                                                                 label="File"
                                                                 currentType={watchedHeaderType}
-                                                            />*/}
+                                                            />
                                                         </div>
                                                     )}
                                                 />
@@ -965,6 +890,44 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                     <div className="space-y-3">
                                                         <Label className="text-sm">Header Variable</Label>
                                                         <div className="flex flex-wrap items-center gap-3 mt-2">
+                                                            <TooltipProvider>
+                                                                <Tooltip delayDuration={250}>
+                                                                    <TooltipTrigger asChild>
+                                                                        <div>
+                                                                            <FormField
+                                                                                control={form.control}
+                                                                                name="header_variable_type"
+                                                                                render={({ field }) => (
+                                                                                    <RadioGroup
+                                                                                        onValueChange={field.onChange}
+                                                                                        value={field.value}
+                                                                                        className="flex items-center gap-4"
+                                                                                        disabled={hasHeaderVariable}
+                                                                                    >
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="positional" id="h-positional" />
+                                                                                            <Label htmlFor="h-positional" className="cursor-pointer font-normal">Positional</Label>
+                                                                                        </div>
+                                                                                        <div className="flex items-center space-x-2">
+                                                                                            <RadioGroupItem value="named" id="h-named" />
+                                                                                            <Label htmlFor="h-named" className="cursor-pointer font-normal">Named</Label>
+                                                                                        </div>
+                                                                                    </RadioGroup>
+                                                                                )}
+                                                                            />
+                                                                        </div>
+                                                                    </TooltipTrigger>
+                                                                    {hasHeaderVariable && (
+                                                                        <TooltipContent
+                                                                        className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                        side="bottom"
+                                                                        >
+                                                                        <p>Remove the variable to change type</p>
+                                                                        </TooltipContent>
+                                                                    )}
+                                                                </Tooltip>
+                                                            </TooltipProvider>
+
                                                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-center">
                                                                 {watchedHeaderVariableType === 'named' && (
                                                                     <Input
@@ -1009,14 +972,12 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                 <TooltipTrigger asChild>
                                                                                     <div className="inline-block w-full">
                                                                                         <Select
-                                                                                            value={headerDbSelectValue}
                                                                                             onValueChange={(value) => {
                                                                                                 const selectedVar = availableVariables.find(
                                                                                                     (v) => v.source_path === value,
                                                                                                 );
                                                                                                 if (selectedVar) {
                                                                                                     handleAddDbHeaderPlaceholder(selectedVar);
-                                                                                                    setHeaderDbSelectValue("");
                                                                                                 }
                                                                                             }}
                                                                                             disabled={hasHeaderVariable}
@@ -1095,8 +1056,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 )}
                                             </div>
 
-                                            <hr/>
-
                                             <FormField
                                                 control={form.control}
                                                 name="body_content"
@@ -1133,6 +1092,51 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
                                                 {/* Variable Type Selector + Add Placeholder */}
                                                 <div className="flex flex-wrap items-center gap-3 mt-2">
+                                                    <TooltipProvider>
+                                                        <Tooltip delayDuration={250}>
+                                                            <TooltipTrigger asChild>
+                                                                <div>
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name="variable_type"
+                                                                        render={({ field }) => (
+                                                                            <RadioGroup
+                                                                                onValueChange={field.onChange}
+                                                                                value={field.value}
+                                                                                className="flex items-center gap-4"
+                                                                                disabled={hasVariables}
+                                                                            >
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <RadioGroupItem value="positional" id="positional" />
+                                                                                    <Label
+                                                                                        htmlFor="positional"
+                                                                                        className="cursor-pointer font-normal"
+                                                                                    >
+                                                                                        Positional
+                                                                                    </Label>
+                                                                                </div>
+                                                                                <div className="flex items-center space-x-2">
+                                                                                    <RadioGroupItem value="named" id="named" />
+                                                                                    <Label htmlFor="named" className="cursor-pointer font-normal">
+                                                                                        Named
+                                                                                    </Label>
+                                                                                </div>
+                                                                            </RadioGroup>
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            {hasVariables && (
+                                                                <TooltipContent
+                                                                    className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                    side="bottom"
+                                                                >
+                                                                    <p>Remove all variables to change type</p>
+                                                                </TooltipContent>
+                                                            )}
+                                                        </Tooltip>
+                                                    </TooltipProvider>
+
                                                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-center">
                                                         {watchedVariableType === 'named' && (
                                                             <Input
@@ -1175,12 +1179,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         <TooltipTrigger asChild>
                                                                             <div className="inline-block w-full">
                                                                                 <Select
-                                                                                    value={dbSelectValue}
                                                                                     onValueChange={(value) => {
                                                                                         const selectedVar = availableVariables.find(v => v.source_path === value);
                                                                                         if (selectedVar) {
                                                                                             handleAddDbPlaceholder(selectedVar);
-                                                                                            setDbSelectValue("");
                                                                                         }
                                                                                     }}
                                                                                     disabled={watchedVariableType === 'positional' && hasVariables}
@@ -1263,8 +1265,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 )}
                                             </div>
 
-                                            <hr />
-
                                             <FormField
                                                 control={form.control}
                                                 name="footer_content"
@@ -1280,9 +1280,6 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                     </FormItem>
                                                 )}
                                             />
-
-                                            <hr />
-
                                             <ButtonsSection control={form.control} />
                                         </div>
                                     </CardContent>

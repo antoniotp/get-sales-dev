@@ -8,7 +8,6 @@ use App\Exceptions\MessageSendException;
 use App\Models\ChatbotChannel;
 use App\Models\Message;
 use App\Models\MessageTemplate;
-use App\Models\MessageTemplateCategory;
 use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -20,16 +19,43 @@ class WhatsAppService implements WhatsAppServiceInterface
     {
         try {
             $channel = $message->conversation->chatbotChannel;
+            $to = $message->conversation->contact_phone;
+            $content = $message->content;
 
             if ($channel->channel->slug !== 'whatsapp' || ! $channel->status) {
                 throw new MessageSendException('Invalid or inactive WhatsApp channel');
             }
 
-            if ($message->isFromTemplate()) {
-                return $this->processTemplateSend($message);
+            $credentials = $channel->credentials;
+            $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
+            $accessToken = $credentials['phone_number_access_token'];
+
+            Log::info('Sending WhatsApp message to '.$to);
+
+            // Send a message using the channel-specific credentials
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->post($apiUrl.'/messages', [
+                'messaging_product' => 'whatsapp',
+                'recipient_type' => 'individual',
+                'to' => $to,
+                'type' => 'text',
+                'text' => [
+                    'preview_url' => false,
+                    'body' => $content,
+                ],
+            ]);
+
+            if (! $response->successful()) {
+                throw new MessageSendException('Failed to send WhatsApp message: '.$response->body());
             }
 
-            return $this->processTextSend($message);
+            $responseBody = $response->json();
+            $externalId = $responseBody['messages'][0]['id'] ?? null;
+
+            Log::info('WhatsApp message sent successfully');
+
+            return new MessageSendResult($externalId);
 
         } catch (Exception $e) {
             Log::error('WhatsApp message sending failed for channel '.$channel->id.': '.$e->getMessage());
@@ -38,154 +64,6 @@ class WhatsAppService implements WhatsAppServiceInterface
         }
     }
 
-    private function processTextSend(Message $message): MessageSendResult
-    {
-        $channel = $message->conversation->chatbotChannel;
-        $to = $message->conversation->contact_phone;
-        $content = $message->content;
-
-        $credentials = $channel->credentials;
-        $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
-        $accessToken = $credentials['phone_number_access_token'];
-
-        Log::info('Sending WhatsApp message to '.$to);
-
-        // Send a message using the channel-specific credentials
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.$accessToken,
-        ])->post($apiUrl.'/messages', [
-            'messaging_product' => 'whatsapp',
-            'recipient_type' => 'individual',
-            'to' => $to,
-            'type' => 'text',
-            'text' => [
-                'preview_url' => false,
-                'body' => $content,
-            ],
-        ]);
-
-        if (! $response->successful()) {
-            throw new MessageSendException('Failed to send WhatsApp message: '.$response->body());
-        }
-
-        $responseBody = $response->json();
-        $externalId = $responseBody['messages'][0]['id'] ?? null;
-
-        Log::info('WhatsApp message sent successfully');
-
-        return new MessageSendResult($externalId);
-    }
-
-    private function processTemplateSend(Message $message): MessageSendResult
-    {
-        $conversation = $message->conversation;
-        $channel = $conversation->chatbotChannel;
-        $credentials = $channel->credentials;
-        $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'message');
-        $accessToken = $credentials['phone_number_access_token'];
-
-        $templateId = $message->metadata['template_id'];
-        $resolvedValues = $message->metadata['resolved_variables'];
-        $template = MessageTemplate::findOrFail($templateId);
-
-        $exampleData = $template->example_data ?? [];
-        $components = [];
-
-        // --- 1. Header Parameters ---
-        if (! empty($resolvedValues['header'])) {
-            $headerIsNamed = isset($exampleData['header_text_named_params']);
-            $headerType = $template->header_type === 'text' ? 'text' : $template->header_type;
-
-            $headerParam = [
-                'type' => $headerType,
-            ];
-
-            if ($headerType === 'text') {
-                $headerParam['text'] = (string) $resolvedValues['header']['value'];
-            } else {
-                $headerParam[$headerType] = [
-                    'id' => (string) $resolvedValues['header']['value'],
-                ];
-            }
-
-            if ($headerIsNamed) {
-                $headerParam['parameter_name'] = str_replace(['{{', '}}'], '', $resolvedValues['header']['placeholder']);
-            }
-
-            $components[] = [
-                'type' => 'header',
-                'parameters' => [$headerParam],
-            ];
-        }
-
-        // --- 2. Body Parameters ---
-        if (! empty($resolvedValues['body'])) {
-            $bodyIsNamed = isset($exampleData['body_text_named_params']);
-            $bodyParams = $resolvedValues['body'];
-
-            if ($bodyIsNamed) {
-                $parameters = array_map(function ($var) {
-                    return [
-                        'type' => 'text',
-                        'parameter_name' => str_replace(['{{', '}}'], '', $var['placeholder']),
-                        'text' => (string) $var['value'],
-                    ];
-                }, $bodyParams);
-            } else {
-                usort($bodyParams, function ($a, $b) {
-                    $numA = (int) str_replace(['{{', '}}'], '', $a['placeholder']);
-                    $numB = (int) str_replace(['{{', '}}'], '', $b['placeholder']);
-
-                    return $numA <=> $numB;
-                });
-
-                $parameters = array_map(function ($var) {
-                    return [
-                        'type' => 'text',
-                        'text' => (string) $var['value'],
-                    ];
-                }, $bodyParams);
-            }
-
-            $components[] = [
-                'type' => 'body',
-                'parameters' => $parameters,
-            ];
-        }
-
-        $payload = [
-            'messaging_product' => 'whatsapp',
-            'recipient_type' => 'individual',
-            'to' => $conversation->contact_phone,
-            'type' => 'template',
-            'template' => [
-                'name' => $template->name,
-                'language' => ['code' => $template->language],
-                'components' => $components,
-            ],
-        ];
-
-        Log::info(
-            "Sending WABA Template: {$template->name}. HeaderNamed: ".($headerIsNamed ?? 'N/A').', BodyNamed: '.($bodyIsNamed ? 'Yes' : 'No')
-        );
-
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer '.$accessToken,
-        ])->post($apiUrl.'/messages', $payload);
-
-        if (! $response->successful()) {
-            throw new MessageSendException('WABA Template Error: '.$response->body());
-        }
-
-        Log::info('WABA Response: '.$response->body());
-        $externalId = $response->json()['messages'][0]['id'] ?? null;
-
-        return new MessageSendResult($externalId);
-    }
-
-    /**
-     * Submits a template for review (Create or Update).
-     */
     public function submitTemplateForReview(MessageTemplate $template): array
     {
         try {
@@ -196,161 +74,116 @@ class WhatsAppService implements WhatsAppServiceInterface
             }
 
             $credentials = $channel->credentials;
+            $apiUrl = $this->buildApiUrl($channel->webhook_url, $credentials, 'template');
             $accessToken = $credentials['whatsapp_business_access_token'];
-            $isUpdate = !empty($template->external_template_id);
 
-            // --- Determine API URL ---
-            if ($isUpdate) {
-                // Update Endpoint: POST /<TEMPLATE_ID>
-                $apiUrl = rtrim($channel->webhook_url, '/') . '/' . $template->external_template_id;
-            } else {
-                // Creation Endpoint: POST /<WABA_ID>/message_templates
-                $wabaId = $credentials['whatsapp_business_account_id'];
-                $apiUrl = rtrim($channel->webhook_url, '/') . '/' . $wabaId . '/message_templates';
+            Log::info('Submitting WhatsApp template for review: '.$template->name);
+            Log::info('API URL: '.$apiUrl);
+
+            $components = [];
+            $exampleData = $template->example_data ?? []; // Get the full example_data
+
+            // --- HEADER Component ---
+            if ($template->header_type !== 'none' && ! empty($template->header_content)) {
+                $headerComponent = [
+                    'type' => 'HEADER',
+                    'format' => strtoupper($template->header_type),
+                ];
+
+                if ($template->header_type === 'text') {
+                    $headerComponent['text'] = $template->header_content;
+                }
+                // Add the example object for the header part if present in example_data
+                $headerExample = Arr::only($exampleData, ['header_text', 'header_text_named_params', 'header_handle']);
+                if (! empty($headerExample)) {
+                    $headerComponent['example'] = $headerExample;
+                }
+                $components[] = $headerComponent;
             }
 
-            // --- Build Components and Format ---
-            $components = $this->buildTemplateComponents($template);
-            $exampleData = $template->example_data ?? [];
-            $isNamed = isset($exampleData['header_text_named_params']) || isset($exampleData['body_text_named_params']);
-            $parameterFormat = $isNamed ? 'named' : 'positional';
-            $categoryName = strtoupper($template->category->slug ?? 'UTILITY');
+            // --- BODY Component (Required) ---
+            $bodyComponent = [
+                'type' => 'BODY',
+                'text' => $template->body_content,
+            ];
+            // Add the example object for the body part if present in example_data
+            $bodyExample = Arr::only($exampleData, ['body_text', 'body_text_named_params']);
+            if (! empty($bodyExample)) {
+                $bodyComponent['example'] = $bodyExample;
+            }
+            $components[] = $bodyComponent;
 
-            // --- Build Payload ---
-            if ($isUpdate) {
-                // According to Meta, for updates we only send components and category
-                $payload = [
-                    'components' => $components,
-                    'category' => $categoryName,
-                    'parameter_format' => $parameterFormat,
-                ];
-            } else {
-                $payload = [
-                    'name' => $template->name,
-                    'category' => $categoryName,
-                    'language' => $template->language,
-                    'parameter_format' => $parameterFormat,
-                    'components' => $components,
+            // --- FOOTER Component ---
+            if (! empty($template->footer_content)) {
+                $components[] = [
+                    'type' => 'FOOTER',
+                    'text' => $template->footer_content,
                 ];
             }
 
-            Log::info(($isUpdate ? 'Updating' : 'Creating') . ' WhatsApp template: ' . $template->name);
-            Log::info('API URL: ' . $apiUrl);
+            // --- BUTTONS Component ---
+            if (! empty($template->button_config)) {
+                $buttons = [];
+                foreach ($template->button_config as $button) {
+                    $buttonPayload = [
+                        'text' => $button['text'],
+                        'type' => $button['type'],
+                    ];
+
+                    if ($button['type'] === 'URL') {
+                        // Only add the 'url' field if the type is URL and it's not empty
+                        if (! empty($button['url'])) {
+                            $buttonPayload['url'] = $button['url'];
+                        }
+                    }
+
+                    $buttons[] = $buttonPayload;
+                }
+
+                if (! empty($buttons)) {
+                    $components[] = [
+                        'type' => 'BUTTONS',
+                        'buttons' => $buttons,
+                    ];
+                }
+            }
+
+            // Submit template to WhatsApp API
+            $categoryName = $template->category->name ?? 'UTILITY'; // Fallback for safety
+            $payload = [
+                'name' => $template->name,
+                'category' => strtoupper($categoryName), // Meta expects category in uppercase
+                'language' => $template->language,
+                'components' => $components,
+            ];
+            Log::info('Submitting template payload: '.json_encode($payload));
 
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
-            ])->post($apiUrl, $payload);
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->post($apiUrl.'/message_templates', $payload);
 
-            if (!$response->successful()) {
-                throw new Exception('Failed to ' . ($isUpdate ? 'update' : 'submit') . ' WhatsApp template: ' . $response->body());
+            if (! $response->successful()) {
+                throw new Exception('Failed to submit WhatsApp template: '.$response->body());
             }
 
+            Log::info('WhatsApp template submitted successfully');
+
+            // Update template with external ID if provided in response
             $responseData = $response->json();
-
-            // --- Handle Success and Database Update ---
-            if (!$isUpdate && isset($responseData['id'])) {
-                // New template created
-                $categorySlug = strtolower($responseData['category'] ?? '');
-                $category = MessageTemplateCategory::where('slug', $categorySlug)->first();
-
+            if (isset($responseData['id'])) {
                 $template->update([
                     'external_template_id' => $responseData['id'],
-                    'status' => isset($responseData['status']) ? strtolower($responseData['status']) : 'pending',
-                    'category_id' => $category?->id ?? $template->category_id,
                 ]);
-            } elseif ($isUpdate && isset($responseData['success']) && $responseData['success'] === true) {
-                // Template updated successfully.
-                // We set status to 'pending' because it usually goes back to review
-                $template->update(['status' => 'pending']);
             }
 
             // Update last activity
             $channel->update(['last_activity_at' => now()]);
 
             return $responseData;
-
         } catch (Exception $e) {
             Log::error('WhatsApp template submission failed for template '.$template->id.': '.$e->getMessage());
             throw $e;
         }
-    }
-
-    /**
-     * Internal helper to build a Meta-compliant components array.
-     */
-    private function buildTemplateComponents(MessageTemplate $template): array
-    {
-        $components = [];
-        $exampleData = $template->example_data ?? [];
-
-        // --- HEADER Component ---
-        if ($template->header_type !== 'none' && ! empty($template->header_content)) {
-            $headerComponent = [
-                'type' => 'HEADER',
-                'format' => strtoupper($template->header_type),
-            ];
-
-            if ($template->header_type === 'text') {
-                $headerComponent['text'] = $template->header_content;
-            }
-
-            // Add the example object for the header part if present in example_data
-            $headerExample = Arr::only($exampleData, ['header_text', 'header_text_named_params', 'header_handle']);
-            if (! empty($headerExample)) {
-                $headerComponent['example'] = $headerExample;
-            }
-            $components[] = $headerComponent;
-        }
-
-        // --- BODY Component (Required) ---
-        $bodyComponent = [
-            'type' => 'BODY',
-            'text' => $template->body_content,
-        ];
-
-        // Add the example object for the body part if present in example_data
-        $bodyExample = Arr::only($exampleData, ['body_text', 'body_text_named_params']);
-        if (! empty($bodyExample)) {
-            $bodyComponent['example'] = $bodyExample;
-        }
-        $components[] = $bodyComponent;
-
-        // --- FOOTER Component ---
-        if (! empty($template->footer_content)) {
-            $components[] = [
-                'type' => 'FOOTER',
-                'text' => $template->footer_content,
-            ];
-        }
-
-        // --- BUTTONS Component ---
-        if (! empty($template->button_config)) {
-            $buttons = [];
-            foreach ($template->button_config as $button) {
-                $buttonPayload = [
-                    'text' => $button['text'],
-                    'type' => $button['type'],
-                ];
-
-                if ($button['type'] === 'URL') {
-                    // Only add the 'url' field if the type is URL and it's not empty
-                    if (! empty($button['url'])) {
-                        $buttonPayload['url'] = $button['url'];
-                    }
-                }
-
-                $buttons[] = $buttonPayload;
-            }
-
-            if (! empty($buttons)) {
-                $components[] = [
-                    'type' => 'BUTTONS',
-                    'buttons' => $buttons,
-                ];
-            }
-        }
-
-        return $components;
     }
 
     public function getMediaInfo(string $mediaId, ChatbotChannel $channel): ?array

@@ -11,7 +11,6 @@ use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\Chatbot\ChatbotServiceInterface;
 use App\Contracts\Services\Contact\ContactServiceInterface;
 use App\Contracts\Services\Invitation\InvitationServiceInterface;
-use App\Contracts\Services\MessageTemplate\MessageTemplateResolverServiceInterface;
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
 use App\Contracts\Services\MessageTemplate\TemplateVariableServiceInterface;
 use App\Contracts\Services\Notification\PushSubscriptionServiceInterface;
@@ -35,7 +34,6 @@ use App\Services\Chat\MessageService;
 use App\Services\Chatbot\ChatbotService;
 use App\Services\Contact\ContactService;
 use App\Services\Invitation\InvitationService;
-use App\Services\MessageTemplate\MessageTemplateResolverService;
 use App\Services\MessageTemplate\MessageTemplateService;
 use App\Services\MessageTemplate\TemplateVariableService;
 use App\Services\Notification\PushSubscriptionService;
@@ -102,7 +100,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MessageTemplateServiceInterface::class, MessageTemplateService::class);
         $this->app->bind(WabaLanguageServiceInterface::class, WabaLanguageService::class);
         $this->app->bind(TemplateVariableServiceInterface::class, TemplateVariableService::class);
-        $this->app->bind(MessageTemplateResolverServiceInterface::class, MessageTemplateResolverService::class);
     }
 
     /**

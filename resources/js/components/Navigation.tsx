@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { Link, usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
 import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from '@/components/general/LanguageSwitcher';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,6 +28,7 @@ const Navigation = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+            <LanguageSwitcher />
             {auth.user ? (
                 <Link
                     href={route('dashboard')}

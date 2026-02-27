@@ -73,15 +73,38 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
     // Resolve Preview when selection or manual values change
     useEffect(() => {
         if (selectedTemplate) {
+            const tempValues = {
+                header: { ...manualValues.header },
+                body: { ...manualValues.body }
+            };
+
+            manualVariables.header.forEach((v) => {
+                const key = v.placeholder.replace(/[{}]/g, '');
+                if (!tempValues.header[key]) {
+                    const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
+                    tempValues.header[key] = `[${cleanLabel}]`; // Ej: [Header Image ID]
+                }
+            });
+
+            manualVariables.body.forEach((v) => {
+                const key = v.placeholder.replace(/[{}]/g, '');
+                if (!tempValues.body[key]) {
+                    const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
+                    tempValues.body[key] = `[${cleanLabel}]`; // Ej: [Name]
+                }
+            });
+
             const timer = setTimeout(() => {
-                axios.post(route('message-templates.resolve-preview', { template: selectedTemplate.id }), {
-                    contact_id: contactId,
-                    manual_values: manualValues
-                }).then(res => setPreview(res.data.rendered));
+                axios
+                    .post(route('message-templates.resolve-preview', { template: selectedTemplate.id }), {
+                        contact_id: contactId,
+                        manual_values: tempValues,
+                    })
+                    .then((res) => setPreview(res.data.rendered));
             }, 500); // Debounce to avoid too many requests
             return () => clearTimeout(timer);
         }
-    }, [selectedTemplate, manualValues, contactId]);
+    }, [selectedTemplate, manualValues, contactId, manualVariables]);
 
     const handleSend = async () => {
         if (!selectedTemplate) return;

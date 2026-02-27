@@ -4,6 +4,7 @@ import { Link, usePage } from '@inertiajs/react';
 import AppLogoIcon from './app-logo-icon';
 import { CustomSidebarTrigger } from '@/components/custom-sidebar-trigger';
 import { NotificationBell } from '@/components/general/NotificationBell';
+import { LanguageSwitcher } from '@/components/general/LanguageSwitcher';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
 
@@ -23,6 +24,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
             <div className="flex items-center ml-auto">
+                <LanguageSwitcher />
                 <NotificationBell />
             </div>
         </header>

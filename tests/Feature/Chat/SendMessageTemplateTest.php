@@ -95,7 +95,11 @@ class SendMessageTemplateTest extends TestCase
 
         $payload = [
             'template_id' => $this->template->id,
-            'manual_values' => ['name' => 'John Doe'],
+            'manual_values' => [
+                'body' => [
+                    'name' => 'John Doe',
+                ],
+            ],
         ];
 
         $response = $this->post(route('chats.messages.send-template', $this->conversation->id), $payload);
@@ -196,11 +200,15 @@ class SendMessageTemplateTest extends TestCase
         $payload = [
             'template_id' => $template->id,
             'manual_values' => [
-                '1' => '2871834006348767', // Image ID in the header
-                'number_of_guests' => '4',
-                'day' => 'Saturday',
-                'date' => 'August 30th, 2025',
-                'time' => '7:30 pm',
+                'header' => [
+                    '1' => '2871834006348767', // Image ID in the header
+                ],
+                'body' => [
+                    'number_of_guests' => '4',
+                    'day' => 'Saturday',
+                    'date' => 'August 30th, 2025',
+                    'time' => '7:30 pm',
+                ],
             ],
         ];
 

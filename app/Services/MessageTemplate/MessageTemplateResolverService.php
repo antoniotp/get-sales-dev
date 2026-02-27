@@ -32,7 +32,7 @@ class MessageTemplateResolverService implements MessageTemplateResolverServiceIn
         if ($headerMapping) {
             $resolved['header'] = [
                 'placeholder' => $headerMapping['placeholder'],
-                'value' => $this->resolveSingleValue($headerMapping, $contact, $manualValues, $user),
+                'value' => $this->resolveSingleValue($headerMapping, $contact, $manualValues, $user, 'header'),
             ];
         }
 
@@ -40,7 +40,7 @@ class MessageTemplateResolverService implements MessageTemplateResolverServiceIn
         foreach ($bodyMappings as $mapping) {
             $resolved['body'][] = [
                 'placeholder' => $mapping['placeholder'],
-                'value' => $this->resolveSingleValue($mapping, $contact, $manualValues, $user),
+                'value' => $this->resolveSingleValue($mapping, $contact, $manualValues, $user, 'body'),
             ];
         }
 
@@ -81,8 +81,10 @@ class MessageTemplateResolverService implements MessageTemplateResolverServiceIn
 
     /**
      * Resolves a single mapping entry into its final string value.
+     *
+     * @param  string  $context  parameter to handle nested manual values ['header' => [], 'body' => []].
      */
-    private function resolveSingleValue(array $mapping, Contact $contact, array $manualValues, ?User $user): string
+    private function resolveSingleValue(array $mapping, Contact $contact, array $manualValues, ?User $user, string $context): string
     {
         $source = $mapping['source'];
         $placeholder = $mapping['placeholder'];
@@ -93,7 +95,7 @@ class MessageTemplateResolverService implements MessageTemplateResolverServiceIn
             // Remove brackets for an easier lookup if the user passed them in keys
             $cleanPlaceholder = str_replace(['{{', '}}'], '', $placeholder);
 
-            return (string) Arr::get($manualValues, $cleanPlaceholder, $fallback);
+            return (string) Arr::get($manualValues, "{$context}.{$cleanPlaceholder}", $fallback);
         }
 
         // Case B: Database source

@@ -240,4 +240,61 @@ class SendMessageTemplateTest extends TestCase
                 $body['parameters'][0]['parameter_name'] === 'number_of_guests';
         });
     }
+
+    #[Test]
+    public function it_sends_the_correct_payload_for_positional_templates()
+    {
+        // 1. Setup: Create a positional template (based on the actual structure of Meta)
+        $template = MessageTemplate::factory()->create([
+            'chatbot_channel_id' => $this->conversation->chatbot_channel_id,
+            'name' => 'positional_template_test',
+            'language' => 'en_US',
+            'header_type' => 'text',
+            'status' => 'approved',
+            'example_data' => [
+                'header_text' => ['Cris'],
+                'body_text' => [['JoboGroup', 'Erika']],
+            ],
+            'variable_mappings' => [
+                'header' => ['placeholder' => '{{1}}', 'source' => 'manual', 'label' => '1'],
+                'body' => [
+                    ['placeholder' => '{{1}}', 'source' => 'manual', 'label' => '1'],
+                    ['placeholder' => '{{2}}', 'source' => 'manual', 'label' => '2'],
+                ],
+            ],
+        ]);
+
+        // 2. Fake API
+        Http::fake([
+            '*/messages' => Http::response(['messages' => [['id' => 'wamid.123']]], 200),
+        ]);
+
+        // 3. Action: Send with manual values (unsorted to test usort)
+        $payload = [
+            'template_id' => $template->id,
+            'manual_values' => [
+                'header' => ['1' => 'Cris Header'],
+                'body' => [
+                    '2' => 'Erika Body', // We send the 2 before the 1
+                    '1' => 'JoboGroup Body',
+                ],
+            ],
+        ];
+
+        $this->post(route('chats.messages.send-template', $this->conversation->id), $payload);
+
+        // 4. Assert: Verify the exact payload for positional
+        Http::assertSent(function ($request) {
+            $data = $request->data();
+            $bodyParams = $data['template']['components'][1]['parameters'];
+
+            return $data['type'] === 'template' &&
+                // We verify that parameter_name does NOT exist
+                ! isset($bodyParams[0]['parameter_name']) &&
+                ! isset($bodyParams[1]['parameter_name']) &&
+                // We verified the ORDER (usort working)
+                $bodyParams[0]['text'] === 'JoboGroup Body' &&
+                $bodyParams[1]['text'] === 'Erika Body';
+        });
+    }
 }

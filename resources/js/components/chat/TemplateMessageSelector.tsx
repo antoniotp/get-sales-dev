@@ -34,7 +34,10 @@ interface Props {
 export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, chatbotChannelId, contactId, onSent, conversationId }: Props) {
     const [templates, setTemplates] = useState<Template[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
-    const [manualValues, setManualValues] = useState<Record<string, string>>({});
+    const [manualValues, setManualValues] = useState<{
+        header: Record<string, string>;
+        body: Record<string, string>;
+    }>({header: {}, body: {}});
     const [preview, setPreview] = useState<{ header: string; body: string; footer: string } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
@@ -55,26 +58,53 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
 
     // Identify Manual Variables
     const manualVariables = useMemo(() => {
-        if (!selectedTemplate?.variable_mappings) return [];
-        const all = [...(selectedTemplate.variable_mappings.body || [])];
-        if (selectedTemplate.variable_mappings.header) {
-            all.push(selectedTemplate.variable_mappings.header);
-        }
-        return all.filter(m => m.source === 'manual');
+        if (!selectedTemplate?.variable_mappings) return { header: [], body: []};
+
+        const header = selectedTemplate.variable_mappings.header?.source === 'manual'
+            ? [selectedTemplate.variable_mappings.header]
+            : [];
+
+        const body = (selectedTemplate.variable_mappings.body || [])
+            .filter(m => m.source === 'manual');
+
+        return { header, body };
     }, [selectedTemplate]);
 
     // Resolve Preview when selection or manual values change
     useEffect(() => {
         if (selectedTemplate) {
+            const tempValues = {
+                header: { ...manualValues.header },
+                body: { ...manualValues.body }
+            };
+
+            manualVariables.header.forEach((v) => {
+                const key = v.placeholder.replace(/[{}]/g, '');
+                if (!tempValues.header[key]) {
+                    const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
+                    tempValues.header[key] = `[${cleanLabel}]`; // Ej: [Header Image ID]
+                }
+            });
+
+            manualVariables.body.forEach((v) => {
+                const key = v.placeholder.replace(/[{}]/g, '');
+                if (!tempValues.body[key]) {
+                    const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
+                    tempValues.body[key] = `[${cleanLabel}]`; // Ej: [Name]
+                }
+            });
+
             const timer = setTimeout(() => {
-                axios.post(route('message-templates.resolve-preview', { template: selectedTemplate.id }), {
-                    contact_id: contactId,
-                    manual_values: manualValues
-                }).then(res => setPreview(res.data.rendered));
+                axios
+                    .post(route('message-templates.resolve-preview', { template: selectedTemplate.id }), {
+                        contact_id: contactId,
+                        manual_values: tempValues,
+                    })
+                    .then((res) => setPreview(res.data.rendered));
             }, 500); // Debounce to avoid too many requests
             return () => clearTimeout(timer);
         }
-    }, [selectedTemplate, manualValues, contactId]);
+    }, [selectedTemplate, manualValues, contactId, manualVariables]);
 
     const handleSend = async () => {
         if (!selectedTemplate) return;
@@ -104,7 +134,14 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
                     {/* Template Selection */}
                     <div className="space-y-2">
                         <Label>Select a Template</Label>
-                        <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                        <Select
+                            value={selectedTemplateId}
+                            onValueChange={val => {
+                                setSelectedTemplateId(val);
+                                setManualValues({ header: {}, body: {} });
+                                setPreview(null);
+                            }}
+                        >
                             <SelectTrigger>
                                 <SelectValue placeholder={isLoading ? 'Loading...' : 'Choose template'} />
                             </SelectTrigger>
@@ -119,34 +156,63 @@ export default function TemplateMessageSelector({ isOpen, onClose, chatbotId, ch
                     </div>
 
                     {/* Manual Inputs */}
-                    {manualVariables.length > 0 && (
-                        <div className="space-y-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
-                            <p className="text-sm font-semibold mb-2">Required information:</p>
-                            {manualVariables.map(v => {
-                                // Remove "Manual: " text if exists
-                                const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
-                                return (
-                                    <div key={v.placeholder} className="flex items-center gap-4">
-                                        <Label className="text-sm min-w-[120px] text-right">{cleanLabel}</Label>
-                                        <Input
-                                            placeholder={`Value for ${v.placeholder}`}
-                                            className="flex-1"
-                                            onChange={(e) => setManualValues(prev => ({
+                    <div className="space-y-3 p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                        <p className="text-sm font-semibold mb-2">Required information:</p>
+                        {/* Header Manual Vars */}
+                        {manualVariables.header.map((v) => {
+                            // Remove "Manual: " text if exists
+                            const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
+                            return (
+                                <div key={`header-${v.placeholder}`} className="flex items-center gap-4">
+                                    <Label className="min-w-[120px] text-right text-sm">Header: {cleanLabel}</Label>
+                                    <Input
+                                        placeholder={`Value for ${v.placeholder}`}
+                                        className="flex-1"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setManualValues((prev) => ({
                                                 ...prev,
-                                                [v.placeholder.replace(/[{}]/g, '')]: e.target.value
-                                            }))}
-                                        />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                                header: {
+                                                    ...prev.header,
+                                                    [v.placeholder.replace(/[{}]/g, '')]: val,
+                                                },
+                                            }));
+                                        }}
+                                    />
+                                </div>
+                            );
+                        })}
+
+                        {/* Body Manual Vars */}
+                        {manualVariables.body.map(v => {
+                            const cleanLabel = v.label.replace(/^Manual:\s*/i, '');
+                            return (
+                                <div key={`body-${v.placeholder}`} className="flex items-center gap-4">
+                                    <Label className="text-sm min-w-[120px] text-right">Body: {cleanLabel}</Label>
+                                    <Input
+                                        placeholder={`Value for ${v.placeholder}`}
+                                        className="flex-1"
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setManualValues(prev => ({
+                                                ...prev,
+                                                body: {
+                                                    ...prev.body,
+                                                    [v.placeholder.replace(/[{}]/g, '')]: val
+                                                }
+                                            }));
+                                        }}
+                                    />
+                                </div>
+                            )
+                        })}
+                    </div>
 
                     {/* Preview Area */}
                     {preview && (
                         <div className="space-y-2">
                             <Label>Preview</Label>
-                            <div className="w-full bg-[#E5DDD5] p-6 flex justify-end rounded-lg">
+                            <div className="flex w-full justify-end rounded-lg bg-[#E5DDD5] p-6">
                                 <WhatsAppBubble>
                                     <PreviewHeader type={selectedTemplate?.header_type || 'text'} content={preview.header} />
                                     <PreviewBody bodyContent={preview.body} />

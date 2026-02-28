@@ -74,7 +74,11 @@ class MessageTemplateResolverServiceTest extends TestCase
             ],
         ]);
 
-        $manualValues = ['manual_promo' => 'OFF50'];
+        $manualValues = [
+            'body' => [
+                'manual_promo' => 'OFF50',
+            ],
+        ];
 
         // Act
         $resolved = $this->service->resolveValues($template, $this->contact, $manualValues);

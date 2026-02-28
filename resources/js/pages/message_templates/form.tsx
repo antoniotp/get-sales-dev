@@ -376,17 +376,16 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                     form.setValue('header_variable_type', 'named', { shouldValidate: true });
                 } else {
                     // 3. If none of the above, it is a manual placeholder
-                    // And the type must be 'named' if it is not positional
+                    newHeaderVariableMapping = {
+                        placeholder: placeholder,
+                        source: 'manual',
+                        label: `${placeholderName}`,
+                        fallback_value: null,
+                    };
+                    // the type must be 'named' if it is not positional
                     if (!/^\d+$/.test(placeholderName)) { // If it is not a number (i.e., it is not positional)
-                        newHeaderVariableMapping = {
-                            placeholder: placeholder,
-                            source: 'manual',
-                            label: `Manual: ${placeholderName}`,
-                            fallback_value: null,
-                        };
                         form.setValue('header_variable_type', 'named', { shouldValidate: true });
                     } else {
-                        // It is a positional placeholder, it does not need mapping in header_variable_mapping
                         form.setValue('header_variable_type', 'positional', { shouldValidate: true });
                     }
                 }
@@ -607,40 +606,37 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
             const placeholderName = placeholder.replace(/[{}]/g, '');
 
-            // Sync mappings only if type is 'named'
-            if (detectedType === 'named') {
-                let mappingFound = false;
+            let mappingFound = false;
 
-                // Re-use existing mapping if exists
-                const existingMapping = currentMappings.find(m => m.placeholder === placeholder);
-                if (existingMapping) {
-                    newMappings.push(existingMapping);
-                    mappingFound = true;
-                }
+            // Re-use existing mapping if exists
+            const existingMapping = currentMappings.find(m => m.placeholder === placeholder);
+            if (existingMapping) {
+                newMappings.push(existingMapping);
+                mappingFound = true;
+            }
 
-                // if there is no mapping, detect if this is a DB variable.
-                if (!mappingFound) {
-                    const dbVar = availableVariables.find(v => v.placeholder_name === placeholderName);
-                    if (dbVar) {
-                        newMappings.push({
-                            placeholder: placeholder,
-                            source: dbVar.source_path,
-                            label: dbVar.label,
-                            fallback_value: '',
-                        });
-                        mappingFound = true;
-                    }
-                }
-
-                // if it is not one of the above, take it as a manual placeholder
-                if (!mappingFound) {
+            // if there is no mapping, detect if this is a DB variable only if it is not a number.
+            if (!mappingFound && !/^\d+$/.test(placeholderName)) {
+                const dbVar = availableVariables.find(v => v.placeholder_name === placeholderName);
+                if (dbVar) {
                     newMappings.push({
                         placeholder: placeholder,
-                        source: 'manual',
-                        label: `Manual: ${placeholderName}`,
-                        fallback_value: null,
+                        source: dbVar.source_path,
+                        label: dbVar.label,
+                        fallback_value: '',
                     });
+                    mappingFound = true;
                 }
+            }
+
+            // if it is not one of the above, take it as a manual placeholder, including positional placeholders.
+            if (!mappingFound) {
+                newMappings.push({
+                    placeholder: placeholder,
+                    source: 'manual',
+                    label: `${placeholderName}`,
+                    fallback_value: null,
+                });
             }
         });
 

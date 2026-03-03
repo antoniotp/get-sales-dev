@@ -544,10 +544,13 @@ export default function Chat(
                             }`}
                         />
                     )}
-                    <span className="mt-1 text-xs flex items-center justify-end text-[#9CA3AF]">
-                        <span className="mr-2">{format(new Date(message.timestamp), 'dd/MM/yyyy HH:mm')}</span>
-                        <MessageStatus message={message} />
-                    </span>
+                    <div className="mt-1 flex flex-col items-end">
+                        <div className="flex items-center text-xs text-[#9CA3AF]">
+                            <span className="mr-2">{format(new Date(message.timestamp), 'dd/MM/yyyy HH:mm')}</span>
+                            <MessageStatus message={message} onlyError={false} />
+                        </div>
+                        <MessageStatus message={message} onlyError={true} />
+                    </div>
                 </div>
             </div>
         ))

@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'message' => [
+        'sent' => [
+            'errors' => [
+                '131042' => 'El mensaje no se pudo enviar debido a restricciones en la cuenta o saldo insuficiente. Por favor, verifica tu Meta Business Suite  (https://business.facebook.com/wa/manage/home/).',
+                'failure_ack' => 'Se recibió un ACK de fallo al Enviar.',
+            ],
+        ],
+    ],
     'lang_codes' => [
         'af' => 'Afrikaans',
         'sq' => 'Albanés',

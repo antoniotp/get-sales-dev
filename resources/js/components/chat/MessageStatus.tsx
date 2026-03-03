@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import axios from 'axios';
 import { useRoute } from 'ziggy-js';
 import { useState } from 'react';
+import LinkifyText from '@/components/chat/LinkifyText';
 
 interface MessageStatusProps {
     message: Message;
@@ -38,9 +39,10 @@ const MessageStatus = ({ message, onlyError }: MessageStatusProps) => {
                     <AlertCircle className="h-3.5 w-3.5" />
                     <span className="text-[10px] font-bold uppercase tracking-wider">Failed to send</span>
                 </div>
-                <p className="text-xs font-medium leading-tight text-white/90 max-w-[100%]">
-                    {message.error_message || 'Unknown error occurred'}
-                </p>
+                <LinkifyText
+                    text={message.error_message || 'Unknown error occurred'}
+                    className="text-xs font-medium leading-tight text-white/90 max-w-[100%] break-words [&_a]:text-blue-300 [&_a]:underline">
+                </LinkifyText>
                 <button
                     onClick={() => handleRetry(message.id)}
                     disabled={isRetrying}

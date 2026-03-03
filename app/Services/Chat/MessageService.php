@@ -184,10 +184,15 @@ class MessageService implements MessageServiceInterface
                     $errorMessage = $statusDetails['error_message'] ?? null;
                     $errorDetails = $statusDetails['error_details'] ?? null;
 
-                    $description = $errorDetails ?: ($errorMessage ?: 'Received failure ACK from channel.');
+                    $translationKey = "waba.message.sent.errors.{$errorCode}";
+                    $customMessage = $errorCode ? __($translationKey) : null;
+
+                    $description = ($customMessage !== $translationKey)
+                        ? $customMessage
+                        : ($errorDetails ?: ($errorMessage ?: __('waba.message.sent.errors.failure_ack')));
 
                     $message->error_message = $errorCode
-                        ? "Error {$errorCode}: {$description}"
+                        ? "{$description} | Code: {$errorCode}"
                         : $description;
 
                     $updated = true;

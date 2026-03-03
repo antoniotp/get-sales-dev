@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'message' => [
+        'sent' => [
+            'errors' => [
+                '131042' => 'The message could not be sent due to account restrictions or insufficient balance. Please check your Meta Business Suite (https://business.facebook.com/wa/manage/home/).',
+                'failure_ack' => 'Received failure ACK from channel.',
+            ],
+        ],
+    ],
     'lang_codes' => [
         'af' => 'Afrikaans',
         'sq' => 'Albanian',

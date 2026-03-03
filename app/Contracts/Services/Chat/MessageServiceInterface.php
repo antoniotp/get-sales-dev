@@ -59,7 +59,8 @@ interface MessageServiceInterface
 
     public function updateStatusFromWebhook(
         string $externalMessageId,
-        int $ackStatus
+        int $ackStatus,
+        array $statusDetails = [],
     ): ?Message;
 
     /**

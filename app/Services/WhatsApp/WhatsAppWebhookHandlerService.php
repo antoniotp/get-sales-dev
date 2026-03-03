@@ -198,10 +198,21 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
             'sent' => 1,
             'delivered' => 2,
             'read' => 3,
+            'failed' => -1,
             default => 0,
         };
 
-        if ($ackStatus > 0) {
+        if ($ackStatus === -1) {
+            $this->messageService->updateStatusFromWebhook(
+                $externalMessageId,
+                $ackStatus,
+                [
+                    'error_code' => $status['errors'][0]['code'] ?? null,
+                    'error_message' => $status['errors'][0]['message'] ?? null,
+                    'error_details' => $status['errors'][0]['error_data']['details'] ?? null,
+                ]
+            );
+        } elseif ($ackStatus > 0) {
             Log::info('Processing status update from WABA webhook', [
                 'external_id' => $externalMessageId,
                 'status' => $statusString,

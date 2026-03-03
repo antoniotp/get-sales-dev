@@ -90,6 +90,8 @@ class WhatsAppService implements WhatsAppServiceInterface
 
         $exampleData = $template->example_data ?? [];
         $components = [];
+        $headerIsNamed = false;
+        $bodyIsNamed = false;
 
         // --- 1. Header Parameters ---
         if (! empty($resolvedValues['header'])) {
@@ -166,7 +168,7 @@ class WhatsAppService implements WhatsAppServiceInterface
         ];
 
         Log::info(
-            "Sending WABA Template: {$template->name}. HeaderNamed: ".($headerIsNamed ?? 'N/A').', BodyNamed: '.($bodyIsNamed ? 'Yes' : 'No')
+            "Sending WABA Template: {$template->name}. HeaderNamed: ".($headerIsNamed ? 'Yes' : 'No').', BodyNamed: '.($bodyIsNamed ? 'Yes' : 'No')
         );
 
         $response = Http::withHeaders([
@@ -197,16 +199,16 @@ class WhatsAppService implements WhatsAppServiceInterface
 
             $credentials = $channel->credentials;
             $accessToken = $credentials['whatsapp_business_access_token'];
-            $isUpdate = !empty($template->external_template_id);
+            $isUpdate = ! empty($template->external_template_id);
 
             // --- Determine API URL ---
             if ($isUpdate) {
                 // Update Endpoint: POST /<TEMPLATE_ID>
-                $apiUrl = rtrim($channel->webhook_url, '/') . '/' . $template->external_template_id;
+                $apiUrl = rtrim($channel->webhook_url, '/').'/'.$template->external_template_id;
             } else {
                 // Creation Endpoint: POST /<WABA_ID>/message_templates
                 $wabaId = $credentials['whatsapp_business_account_id'];
-                $apiUrl = rtrim($channel->webhook_url, '/') . '/' . $wabaId . '/message_templates';
+                $apiUrl = rtrim($channel->webhook_url, '/').'/'.$wabaId.'/message_templates';
             }
 
             // --- Build Components and Format ---
@@ -234,21 +236,21 @@ class WhatsAppService implements WhatsAppServiceInterface
                 ];
             }
 
-            Log::info(($isUpdate ? 'Updating' : 'Creating') . ' WhatsApp template: ' . $template->name);
-            Log::info('API URL: ' . $apiUrl);
+            Log::info(($isUpdate ? 'Updating' : 'Creating').' WhatsApp template: '.$template->name);
+            Log::info('API URL: '.$apiUrl);
 
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
+                'Authorization' => 'Bearer '.$accessToken,
             ])->post($apiUrl, $payload);
 
-            if (!$response->successful()) {
-                throw new Exception('Failed to ' . ($isUpdate ? 'update' : 'submit') . ' WhatsApp template: ' . $response->body());
+            if (! $response->successful()) {
+                throw new Exception('Failed to '.($isUpdate ? 'update' : 'submit').' WhatsApp template: '.$response->body());
             }
 
             $responseData = $response->json();
 
             // --- Handle Success and Database Update ---
-            if (!$isUpdate && isset($responseData['id'])) {
+            if (! $isUpdate && isset($responseData['id'])) {
                 // New template created
                 $categorySlug = strtolower($responseData['category'] ?? '');
                 $category = MessageTemplateCategory::where('slug', $categorySlug)->first();

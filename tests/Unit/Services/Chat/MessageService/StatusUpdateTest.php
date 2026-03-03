@@ -194,6 +194,8 @@ class StatusUpdateTest extends TestCase
         // The current implementation in MessageService does not handle ack -1.
         // This test serves as a reminder to implement failure ACK handling if needed in the future.
         $this->assertNotNull($updatedMessage);
-        Event::assertNotDispatched(NewWhatsAppMessage::class);
+        Event::assertDispatched(NewWhatsAppMessage::class, function (NewWhatsAppMessage $event) use ($message) {
+            return $event->message['id'] === $message->id;
+        });
     }
 }

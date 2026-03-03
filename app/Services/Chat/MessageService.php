@@ -145,7 +145,7 @@ class MessageService implements MessageServiceInterface
         ];
     }
 
-    public function updateStatusFromWebhook(string $externalMessageId, int $ackStatus): ?Message
+    public function updateStatusFromWebhook(string $externalMessageId, int $ackStatus, array $statusDetails = []): ?Message
     {
         $message = Message::where('external_message_id', $externalMessageId)->first();
 
@@ -176,13 +176,28 @@ class MessageService implements MessageServiceInterface
                 }
                 break;
 
-                // case -1:
-                //     if (is_null($message->failed_at)) {
-                //         $message->failed_at = now();
-                //         $message->error_message = 'Received failure ACK from channel.';
-                //         $updated = true;
-                //     }
-                //     break;
+            case -1: // FAILED
+                if (is_null($message->failed_at)) {
+                    $message->failed_at = now();
+
+                    $errorCode = $statusDetails['error_code'] ?? null;
+                    $errorMessage = $statusDetails['error_message'] ?? null;
+                    $errorDetails = $statusDetails['error_details'] ?? null;
+
+                    $translationKey = "waba.message.sent.errors.{$errorCode}";
+                    $customMessage = $errorCode ? __($translationKey) : null;
+
+                    $description = ($customMessage !== $translationKey)
+                        ? $customMessage
+                        : ($errorDetails ?: ($errorMessage ?: __('waba.message.sent.errors.failure_ack')));
+
+                    $message->error_message = $errorCode
+                        ? "{$description} | Code: {$errorCode}"
+                        : $description;
+
+                    $updated = true;
+                }
+                break;
         }
 
         if ($updated) {

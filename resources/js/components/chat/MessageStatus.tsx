@@ -4,8 +4,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import axios from 'axios';
 import { useRoute } from 'ziggy-js';
 import { useState } from 'react';
-import LinkifyText from '@/components/chat/LinkifyText';
 import { useTranslation } from 'react-i18next';
+import LinkifyText from '@/components/chat/LinkifyText';
 
 interface MessageStatusProps {
     message: Message;
@@ -39,10 +39,12 @@ const MessageStatus = ({ message, onlyError }: MessageStatusProps) => {
             <div className="mt-2 flex flex-col items-end gap-1.5 rounded-lg bg-red-900/20 border border-red-400/30 p-2 text-right animate-in fade-in slide-in-from-top-1">
                 <div className="flex items-center gap-1.5 text-red-200">
                     <AlertCircle className="h-3.5 w-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Failed to send</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                        {t('message.failedToSend')}
+                    </span>
                 </div>
                 <LinkifyText
-                    text={message.error_message || 'Unknown error occurred'}
+                    text={message.error_message || t('message.unknownError')}
                     className="text-xs font-medium leading-tight text-white/90 max-w-[100%] break-words [&_a]:text-blue-300 [&_a]:underline">
                 </LinkifyText>
                 <button
@@ -51,7 +53,9 @@ const MessageStatus = ({ message, onlyError }: MessageStatusProps) => {
                     className="mt-1 flex items-center gap-1 rounded bg-white px-2.5 py-1 text-[10px] font-bold text-red-600 hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
                     <Clock className="h-3 w-3" />
-                    {isRetrying ? 'RETRYING...' : 'RETRY NOW'}
+                    {isRetrying
+                        ? t('message.retrying')
+                        : t('message.retryNow')}
                 </button>
             </div>
         );
@@ -63,35 +67,21 @@ const MessageStatus = ({ message, onlyError }: MessageStatusProps) => {
     let statusText: string;
 
     if (message.failed_at) {
-        statusIcon = (
-            <button
-                onClick={() => handleRetry(message.id)}
-                disabled={isRetrying}
-                className="flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
-                aria-label={t('message.retry_aria')}
-            >
-                <XCircle className="h-5 w-5 text-red-500" />
-                <span className="text-red-500 text-sm">
-                    {t('message.retry')}
-                </span>
-            </button>
-        );
-        statusText = t('message.failed', {
-            error: message.error_message || t('message.unknown_error'),
-        });
+        statusIcon = <XCircle className="h-5 w-5 text-red-400" />;
+        statusText = t('message.errorInDelivery');
     } else if (message.read_at) {
         statusIcon = <CheckCheck className="h-5 w-5 text-blue-800" />;
-        statusText = t('message.read_at', {
+        statusText = t('message.readAt', {
             date: new Date(message.read_at).toLocaleString(),
         });
     } else if (message.delivered_at) {
         statusIcon = <CheckCheck className="h-5 w-5 text-gray-100" />;
-        statusText = t('message.delivered_at', {
+        statusText = t('message.deliveredAt', {
             date: new Date(message.delivered_at).toLocaleString(),
         });
     } else if (message.sent_at) {
         statusIcon = <Check className="h-5 w-5 text-gray-100" />;
-        statusText = t('message.sent_at', {
+        statusText = t('message.sentAt', {
             date: new Date(message.sent_at).toLocaleString(),
         });
     } else {

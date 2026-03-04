@@ -237,7 +237,6 @@ export default function AppointmentsIndex(){
                                         <CalendarToolbar
                                             {...toolbarProps}
                                             onCreate={handleCreate}
-                                            createLabel={t('actions.create')}
                                         />
                                     ),
                                 }}

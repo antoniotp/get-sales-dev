@@ -15,8 +15,6 @@ import esContact from './locales/es/contact.json';
 import enContact from './locales/en/contact.json';
 import esOrganization from './locales/es/organization.json';
 import enOrganization from './locales/en/organization.json';
-import esMessageTemplates from './locales/es/message_templates.json';
-import enMessageTemplates from './locales/en/message_templates.json';
 import esAppointments from './locales/es/appointments.json';
 import enAppointments from './locales/en/appointments.json';
 import esChat from './locales/es/chat.json';
@@ -44,7 +42,6 @@ i18n
                 chatbot: esChatbot,
                 contact: esContact,
                 organization: esOrganization,
-                messageTemplates: esMessageTemplates,
                 appointments: esAppointments,
                 chat: esChat,
                 general: esGeneral,
@@ -61,7 +58,6 @@ i18n
                 chatbot: enChatbot,
                 contact: enContact,
                 organization: enOrganization,
-                messageTemplates: enMessageTemplates,
                 appointments: enAppointments,
                 chat: enChat,
                 general: enGeneral,

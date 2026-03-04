@@ -5,13 +5,14 @@
         "assigned_error": "No se pudo asignar el agente."
     },
     "message": {
-        "retry": "Retry",
-        "retry_aria": "Retry sending message",
-        "unknown_error": "Unknown error",
-        "failed": "Failed: {{error}}",
-        "read_at": "Read at {{date}}",
-        "delivered_at": "Delivered at {{date}}",
-        "sent_at": "Sent at {{date}}",
-        "sending": "Sending..."
+        "failedToSend": "Error al enviar",
+        "unknownError": "Ocurrió un error desconocido",
+        "retryNow": "REINTENTAR",
+        "retrying": "REINTENTANDO...",
+        "errorInDelivery": "Error en la entrega",
+        "readAt": "Leído el {{date}}",
+        "deliveredAt": "Entregado el {{date}}",
+        "sentAt": "Enviado el {{date}}",
+        "sending": "Enviando..."
     }
 }

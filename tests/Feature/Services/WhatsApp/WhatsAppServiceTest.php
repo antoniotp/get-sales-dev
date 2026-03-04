@@ -2,6 +2,8 @@
 
 namespace Feature\Services\WhatsApp;
 
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use App\Models\Channel;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
@@ -64,7 +66,7 @@ class WhatsAppServiceTest extends TestCase
         Http::fake([
             'https://graph.facebook.com/v24.0/*/message_templates' => Http::response([
                 'id' => 'mocked_external_id_123',
-                'status' => 'pending',
+                'status' => Status::PENDING,
             ], 200),
         ]);
 
@@ -73,7 +75,7 @@ class WhatsAppServiceTest extends TestCase
             'name' => 'seasonal_promotion',
             'language' => 'en_US',
             'category_id' => $this->marketingCategory->id,
-            'header_type' => 'text',
+            'header_type' => HeaderType::TEXT,
             'header_content' => 'Our {{1}} is on!',
             'body_content' => 'Shop now through {{1}} and use code {{2}} to get {{3}} off of all merchandise.',
             'footer_content' => 'Use the buttons below to manage your marketing subscriptions',
@@ -88,7 +90,7 @@ class WhatsAppServiceTest extends TestCase
                 ],
             ],
             // Ensure status and platform_status match default expected by the service
-            'status' => 'pending',
+            'status' => Status::PENDING,
             'platform_status' => 1,
         ]);
 
@@ -162,7 +164,7 @@ class WhatsAppServiceTest extends TestCase
         Http::fake([
             'https://graph.facebook.com/v24.0/*/message_templates' => Http::response([
                 'id' => 'mocked_external_id_123',
-                'status' => 'pending',
+                'status' => Status::PENDING,
             ], 200),
         ]);
 
@@ -170,7 +172,7 @@ class WhatsAppServiceTest extends TestCase
             'name' => 'promo_link',
             'language' => 'en_US',
             'category_id' => $this->marketingCategory->id,
-            'header_type' => 'none',
+            'header_type' => HeaderType::NONE,
             'body_content' => 'Check out our new products!',
             'footer_content' => null,
             'button_config' => [
@@ -205,7 +207,7 @@ class WhatsAppServiceTest extends TestCase
                             'type' => 'URL',
                             'text' => 'View Products',
                             'url' => 'https://example.com/products',
-                        ]
+                        ],
                     ],
                 ],
             ],
@@ -226,7 +228,7 @@ class WhatsAppServiceTest extends TestCase
         Http::fake([
             'https://graph.facebook.com/v24.0/*/message_templates' => Http::response([
                 'id' => 'mocked_external_id_123',
-                'status' => 'pending',
+                'status' => Status::PENDING,
             ], 200),
         ]);
 
@@ -234,7 +236,7 @@ class WhatsAppServiceTest extends TestCase
             'name' => 'seasonal_promotion',
             'language' => 'en_US',
             'category_id' => $this->marketingCategory->id,
-            'header_type' => 'text',
+            'header_type' => HeaderType::TEXT,
             'header_content' => 'Our {{campaign}} is on!',
             'body_content' => 'Shop now through {{store}} and use code {{promo_code}} to get {{discount}} off of all merchandise.',
             'footer_content' => 'Use the buttons below to manage your marketing subscriptions',
@@ -245,26 +247,26 @@ class WhatsAppServiceTest extends TestCase
             'example_data' => [
                 'header_text_named_params' => [
                     [
-                        'param_name'    => 'campaign',
+                        'param_name' => 'campaign',
                         'example' => 'Summer Sale',
-                    ]
+                    ],
                 ],
-                'body_text_named_params'   => [
+                'body_text_named_params' => [
                     [
                         'param_name' => 'store',
-                        'example'    => 'the end of August',
+                        'example' => 'the end of August',
                     ],
                     [
                         'param_name' => 'promo_code',
-                        'example'    => '25OFF',
+                        'example' => '25OFF',
                     ],
                     [
                         'param_name' => 'discount',
-                        'example'    => '25%',
-                    ]
-                ]
+                        'example' => '25%',
+                    ],
+                ],
             ],
-            'status' => 'pending',
+            'status' => Status::PENDING,
             'platform_status' => 1,
         ]);
 
@@ -282,31 +284,31 @@ class WhatsAppServiceTest extends TestCase
                     'example' => [
                         'header_text_named_params' => [
                             [
-                                'param_name'    => 'campaign',
+                                'param_name' => 'campaign',
                                 'example' => 'Summer Sale',
-                            ]
+                            ],
                         ],
-                    ]
+                    ],
                 ],
                 [
                     'type' => 'BODY',
                     'text' => 'Shop now through {{store}} and use code {{promo_code}} to get {{discount}} off of all merchandise.',
                     'example' => [
-                        'body_text_named_params'   => [
+                        'body_text_named_params' => [
                             [
                                 'param_name' => 'store',
-                                'example'    => 'the end of August',
+                                'example' => 'the end of August',
                             ],
                             [
                                 'param_name' => 'promo_code',
-                                'example'    => '25OFF',
+                                'example' => '25OFF',
                             ],
                             [
                                 'param_name' => 'discount',
-                                'example'    => '25%',
-                            ]
-                        ]
-                    ]
+                                'example' => '25%',
+                            ],
+                        ],
+                    ],
                 ],
                 [
                     'type' => 'FOOTER',
@@ -322,10 +324,10 @@ class WhatsAppServiceTest extends TestCase
                         [
                             'type' => 'QUICK_REPLY',
                             'text' => 'Unsubscribe from All',
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         $this->whatsAppService->submitTemplateForReview($template);

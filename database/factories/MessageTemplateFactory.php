@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use App\Models\MessageTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -29,9 +31,9 @@ class MessageTemplateFactory extends Factory
             'name' => $this->faker->words(3, true),
             'category_id' => 1,
             'language' => 'es',
-            'status' => 'approved',
+            'status' => Status::APPROVED,
             'platform_status' => 1,
-            'header_type' => 'none',
+            'header_type' => HeaderType::NONE,
             'body_content' => $this->faker->sentence().' {{1}}',
             'variables_count' => 1,
             'example_data' => [],

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\MessageTemplates;
 
+use App\Enums\MessageTemplate\Status;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\MessageTemplate;
@@ -97,13 +98,13 @@ class MessageTemplatePersistenceTest extends TestCase
         $this->assertEquals($templateData['chatbot_channel_id'], $createdTemplate->chatbot_channel_id);
         $this->assertEquals($templateData['category_id'], $createdTemplate->category_id);
         $this->assertEquals($templateData['language'], $createdTemplate->language);
-        $this->assertEquals($templateData['header_type'], $createdTemplate->header_type);
+        $this->assertEquals($templateData['header_type'], $createdTemplate->header_type->value);
         $this->assertEquals($templateData['header_content'], $createdTemplate->header_content);
         $this->assertEquals($templateData['body_content'], $createdTemplate->body_content);
         $this->assertEquals($templateData['footer_content'], $createdTemplate->footer_content);
         $this->assertEquals($templateData['button_config'], $createdTemplate->button_config);
         $this->assertEquals(4, $createdTemplate->variables_count); // 1 header + 3 body named vars
-        $this->assertEquals('pending', $createdTemplate->status); // Default status
+        $this->assertEquals(Status::DRAFT, $createdTemplate->status); // Default status
         $this->assertEquals(1, $createdTemplate->platform_status); // Default platform status
         $this->assertEquals($expectedExampleData, $createdTemplate->example_data);
     }
@@ -154,13 +155,13 @@ class MessageTemplatePersistenceTest extends TestCase
         $this->assertEquals($templateData['chatbot_channel_id'], $createdTemplate->chatbot_channel_id);
         $this->assertEquals($templateData['category_id'], $createdTemplate->category_id);
         $this->assertEquals($templateData['language'], $createdTemplate->language);
-        $this->assertEquals($templateData['header_type'], $createdTemplate->header_type);
+        $this->assertEquals($templateData['header_type'], $createdTemplate->header_type->value);
         $this->assertEquals($templateData['header_content'], $createdTemplate->header_content);
         $this->assertEquals($templateData['body_content'], $createdTemplate->body_content);
         $this->assertEquals($templateData['footer_content'], $createdTemplate->footer_content);
         $this->assertEquals($templateData['button_config'], $createdTemplate->button_config);
         $this->assertEquals(4, $createdTemplate->variables_count); // 1 header + 3 body positional vars
-        $this->assertEquals('pending', $createdTemplate->status);
+        $this->assertEquals(Status::DRAFT, $createdTemplate->status);
         $this->assertEquals(1, $createdTemplate->platform_status);
         $this->assertEquals($expectedExampleData, $createdTemplate->example_data);
     }
@@ -203,7 +204,7 @@ class MessageTemplatePersistenceTest extends TestCase
         $this->assertEquals($templateData['body_content'], $createdTemplate->body_content);
         $this->assertEquals($templateData['footer_content'], $createdTemplate->footer_content);
         $this->assertNull($createdTemplate->button_config);
-        $this->assertEquals('pending', $createdTemplate->status);
+        $this->assertEquals(Status::DRAFT, $createdTemplate->status);
         $this->assertEquals(1, $createdTemplate->platform_status);
     }
 

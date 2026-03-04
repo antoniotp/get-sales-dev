@@ -2,6 +2,7 @@
 
 namespace App\DataTransferObjects\MessageTemplate;
 
+use App\Enums\MessageTemplate\Status;
 use App\Models\MessageTemplate;
 use Illuminate\Contracts\Support\Arrayable;
 
@@ -11,12 +12,11 @@ class MessageTemplateData implements Arrayable
         public int $id,
         public string $name,
         public string $category,
-        public string $status,
+        public Status $status,
         public int $platformStatus,
         public bool $isDeleted,
         public string $language,
-    ) {
-    }
+    ) {}
 
     public static function fromMessageTemplate(MessageTemplate $template): self
     {
@@ -26,7 +26,7 @@ class MessageTemplateData implements Arrayable
             category: $template->category->name,
             status: $template->status,
             platformStatus: $template->platform_status,
-            isDeleted: (bool)$template->trashed(),
+            isDeleted: (bool) $template->trashed(),
             language: $template->language,
         );
     }
@@ -37,7 +37,7 @@ class MessageTemplateData implements Arrayable
             'id' => $this->id,
             'name' => $this->name,
             'category' => $this->category,
-            'status' => $this->status,
+            'status' => $this->status->value,
             'platformStatus' => $this->platformStatus,
             'isDeleted' => $this->isDeleted,
             'language' => $this->language,

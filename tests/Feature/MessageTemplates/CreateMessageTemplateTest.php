@@ -3,6 +3,8 @@
 namespace Tests\Feature\MessageTemplates;
 
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
 use App\Models\MessageTemplate;
@@ -57,9 +59,9 @@ class CreateMessageTemplateTest extends TestCase
             'chatbot_channel_id' => $this->channel->id,
             'category_id' => $this->category->id,
             'language' => 'en_US',
-            'header_type' => 'none',
+            'header_type' => HeaderType::NONE,
             'body_content' => 'dummy',
-            'status' => 'pending',
+            'status' => Status::PENDING,
             'platform_status' => 1,
             'name' => 'welcome_message',
             'display_name' => 'Welcome Message',

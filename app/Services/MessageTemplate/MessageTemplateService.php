@@ -6,6 +6,8 @@ use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\MessageTemplate\MessageTemplateResolverServiceInterface;
 use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use App\Events\MessageTemplateCreated;
 use App\Models\Chatbot;
 use App\Models\Conversation;
@@ -61,7 +63,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
     public function sendForReview(MessageTemplate $template): MessageTemplate
     {
         $template->update([
-            'status' => 'pending',
+            'status' => Status::PENDING,
             'platform_status' => 1,
         ]);
 
@@ -89,7 +91,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
         $exampleData = [];
 
         // --- Header Examples ---
-        if ($headerVariable && Arr::get($data, 'header_type') === 'text') {
+        if ($headerVariable && Arr::get($data, 'header_type') === HeaderType::TEXT->value) {
             // For text header with a variable
             if ($headerVariableType === 'named') {
                 $exampleData['header_text_named_params'] = [
@@ -101,7 +103,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
             } else { // Positional
                 $exampleData['header_text'] = [$headerVariable['example']];
             }
-        } elseif (in_array(Arr::get($data, 'header_type'), ['image', 'video', 'document'])) {
+        } elseif (in_array(Arr::get($data, 'header_type'), [HeaderType::IMAGE->value, HeaderType::VIDEO->value, HeaderType::DOCUMENT->value])) {
             // For media headers, 'header_content' holds the media handle.
             // Meta's example_data for media header uses 'header_handle'.
             if (Arr::get($data, 'header_content')) {
@@ -145,7 +147,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
         if (Arr::get($data, 'body_content')) {
             $variablesCount += substr_count(Arr::get($data, 'body_content'), '{{');
         }
-        if ($headerVariable && Arr::get($data, 'header_type') === 'text') {
+        if ($headerVariable && Arr::get($data, 'header_type') === HeaderType::TEXT->value) {
             $variablesCount += 1; // Count the single header variable
         }
 
@@ -161,7 +163,7 @@ class MessageTemplateService implements MessageTemplateServiceInterface
         // Add constructed and calculated fields
         $processedData['example_data'] = ! empty($exampleData) ? $exampleData : null;
         $processedData['variable_mappings'] = ! empty($finalMappings) ? $finalMappings : null;
-        $processedData['status'] = 'pending'; // Default status for new/updated templates
+        $processedData['status'] = Status::DRAFT; // Default status for new/updated templates
         $processedData['platform_status'] = 1; // Default internal status
         $processedData['variables_count'] = $variablesCount;
 

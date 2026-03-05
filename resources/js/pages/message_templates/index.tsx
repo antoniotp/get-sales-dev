@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { BreadcrumbItem, PageProps } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { DropdownMenu, DropdownMenuLabel, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge'
@@ -16,9 +16,13 @@ import {
     CheckCircle,
     XCircle,
     PauseCircle,
-    Ban
+    Ban,
+    Info,
+    AlertTriangle,
 } from 'lucide-react';
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {useTranslation, Trans} from "react-i18next";
 
 interface Template {
     id: number;
@@ -132,7 +136,6 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
 
     return (
         <Table>
-            <TableCaption>A list of your templates.</TableCaption>
             <TableHeader>
                 <TableRow>
                     <TableHead className="w-[100px]">Name</TableHead>
@@ -197,37 +200,78 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
         },
     ], [props.chatbot]);
 
+    const { t } = useTranslation('messageTemplates');
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Message templates | List" />
             <MessageTemplateLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <Card className="w-full p-3">
-                        <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center justify-between">
                             <h2 className="text-2xl font-bold">Message Templates</h2>
                             <Link href={route('message-templates.create')}>
                                 <Button>Create Template</Button>
                             </Link>
                         </div>
-                        <Tabs defaultValue="template_library" className="w-full overflow-auto">
-                            <TabsList>
-                                <TabsTrigger value="template_library">Template Library</TabsTrigger>
-                                <TabsTrigger value="active_templates">Active</TabsTrigger>
-                                <TabsTrigger value="deleted_templates">Deleted</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="template_library">
-                                <TemplateTable templates={allTemplates} />
-                            </TabsContent>
-                            <TabsContent value="active_templates">
-                                <TemplateTable templates={activeTemplates} />
-                            </TabsContent>
-                            <TabsContent value="deleted_templates">
-                                <TemplateTable templates={deletedTemplates} />
-                            </TabsContent>
-                        </Tabs>
+                        <div className="overflow-auto">
+                            <div className="mb-2 flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm text-muted-foreground dark:border-slate-800 dark:bg-slate-900/50">
+                                <Info className="mt-0.5 h-4 w-4 shrink-0" />
+                                <div className="space-y-3 leading-relaxed">
+                                    <p>{t('index.description_part1')}</p>
+                                    <p>{t('index.description_part2')}</p>
+                                    <p>{t('index.description_part3')}</p>
+                                </div>
+                            </div>
+                            <Alert className="mb-2 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-500">
+                                <AlertTriangle className="h-4 w-4 !text-amber-600" />
+                                <AlertDescription>
+                                    <span className="inline-block leading-normal">
+                                        <Trans
+                                            t={t}
+                                            i18nKey="index.payment_notice"
+                                            parent="span"
+                                            components={[
+                                                <strong key="bold" />,
+                                                <a
+                                                    key="link1"
+                                                    href="https://business.facebook.com/wa/manage/home/"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-800 underline"
+                                                />,
+                                                <a
+                                                    key="link2"
+                                                    href="https://www.facebook.com/business/help/488291839463771"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-800 underline"
+                                                />,
+                                            ]}
+                                        />
+                                    </span>
+                                </AlertDescription>
+                            </Alert>
+                            <Tabs defaultValue="template_library" className="w-full">
+                                <TabsList>
+                                    <TabsTrigger value="template_library">Template Library</TabsTrigger>
+                                    <TabsTrigger value="active_templates">Active</TabsTrigger>
+                                    <TabsTrigger value="deleted_templates">Deleted</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="template_library">
+                                    <TemplateTable templates={allTemplates} />
+                                </TabsContent>
+                                <TabsContent value="active_templates">
+                                    <TemplateTable templates={activeTemplates} />
+                                </TabsContent>
+                                <TabsContent value="deleted_templates">
+                                    <TemplateTable templates={deletedTemplates} />
+                                </TabsContent>
+                            </Tabs>
+                        </div>
                     </Card>
                 </div>
             </MessageTemplateLayout>
         </AppLayout>
-    )
+    );
 }

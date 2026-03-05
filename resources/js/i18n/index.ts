@@ -30,6 +30,8 @@ import esUi from './locales/es/ui.json';
 import enUi from './locales/en/ui.json';
 import esCommon from './locales/es/common.json';
 import enCommon from './locales/en/common.json';
+import enMessageTemplates from '@/i18n/locales/en/message_templates.json';
+import esMessageTemplates from '@/i18n/locales/es/message_templates.json';
 import esAuth from './locales/es/auth.json';
 import enAuth from './locales/en/auth.json';
 
@@ -53,6 +55,7 @@ i18n
                 settings: esSettings,
                 ui: esUi,
                 common: esCommon,
+                messageTemplates: esMessageTemplates,
                 auth: esAuth,
             },
             en: {
@@ -70,6 +73,7 @@ i18n
                 settings: enSettings,
                 ui: enUi,
                 common: enCommon,
+                messageTemplates: enMessageTemplates,
                 auth: enAuth,
             },
         },

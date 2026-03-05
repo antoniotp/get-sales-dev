@@ -1,10 +1,10 @@
 {
-  "title": "Agenda",
-  "breadcrumbs": {
+    "title": "Agenda",
+    "breadcrumbs": {
         "chatbots": "Chatbots",
         "agenda": "Agenda"
-  },
-  "calendar": {
+    },
+    "index": {
         "today": "Hoy",
         "month": "Mes",
         "week": "Semana",
@@ -14,8 +14,8 @@
         "time": "Hora",
         "event": "Evento",
         "no_events": "No hay citas en este rango."
-  },
-  "detailsModal": {
+    },
+    "detailsModal": {
         "validation": {
             "appointmentRequired": "La fecha de la cita es obligatoria."
         },
@@ -42,5 +42,8 @@
             "deleting": "Eliminando...",
             "deleteAppointment": "Eliminar Cita"
         }
-  }
+    },
+    "calendarToolbar": {
+        "create": "Crear"
+    }
 }

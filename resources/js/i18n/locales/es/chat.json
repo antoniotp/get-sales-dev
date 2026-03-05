@@ -1,0 +1,18 @@
+{
+    "agent": {
+        "unassigned": "Sin asignar",
+        "assigned_success": "Agente asignado correctamente.",
+        "assigned_error": "No se pudo asignar el agente."
+    },
+    "message": {
+        "failedToSend": "Error al enviar",
+        "unknownError": "Ocurrió un error desconocido",
+        "retryNow": "REINTENTAR",
+        "retrying": "REINTENTANDO...",
+        "errorInDelivery": "Error en la entrega",
+        "readAt": "Leído el {{date}}",
+        "deliveredAt": "Entregado el {{date}}",
+        "sentAt": "Enviado el {{date}}",
+        "sending": "Enviando..."
+    }
+}

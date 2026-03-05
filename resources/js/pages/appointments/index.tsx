@@ -10,6 +10,7 @@ import { es } from 'date-fns/locale/es';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { toZonedTime } from 'date-fns-tz';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { NewAppointmentModal } from './partials/NewAppointmentModal';
 import { AppointmentDetailsModal } from './partials/AppointmentDetailsModal';
 import { CalendarToolbar } from './partials/CalendarToolbar';
@@ -51,6 +52,9 @@ interface PageProps extends GlobalPageProps {
 
 
 export default function AppointmentsIndex(){
+
+    const { t } = useTranslation('appointments');
+
     const { chatbot, chatbotChannels, organization } = usePage<PageProps>().props;
     const [events, setEvents] = useState<FormattedEvent[]>([]);
 
@@ -63,9 +67,9 @@ export default function AppointmentsIndex(){
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
     const breadcrumbs = [
-        { title: 'Chatbots', href: route('chatbots.index') },
+        { title: t('breadcrumbs.chatbots'), href: route('chatbots.index') },
         { title: chatbot.name, href: route('chatbots.edit', { chatbot: chatbot.id }) },
-        { title: 'Agenda', href: route('appointments.index', { chatbot: chatbot.id }) },
+        { title: t('breadcrumbs.agenda'), href: route('appointments.index', { chatbot: chatbot.id }) },
     ];
 
     const organizationTimezone = organization.current.timezone || 'UTC';
@@ -199,7 +203,7 @@ export default function AppointmentsIndex(){
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Agenda" />
+            <Head title={t('title')} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <Card className="w-full p-3 flex flex-col overflow-auto">
@@ -217,15 +221,15 @@ export default function AppointmentsIndex(){
                                 messages={{
                                     next: ">",
                                     previous: "<",
-                                    today: "Hoy",
-                                    month: "Mes",
-                                    week: "Semana",
-                                    day: "Día",
-                                    agenda: "Agenda",
-                                    date: "Fecha",
-                                    time: "Hora",
-                                    event: "Evento",
-                                    noEventsInRange: "No hay citas en este rango.",
+                                    today: t('calendar.today'),
+                                    month: t('calendar.month'),
+                                    week: t('calendar.week'),
+                                    day: t('calendar.day'),
+                                    agenda: t('calendar.agenda'),
+                                    date: t('calendar.date'),
+                                    time: t('calendar.time'),
+                                    event: t('calendar.event'),
+                                    noEventsInRange: t('calendar.no_events'),
                                 }}
                                 components={{
                                     month: { event: CustomMonthEvent },

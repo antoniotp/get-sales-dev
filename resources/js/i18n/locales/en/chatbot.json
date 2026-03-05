@@ -1,0 +1,213 @@
+{
+    "index": {
+        "breadcrumbs": {
+        "agents": "Agents"
+        },
+        "head": {
+        "title": "Agents | List"
+        },
+        "header": {
+        "title": "Agents",
+        "description": "Manage your AI Agents and their configurations",
+        "create": "Create Agent"
+        },
+        "empty": {
+        "title": "No chatbots found",
+        "description": "You haven't created any agents yet. Create your first agent to start automated conversations.",
+        "button": "Create Your First Agent"
+        },
+        "card": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "no_description": "No description provided",
+        "created": "Created {{date}}",
+        "menu_open": "Open menu",
+        "delete": "Delete Agent"
+        },
+        "dialog": {
+        "title": "Delete Agent",
+        "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone. All conversations and data associated with this agent will be permanently removed.",
+        "cancel": "Cancel",
+        "deleting": "Deleting...",
+        "confirm": "Delete Agent",
+        "error": "Failed to delete agent. Please try again."
+        }
+    },
+
+    "form": {
+        "head": {
+        "create": "Create Agent",
+        "edit": "Edit Agent"
+        },
+        "titles": {
+        "create": "Create New Agent",
+        "edit": "Edit Agent"
+        },
+        "card": {
+        "title": "Agent Details",
+        "description": "Configure your agent's basic information and behavior"
+        },
+        "fields": {
+        "name": "Name *",
+        "name_placeholder": "Enter agent name",
+        "description": "Description *",
+        "description_placeholder": "Describe what this agent does",
+        "visibility": "Agent Chat Visibility",
+        "visibility_all": "Agents can see all conversations in this chatbot.",
+        "visibility_assigned": "Agents can only see conversations assigned to them.",
+        "enable_ai": "Enable AI",
+        "ai_active": "AI is Active",
+        "ai_inactive": "AI is Inactive",
+        "ai_description": "If enabled, the AI will handle new conversations automatically.",
+        "system_prompt": "System Prompt",
+        "system_prompt_placeholder": "Enter system instructions for the AI (optional)",
+        "system_prompt_description": "Optional instructions that define how the AI should behave",
+        "min_delay": "Min Response Delay (seconds)",
+        "max_delay": "Max Response Delay (seconds)",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive",
+        "status_description": "Inactive agents won't respond to messages"
+        },
+        "actions": {
+        "cancel": "Cancel",
+        "create": "Create Agent",
+        "update": "Update Agent",
+        "creating": "Creating...",
+        "updating": "Updating..."
+        },
+        "validation": {
+        "name_required": "Agent name is required",
+        "description_required": "Description is required",
+        "min_delay_invalid": "Minimum delay must be 0 or greater",
+        "max_delay_invalid": "Maximum delay must be 0 or greater",
+        "delay_range_invalid": "Maximum delay must be greater than or equal to minimum delay"
+        }
+    },
+
+    "integrations": {
+        "breadcrumb": "Integrations",
+        "headTitle": "Agents | Integrations",
+        "title": "Agents",
+        "subtitle": "Manage your AI Agents integrations",
+        "connect": "Connect",
+        "manage": "Manage",
+        "whatsappBusiness": {
+            "title": "WhatsApp Business API",
+            "description": "Connect via the official Meta API for scalable, reliable communication."
+        },
+        "whatsappWeb": {
+            "title": "WhatsApp Web (QR)",
+            "description": "Connect a number by scanning a QR code, ideal for testing and small-scale use."
+        },
+        "settings": {
+            "title": "Settings",
+            "description": "Configure additional settings for your WhatsApp Web connection.",
+            "incoming_call_title": "Incoming Call Auto-Reply",
+            "incoming_call_description": "Define a message to automatically send when you receive calls on this number.",
+            "auto_reply_label": "Auto-Reply Message",
+            "auto_reply_placeholder": "Enter the message to send when a call is received...",
+            "save": "Save Settings",
+            "default_message": "Sorry, I cannot take calls right now. Please leave a message."
+        },
+        "generator": {
+            "title": "Start Conversation Link",
+            "description": "Generate a URL to start a conversation directly with a specific number.",
+            "url_structure": "URL Structure",
+            "fill_fields": "Fill in the fields below to generate an example link:",
+            "phone_number": "Phone Number",
+            "phone_placeholder": "Enter phone number",
+            "initial_message": "Initial Message (Optional)",
+            "message_placeholder": "Enter a pre-filled message for the user...",
+            "generated_url": "Generated URL",
+            "copy": "Copy",
+            "copied": "Copied!",
+            "create": "Create URL"
+        }
+    },
+
+    "business": {
+        "breadcrumb_integrations": "Integrations",
+        "breadcrumb_whatsapp": "WhatsApp Business API",
+
+        "page_title": "WhatsApp Business API Integration",
+
+        "connected_number_title": "Connected Number (Official API)",
+        "connected_number_description": "The WhatsApp number connected to this agent via the Official Business API.",
+
+        "table_phone": "Phone Number",
+        "table_display_name": "Display Name",
+        "table_status": "Status",
+        "table_actions": "Actions",
+
+        "status_active": "Active",
+        "status_inactive": "Inactive",
+
+        "open_menu": "Open menu",
+        "delete": "Delete",
+
+        "no_number_connected": "No WhatsApp number connected.",
+
+        "test_connection_title": "Test Connection",
+        "test_connection_description": "Scan the QR code to start a conversation.",
+
+        "no_qr_available": "No QR code available. Please connect a number first."
+    },
+
+    "web": {
+        "headTitle": "WhatsApp Web Integration",
+        "breadcrumbs": {
+            "integrations": "Integrations",
+            "whatsappWeb": "WhatsApp Web"
+        }
+    },
+
+    "webConnection": {
+        "header": {
+        "title": "WhatsApp Web (Unofficial) Connection",
+        "description": "Connect a WhatsApp number using your phone."
+        },
+        "status": {
+        "label": "Status:",
+        "verifying": "Verifying connection status...",
+        "waitingQr": "Waiting for QR code...",
+        "reconnectingWaiting": "Reconnection initiated. Waiting for events...",
+        "disconnected": "Disconnected",
+        "error": "Error"
+        },
+        "connected": {
+        "title": "Connected Number",
+        "description": "Details of the connected WhatsApp Web number.",
+        "noNumber": "No WhatsApp Web number connected."
+        },
+        "disconnected": {
+        "scanQr": "Scan the QR code to connect.",
+        "lost": "The connection was lost. Please reconnect or start a new session."
+        },
+        "error": {
+        "description": "Could not verify the connection status. Please try again later."
+        },
+        "table": {
+        "phone": "Phone Number",
+        "displayName": "Display Name",
+        "status": "Status",
+        "actions": "Actions",
+        "openMenu": "Open menu"
+        },
+        "test": {
+        "title": "Test Connection",
+        "description": "Scan the QR code to start a conversation.",
+        "noQr": "No QR code available. Please connect a number first."
+        },
+        "actions": {
+        "delete": "Delete",
+        "generateQr": "Generate QR Code",
+        "reconnect": "Reconnect"
+        },
+        "common": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "na": "N/A"
+        }
+    }
+}

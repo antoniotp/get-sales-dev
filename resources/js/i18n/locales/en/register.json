@@ -1,0 +1,24 @@
+{
+    "head": {
+        "title": "Create an account",
+        "description": "Enter your details below to create your account",
+        "page_title": "Register"
+    },
+    "fields": {
+        "name": "Name",
+        "name_placeholder": "Full name",
+        "email": "Email address",
+        "email_placeholder": "email@example.com",
+        "password": "Password",
+        "password_placeholder": "Password",
+        "password_confirmation": "Confirm password",
+        "password_confirmation_placeholder": "Confirm password"
+    },
+    "actions": {
+        "create": "Create account"
+    },
+    "footer": {
+        "have_account": "Already have an account?",
+        "login": "Log in"
+    }
+}

@@ -9,6 +9,7 @@ import { router } from '@inertiajs/react';
 import React from 'react';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface PaginationProps {
     links: { url: string | null; label: string; active: boolean }[];
@@ -17,7 +18,17 @@ interface PaginationProps {
     nextLabel?: string;
 }
 
-export function CustomPagination({ links, windowSize = 5, previousLabel = 'Previous', nextLabel = 'Next' }: PaginationProps) {
+export function CustomPagination({
+    links,
+    windowSize = 5,
+    previousLabel,
+    nextLabel,
+}: PaginationProps) {
+
+    const { t } = useTranslation('general');
+
+    const prevText = previousLabel ?? t('pagination.previous');
+    const nextText = nextLabel ?? t('pagination.next');
 
     function handlePaginationClick(url: string | null) {
         if (!url) return;
@@ -67,7 +78,7 @@ export function CustomPagination({ links, windowSize = 5, previousLabel = 'Previ
                     <>
                         <PaginationItem>
                             <PaginationLink
-                                aria-label="Go to previous page"
+                                aria-label={t('pagination.go_previous')}
                                 size="default"
                                 href={links[0].url || ''}
                                 className={cn("gap-1 px-2.5 sm:pl-2.5", !links[0].url ? 'opacity-50 cursor-not-allowed' : '')}
@@ -79,13 +90,17 @@ export function CustomPagination({ links, windowSize = 5, previousLabel = 'Previ
                                 }}
                             >
                                 <ChevronLeftIcon className="h-4 w-4" />
-                                <span className="hidden sm:block">{previousLabel}</span>
+                                <span className="hidden sm:block">{prevText}</span>
                             </PaginationLink>
                         </PaginationItem>
 
                         {windowedPageLinks.map((link, index) => {
                             if (!link.url) {
-                                return <PaginationItem key={index}><PaginationEllipsis /></PaginationItem>
+                                return (
+                                    <PaginationItem key={index}>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                )
                             }
                             return (
                                 <PaginationItem key={index}>
@@ -105,7 +120,7 @@ export function CustomPagination({ links, windowSize = 5, previousLabel = 'Previ
 
                         <PaginationItem>
                             <PaginationLink
-                                aria-label="Go to next page"
+                                aria-label={t('pagination.go_next')}
                                 size="default"
                                 href={links[links.length - 1].url || ''}
                                 className={cn("gap-1 px-2.5 sm:pr-2.5", !links[links.length - 1].url ? 'opacity-50 cursor-not-allowed' : '')}
@@ -116,7 +131,7 @@ export function CustomPagination({ links, windowSize = 5, previousLabel = 'Previ
                                     }
                                 }}
                             >
-                                <span className="hidden sm:block">{nextLabel}</span>
+                                <span className="hidden sm:block">{nextText}</span>
                                 <ChevronRightIcon className="h-4 w-4" />
                             </PaginationLink>
                         </PaginationItem>

@@ -23,6 +23,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Bot, Plus, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface ChatbotsIndexProps {
     chatbots: Chatbot[];
@@ -30,30 +31,37 @@ interface ChatbotsIndexProps {
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Agents', href: route('chatbots.index') },
+    { title: 'chatbot:index.breadcrumbs.agents', href: route('chatbots.index') },
 ];
 
 export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndexProps) {
     const { auth } = usePage<PageProps>().props;
+    const { t } = useTranslation('chatbot');
+
+    const translatedBreadcrumbs = [
+        { ...breadcrumbs[0], title: t('index.breadcrumbs.agents') },
+    ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Agents | List" />
+        <AppLayout breadcrumbs={translatedBreadcrumbs}>
+            <Head title={t('index.head.title')} />
             <AppContentDefaultLayout>
                 <div className="space-y-6">
                     {/* Header Section */}
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Agents</h1>
+                            <h1 className="text-2xl font-bold tracking-tight">
+                                {t('index.header.title')}
+                            </h1>
                             <p className="text-muted-foreground mr-1">
-                                Manage your AI Agents and their configurations
+                                {t('index.header.description')}
                             </p>
                         </div>
                         {(auth.user.level !== null && auth.user.level > 40) && (
                             <Button asChild>
                                 <Link href={route('chatbots.create')}>
                                     <Plus className="mr-2 h-4 w-4" />
-                                    Create Agent
+                                    {t('index.header.create')}
                                 </Link>
                             </Button>
                         )}
@@ -72,19 +80,23 @@ export default function ChatbotsIndex({ chatbots, hasNoChatbots }: ChatbotsIndex
 }
 
 function EmptyState() {
+    const { t } = useTranslation('chatbot');
+
     return (
         <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
                 <Bot className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="mt-4 text-lg font-semibold">No chatbots found</h3>
+            <h3 className="mt-4 text-lg font-semibold">
+                {t('index.empty.title')}
+            </h3>
             <p className="mb-6 mt-2 text-sm text-muted-foreground max-w-sm">
-                You haven't created any agents yet. Create your first agents to get started with automated conversations.
+                {t('index.empty.description')}
             </p>
             <Button asChild>
                 <Link href={route('chatbots.create')}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Agent
+                    {t('index.empty.button')}
                 </Link>
             </Button>
         </div>
@@ -103,6 +115,8 @@ function ChatbotGrid({ chatbots }: { chatbots: Chatbot[] }) {
 
 function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
     const { auth } = usePage<PageProps>().props;
+    const { t } = useTranslation('chatbot');
+
     const isActive = chatbot.status === 1;
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -117,7 +131,7 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
             },
             onError: () => {
                 setIsDeleting(false);
-                toast.error('Failed to delete agent. Please try again.');
+                toast.error(t('index.dialog.error'));
             }
         });
     };
@@ -143,21 +157,23 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                                     }`}
                                 />
                                 <span className="text-xs text-muted-foreground">
-                                {isActive ? 'Active' : 'Inactive'}
-                            </span>
+                                    {isActive
+                                        ? t('index.card.active')
+                                        : t('index.card.inactive')}
+                                </span>
                             </div>
                         </div>
                     </CardHeader>
 
                     <CardContent className="pt-0">
                         <CardDescription className="line-clamp-3 min-h-[30px] text-sm">
-                            {chatbot.description || 'No description provided'}
+                            {chatbot.description || t('index.card.no_description')}
                         </CardDescription>
 
                         <div className="mt-4 flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                            Created {chatbot.created_at}
-                        </span>
+                            <span className="text-xs text-muted-foreground">
+                                {t('index.card.created', { date: chatbot.created_at })}
+                            </span>
                             {(auth.user.level !== null && auth.user.level > 40) && (
                                 <div className="flex items-center space-x-2">
                                     <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -172,7 +188,9 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                                                 }}
                                             >
                                                 <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">Open menu</span>
+                                                <span className="sr-only">
+                                                    {t('index.card.menu_open')}
+                                                </span>
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
@@ -186,7 +204,7 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
                                                 className="text-red-600 focus:text-red-600"
                                             >
                                                 <Trash2 className="mr-2 h-4 w-4" />
-                                                Delete Agent
+                                                {t('index.card.delete')}
                                             </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -200,22 +218,25 @@ function ChatbotCard({ chatbot }: { chatbot: Chatbot }) {
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Agent</AlertDialogTitle>
+                        <AlertDialogTitle>
+                            {t('index.dialog.title')}
+                        </AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete "{chatbot.name}"? This action cannot be undone.
-                            All conversations and data associated with this agent will be permanently removed.
+                            {t('index.dialog.description', { name: chatbot.name })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isDeleting}>
-                            Cancel
+                            {t('index.dialog.cancel')}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}
                             disabled={isDeleting}
                             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
                         >
-                            {isDeleting ? 'Deleting...' : 'Delete Agent'}
+                            {isDeleting
+                                ? t('index.dialog.deleting')
+                                : t('index.dialog.confirm')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

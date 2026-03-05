@@ -1,0 +1,16 @@
+{
+  "side": {
+    "agents": "Agents",
+    "all_contacts": "All Contacts",
+    "organization_settings": "Organization Settings",
+    "general": "General",
+    "members": "Members",
+    "agent_switcher": "Agent Switcher",
+    "chats": "Chats",
+    "agenda": "Agenda",
+    "template_messages": "Messages Templates",
+    "integrations": "Integrations",
+    "agent_configuration": "Agent Configuration",
+    "organization": "Organization"
+  }
+}

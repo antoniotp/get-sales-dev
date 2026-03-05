@@ -14,6 +14,7 @@ import { useForm } from '@inertiajs/react';
 import { Contact } from '@/types/contact';
 import { useEffect } from 'react';
 import InputError from '@/components/input-error';
+import { useTranslation } from 'react-i18next';
 
 interface UpsertContactSheetProps {
     open: boolean;
@@ -22,6 +23,9 @@ interface UpsertContactSheetProps {
 }
 
 export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContactSheetProps) {
+
+    const { t } = useTranslation('contact');
+
     const { data, setData, post, put, processing, errors, reset } = useForm({
         first_name: '',
         last_name: '',
@@ -69,16 +73,20 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
         <Sheet open={open} onOpenChange={handleOpenChange}>
             <SheetContent>
                 <SheetHeader>
-                    <SheetTitle>{contact ? 'Edit Contact' : 'Create Contact'}</SheetTitle>
+                    <SheetTitle>
+                        {contact ? t('form.editTitle') : t('form.createTitle')}
+                    </SheetTitle>
                     <SheetDescription>
-                        {contact ? 'Update the details of the existing contact.' : 'Add a new contact to your list.'}
+                        {contact
+                            ? t('form.editDescription')
+                            : t('form.createDescription')}
                     </SheetDescription>
                 </SheetHeader>
                 <form onSubmit={onSubmit} className="space-y-8 py-4">
                     <div className="grid gap-4">
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="first_name" className="text-right">
-                                First Name
+                                {t('form.fields.first_name')}
                             </Label>
                             <Input
                                 id="first_name"
@@ -90,7 +98,7 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="last_name" className="text-right">
-                                Last Name
+                                {t('form.fields.last_name')}
                             </Label>
                             <Input
                                 id="last_name"
@@ -102,7 +110,7 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="email" className="text-right">
-                                Email
+                                {t('form.fields.email')}
                             </Label>
                             <Input
                                 id="email"
@@ -115,7 +123,7 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="phone_number" className="text-right">
-                                Phone
+                                {t('form.fields.phone')}
                             </Label>
                             <Input
                                 id="phone_number"
@@ -127,7 +135,7 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="country_code" className="text-right">
-                                Country
+                                {t('form.fields.country')}
                             </Label>
                             <Input
                                 id="country_code"
@@ -139,7 +147,7 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="language_code" className="text-right">
-                                Language
+                                {t('form.fields.language')}
                             </Label>
                             <Input
                                 id="language_code"
@@ -153,11 +161,11 @@ export function UpsertContactSheet({ open, onOpenChange, contact }: UpsertContac
                     <SheetFooter>
                         <SheetClose asChild>
                             <Button type="button" variant="secondary">
-                                Cancel
+                                {t('form.cancel')}
                             </Button>
                         </SheetClose>
                         <Button type="submit" disabled={processing}>
-                            {contact ? 'Save Changes' : 'Create Contact'}
+                            {contact ? t('form.saveChanges') : t('form.create')}
                         </Button>
                     </SheetFooter>
                 </form>

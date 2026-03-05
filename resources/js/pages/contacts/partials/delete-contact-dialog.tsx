@@ -9,6 +9,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 
 interface DeleteContactDialogProps {
     open: boolean;
@@ -17,6 +18,9 @@ interface DeleteContactDialogProps {
 }
 
 export function DeleteContactDialog({ open, onOpenChange, contactId }: DeleteContactDialogProps) {
+
+    const { t } = useTranslation('contact');
+
     const { delete: destroy, processing } = useForm();
 
     const handleDelete = () => {
@@ -29,15 +33,19 @@ export function DeleteContactDialog({ open, onOpenChange, contactId }: DeleteCon
         <AlertDialog open={open} onOpenChange={onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                        {t('deleteDialog.title')}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the contact.
+                        {t('deleteDialog.description')}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>
+                        {t('deleteDialog.cancel')}
+                    </AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} disabled={processing}>
-                        Delete
+                        {t('deleteDialog.delete')}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

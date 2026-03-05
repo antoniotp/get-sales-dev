@@ -1,0 +1,16 @@
+{
+    "login": {
+        "title": "Inicia sesión en tu cuenta",
+        "description": "Ingresa tu correo electrónico y contraseña para acceder",
+        "headTitle": "Iniciar sesión",
+        "emailLabel": "Correo electrónico",
+        "emailPlaceholder": "correo@ejemplo.com",
+        "passwordLabel": "Contraseña",
+        "passwordPlaceholder": "Contraseña",
+        "forgotPassword": "¿Olvidaste tu contraseña?",
+        "rememberMe": "Recuérdame",
+        "submit": "Iniciar sesión",
+        "noAccount": "¿No tienes una cuenta?",
+        "signUp": "Regístrate"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "agent": {
+        "unassigned": "Unassigned",
+        "assigned_success": "Agent assigned successfully.",
+        "assigned_error": "The agent could not be assigned."
+    },
+    "message": {
+        "failedToSend": "Failed to send",
+        "unknownError": "Unknown error occurred",
+        "retryNow": "RETRY NOW",
+        "retrying": "RETRYING...",
+        "errorInDelivery": "Error in delivery",
+        "readAt": "Read at {{date}}",
+        "deliveredAt": "Delivered at {{date}}",
+        "sentAt": "Sent at {{date}}",
+        "sending": "Sending..."
+    }
+}

@@ -4,6 +4,7 @@ import axios from 'axios';
 import React, { useCallback } from 'react';
 import { toast } from 'sonner';
 import { useRoute } from 'ziggy-js';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     canAssign: boolean;
@@ -14,6 +15,7 @@ interface Props {
 
 const AgentAssignmentDropdown: React.FC<Props> = ({ canAssign, selectedChat, agents, onAgentAssigned }) => {
     const route = useRoute();
+    const { t } = useTranslation('chat');
 
     const handleAssignAgent = useCallback(
         async (newAgentIdValue: string) => {
@@ -26,14 +28,14 @@ const AgentAssignmentDropdown: React.FC<Props> = ({ canAssign, selectedChat, age
                     const { assigned_user_id, assigned_user_name } = response.data;
                     const updatedChat = { ...selectedChat, assigned_user_id, assigned_user_name };
                     onAgentAssigned(updatedChat);
-                    toast.success('Agent assigned successfully.');
+                    toast.success(t('agent.assigned_success'));
                 }
             } catch (error) {
                 console.error('Failed to assign agent:', error);
-                toast.error('Failed to assign agent.');
+                toast.error(t('agent.assigned_error'));
             }
         },
-        [selectedChat, route, onAgentAssigned],
+        [selectedChat, route, onAgentAssigned, t],
     );
 
     if (!selectedChat) {
@@ -45,10 +47,12 @@ const AgentAssignmentDropdown: React.FC<Props> = ({ canAssign, selectedChat, age
             {canAssign ? (
                 <Select value={selectedChat.assigned_user_id?.toString() || 'unassigned'} onValueChange={handleAssignAgent}>
                     <SelectTrigger className="w-full py-0 h-7 mt-1">
-                        <SelectValue placeholder="Unassigned" />
+                        <SelectValue placeholder={t('agent.unassigned')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
+                        <SelectItem value="unassigned">
+                            {t('agent.unassigned')}
+                        </SelectItem>
                         {agents.map((agent) => (
                             <SelectItem key={agent.id} value={agent.id.toString()}>
                                 {agent.name}
@@ -57,7 +61,7 @@ const AgentAssignmentDropdown: React.FC<Props> = ({ canAssign, selectedChat, age
                     </SelectContent>
                 </Select>
             ) : (
-                <span>{selectedChat.assigned_user_name || 'Unassigned'}</span>
+                <span>{selectedChat.assigned_user_name || t('agent.unassigned')}</span>
             )}
         </div>
     );

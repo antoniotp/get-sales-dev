@@ -1,0 +1,56 @@
+{
+    "contactsPage": {
+        "breadcrumb": "Contactos",
+        "headTitle": "Contactos",
+        "title": "Contactos",
+        "createContact": "Crear contacto",
+        "searchPlaceholder": "Buscar por nombre, email, teléfono...",
+        "applyFilters": "Aplicar filtros",
+        "openMenu": "Abrir menú",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "noResults": "No se encontraron contactos.",
+        "filters": {
+            "country": "País",
+            "language": "Idioma",
+            "chatbot": "Chatbot",
+            "channel": "Canal",
+            "allCountries": "Todos los países",
+            "allLanguages": "Todos los idiomas",
+            "allChatbots": "Todos los chatbots",
+            "allChannels": "Todos los canales"
+        },
+        "table": {
+            "name": "Nombre",
+            "contact": "Contacto",
+            "location": "Ubicación",
+            "chatbots": "Chatbots",
+            "channels": "Canales"
+        }
+    },
+
+    "form": {
+        "createTitle": "Crear contacto",
+        "editTitle": "Editar contacto",
+        "createDescription": "Agrega un nuevo contacto a tu lista.",
+        "editDescription": "Actualiza los datos del contacto existente.",
+        "create": "Crear contacto",
+        "saveChanges": "Guardar cambios",
+        "cancel": "Cancelar",
+        "fields": {
+            "first_name": "Nombre",
+            "last_name": "Apellido",
+            "email": "Correo electrónico",
+            "phone": "Teléfono",
+            "country": "País",
+            "language": "Idioma"
+        }
+    },
+
+    "deleteDialog": {
+        "title": "¿Estás seguro?",
+        "description": "Esta acción no se puede deshacer. El contacto será eliminado permanentemente.",
+        "cancel": "Cancelar",
+        "delete": "Eliminar"
+    }
+}

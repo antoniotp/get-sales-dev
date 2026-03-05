@@ -1,0 +1,73 @@
+{
+  "form": {
+    "head": {
+      "create": "Create Organization",
+      "edit": "Organization Details"
+    },
+    "titles": {
+      "create": "Create New Organization",
+      "edit": "General"
+    },
+    "descriptions": {
+      "create": "Fill in the details below to create a new organization.",
+      "edit": "Organization Details."
+    },
+    "fields": {
+      "name": "Name",
+      "website": "Website",
+      "address": "Address",
+      "timezone": "Timezone",
+      "locale": "Locale"
+    },
+    "placeholders": {
+      "timezone": "Select a timezone",
+      "locale": "Select a locale"
+    },
+    "actions": {
+      "save": "Save",
+      "create": "Create Organization"
+    }
+  },
+
+    "members": {
+        "breadcrumb": "Members",
+        "head": {
+        "title": "Members of {{name}}"
+        },
+        "title": "Organization Members",
+        "table": {
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "status": "Status",
+        "joined": "Joined At",
+        "expires": "Expires At",
+        "actions": "Actions",
+        "na": "N/A"
+        },
+        "invite": {
+        "button": "Invite Member",
+        "title": "Invite a new member",
+        "description": "Enter the email address and assign a role for the new member.",
+        "fields": {
+            "email": "Email Address",
+            "role": "Role"
+        },
+        "placeholders": {
+            "email": "name@example.com",
+            "role": "Select a role"
+        },
+        "actions": {
+            "send": "Send Invitation",
+            "sending": "Sending..."
+        }
+        },
+        "invitations": {
+        "title": "Invitations"
+        },
+        "actions": {
+        "cancel": "Cancel",
+        "resend": "Resend"
+        }
+    }
+}

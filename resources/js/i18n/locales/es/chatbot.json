@@ -1,0 +1,213 @@
+{
+    "index": {
+        "breadcrumbs": {
+        "agents": "Agentes"
+        },
+        "head": {
+        "title": "Agentes | Lista"
+        },
+        "header": {
+        "title": "Agentes",
+        "description": "Administra tus agentes de IA y sus configuraciones",
+        "create": "Crear agente"
+        },
+        "empty": {
+        "title": "No se encontraron agentes",
+        "description": "Aún no has creado agentes. Crea tu primer agente para comenzar con conversaciones automatizadas.",
+        "button": "Crear tu primer agente"
+        },
+        "card": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "no_description": "Sin descripción",
+        "created": "Creado {{date}}",
+        "menu_open": "Abrir menú",
+        "delete": "Eliminar agente"
+        },
+        "dialog": {
+        "title": "Eliminar agente",
+        "description": "¿Seguro que deseas eliminar \"{{name}}\"? Esta acción no se puede deshacer. Todas las conversaciones y datos asociados se eliminarán permanentemente.",
+        "cancel": "Cancelar",
+        "deleting": "Eliminando...",
+        "confirm": "Eliminar agente",
+        "error": "Error al eliminar el agente. Intenta nuevamente."
+        }
+    },
+
+    "form": {
+        "head": {
+        "create": "Crear agente",
+        "edit": "Editar agente"
+        },
+        "titles": {
+        "create": "Crear nuevo agente",
+        "edit": "Editar agente"
+        },
+        "card": {
+        "title": "Detalles del agente",
+        "description": "Configura la información básica y el comportamiento del agente"
+        },
+        "fields": {
+        "name": "Nombre *",
+        "name_placeholder": "Ingresa el nombre del agente",
+        "description": "Descripción *",
+        "description_placeholder": "Describe qué hace este agente",
+        "visibility": "Visibilidad del chat del agente",
+        "visibility_all": "Los agentes pueden ver todas las conversaciones en este chatbot.",
+        "visibility_assigned": "Los agentes solo pueden ver conversaciones asignadas a ellos.",
+        "enable_ai": "Activar IA",
+        "ai_active": "La IA está activa",
+        "ai_inactive": "La IA está inactiva",
+        "ai_description": "Si está activado, la IA gestionará nuevas conversaciones automáticamente.",
+        "system_prompt": "System Prompt",
+        "system_prompt_placeholder": "Ingresa instrucciones del sistema para la IA (opcional)",
+        "system_prompt_description": "Instrucciones opcionales que definen cómo debe comportarse la IA",
+        "min_delay": "Retraso mínimo de respuesta (segundos)",
+        "max_delay": "Retraso máximo de respuesta (segundos)",
+        "status": "Estado",
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "status_description": "Los agentes inactivos no responderán a mensajes"
+        },
+        "actions": {
+        "cancel": "Cancelar",
+        "create": "Crear agente",
+        "update": "Actualizar agente",
+        "creating": "Creando...",
+        "updating": "Actualizando..."
+        },
+        "validation": {
+            "name_required": "El nombre del agente es obligatorio",
+            "description_required": "La descripción es obligatoria",
+            "min_delay_invalid": "El retraso mínimo debe ser 0 o mayor",
+            "max_delay_invalid": "El retraso máximo debe ser 0 o mayor",
+            "delay_range_invalid": "El retraso máximo debe ser mayor o igual al mínimo"
+        }
+    },
+
+    "integrations": {
+        "breadcrumb": "Integraciones",
+        "headTitle": "Agents | Integraciones",
+        "title": "Agentes",
+        "subtitle": "Administra las integraciones de tus Agentes AI",
+        "connect": "Conectar",
+        "manage": "Administrar",
+        "whatsappBusiness": {
+            "title": "WhatsApp Business API",
+            "description": "Conéctate mediante la API oficial de Meta para una comunicación escalable y confiable."
+        },
+        "whatsappWeb": {
+            "title": "WhatsApp Web (QR)",
+            "description": "Conecta un número escaneando un código QR, ideal para pruebas y uso a pequeña escala."
+        },
+        "settings": {
+            "title": "Configuración",
+            "description": "Configura ajustes adicionales para tu conexión de WhatsApp Web.",
+            "incoming_call_title": "Respuesta automática para llamadas entrantes",
+            "incoming_call_description": "Define un mensaje que se enviará automáticamente cuando recibas llamadas en este número.",
+            "auto_reply_label": "Mensaje de respuesta automática",
+            "auto_reply_placeholder": "Escribe el mensaje que se enviará cuando se reciba una llamada...",
+            "save": "Guardar configuración",
+            "default_message": "Lo siento, no puedo atender llamadas en este momento. Por favor, deja un mensaje."
+        },
+        "generator": {
+            "title": "Enlace para iniciar conversación",
+            "description": "Genera una URL para iniciar una conversación directamente con un número específico.",
+            "url_structure": "Estructura de la URL",
+            "fill_fields": "Completa los siguientes campos para generar un enlace de ejemplo:",
+            "phone_number": "Número de teléfono",
+            "phone_placeholder": "Ingresa el número de teléfono",
+            "initial_message": "Mensaje inicial (Opcional)",
+            "message_placeholder": "Escribe un mensaje precargado para el usuario...",
+            "generated_url": "URL generada",
+            "copy": "Copiar",
+            "copied": "¡Copiado!",
+            "create": "Crear URL"
+        }
+    },
+
+    "business": {
+        "breadcrumb_integrations": "Integraciones",
+        "breadcrumb_whatsapp": "WhatsApp Business API",
+
+        "page_title": "Integración con WhatsApp Business API",
+
+        "connected_number_title": "Número Conectado (API Oficial)",
+        "connected_number_description": "El número de WhatsApp conectado a este agente mediante la API Oficial de Business.",
+
+        "table_phone": "Número de Teléfono",
+        "table_display_name": "Nombre Visible",
+        "table_status": "Estado",
+        "table_actions": "Acciones",
+
+        "status_active": "Activo",
+        "status_inactive": "Inactivo",
+
+        "open_menu": "Abrir menú",
+        "delete": "Eliminar",
+
+        "no_number_connected": "No hay ningún número de WhatsApp conectado.",
+
+        "test_connection_title": "Probar Conexión",
+        "test_connection_description": "Escanea el código QR para iniciar una conversación.",
+
+        "no_qr_available": "No hay código QR disponible. Conecta un número primero."
+    },
+
+    "web": {
+        "headTitle": "Integración de WhatsApp Web",
+        "breadcrumbs": {
+            "integrations": "Integraciones",
+            "whatsappWeb": "WhatsApp Web"
+        }
+    },
+
+    "webConnection": {
+        "header": {
+        "title": "Conexión WhatsApp Web (No Oficial)",
+        "description": "Conecta un número de WhatsApp usando tu teléfono."
+        },
+        "status": {
+        "label": "Estado:",
+        "verifying": "Verificando estado de la conexión...",
+        "waitingQr": "Esperando código QR...",
+        "reconnectingWaiting": "Reconexión iniciada. Esperando eventos...",
+        "disconnected": "Desconectado",
+        "error": "Error"
+        },
+        "connected": {
+        "title": "Número Conectado",
+        "description": "Detalles del número conectado por WhatsApp Web.",
+        "noNumber": "No hay ningún número de WhatsApp Web conectado."
+        },
+        "disconnected": {
+        "scanQr": "Escanea el código QR para conectar.",
+        "lost": "La conexión se perdió. Por favor reconecta o inicia una nueva sesión."
+        },
+        "error": {
+        "description": "No se pudo verificar el estado de la conexión. Inténtalo nuevamente más tarde."
+        },
+        "table": {
+        "phone": "Número de Teléfono",
+        "displayName": "Nombre Visible",
+        "status": "Estado",
+        "actions": "Acciones",
+        "openMenu": "Abrir menú"
+        },
+        "test": {
+        "title": "Probar Conexión",
+        "description": "Escanea el código QR para iniciar una conversación.",
+        "noQr": "No hay código QR disponible. Conecta un número primero."
+        },
+        "actions": {
+        "delete": "Eliminar",
+        "generateQr": "Generar Código QR",
+        "reconnect": "Reconectar"
+        },
+        "common": {
+        "active": "Activo",
+        "inactive": "Inactivo",
+        "na": "N/A"
+        }
+    }
+}

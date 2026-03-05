@@ -1,0 +1,37 @@
+{
+    "agentSwitcher": {
+        "selectAgent": "Selecciona un agente",
+        "agents": "Agentes",
+        "loading": "Cargando..."
+    },
+
+    "navigation": {
+        "dashboard": "Panel",
+        "repository": "Repositorio",
+        "documentation": "Documentación",
+        "menu": "Menú de navegación"
+    },
+
+    "appearance": {
+        "toggleTheme": "Cambiar tema",
+        "light": "Claro",
+        "dark": "Oscuro",
+        "system": "Sistema"
+    },
+
+    "sidebar": {
+        "toggle": "Mostrar u ocultar barra lateral"
+    },
+
+    "deleteUser": {
+        "title": "Eliminar cuenta",
+        "description": "Elimina tu cuenta y todos sus recursos",
+        "warningTitle": "Advertencia",
+        "warningDescription": "Por favor procede con precaución, esta acción no se puede deshacer.",
+        "deleteButton": "Eliminar cuenta",
+        "modalTitle": "¿Estás seguro de que deseas eliminar tu cuenta?",
+        "modalDescription": "Una vez que tu cuenta sea eliminada, todos sus recursos y datos también serán eliminados permanentemente. Por favor ingresa tu contraseña para confirmar que deseas eliminar tu cuenta de forma permanente.",
+        "password": "Contraseña",
+        "cancel": "Cancelar"
+    }
+}

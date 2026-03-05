@@ -1,0 +1,37 @@
+{
+    "agentSwitcher": {
+        "selectAgent": "Select an agent",
+        "agents": "Agents",
+        "loading": "Loading..."
+    },
+
+    "navigation": {
+        "dashboard": "Dashboard",
+        "repository": "Repository",
+        "documentation": "Documentation",
+        "menu": "Navigation Menu"
+    },
+
+    "appearance": {
+        "toggleTheme": "Toggle theme",
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+    },
+
+    "sidebar": {
+        "toggle": "Show or hide sidebar"
+    },
+
+    "deleteUser": {
+        "title": "Delete account",
+        "description": "Delete your account and all of its resources",
+        "warningTitle": "Warning",
+        "warningDescription": "Please proceed with caution, this cannot be undone.",
+        "deleteButton": "Delete account",
+        "modalTitle": "Are you sure you want to delete your account?",
+        "modalDescription": "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.",
+        "password": "Password",
+        "cancel": "Cancel"
+    }
+}

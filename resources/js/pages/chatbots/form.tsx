@@ -22,6 +22,9 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
+
 
 interface Chatbot {
     id: number;
@@ -40,32 +43,36 @@ interface Props {
 }
 
 // Zod schema definition
-const formSchema = z.object({
-    name: z.string().min(1, 'Agent name is required'),
-    description: z.string().min(1, 'Description is required'),
+const getFormSchema = (t: TFunction<'chatbot'>) =>
+z.object({
+    name: z.string().min(1, t('form.validation.name_required')),
+    description: z.string().min(1, t('form.validation.description_required')),
     system_prompt: z.string().optional(),
-    response_delay_min: z.number().min(0, 'Minimum delay must be 0 or greater'),
-    response_delay_max: z.number().min(0, 'Maximum delay must be 0 or greater'),
+    response_delay_min: z.number().min(0, t('form.validation.min_delay_invalid')),
+    response_delay_max: z.number().min(0, t('form.validation.max_delay_invalid')),
     status: z.number().optional(),
     ai_enabled: z.boolean().optional(),
     agent_visibility: z.enum(['all', 'assigned_only']).optional(),
 }).refine((data) => data.response_delay_max >= data.response_delay_min, {
-    message: "Maximum delay must be greater than or equal to minimum delay",
-    path: ["response_delay_max"],
+    message: t('form.validation.delay_range_invalid'),
+    path: ['response_delay_max'],
 });
 
-type ChatbotFormValues = z.infer<typeof formSchema>;
+type ChatbotFormValues = z.infer<ReturnType<typeof getFormSchema>>;
 
 export default function ChatbotForm({ chatbot }: Props) {
+
+    const { t } = useTranslation('chatbot');
+
     const isEditing = !!chatbot;
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
-            title: chatbot?.name || 'Create Agent',
+            title: chatbot?.name || t('form.head.create'),
             href: chatbot?.id ? route('chatbots.edit', { chatbot: chatbot?.id }): route('chatbots.create'),
         },
         {
-            title: isEditing ? 'Edit' : 'New',
+            title: isEditing ? t('form.head.edit') : t('form.titles.create'),
             href: isEditing ? route('chatbots.edit', chatbot.id) : route('chatbots.create')
         },
     ];
@@ -100,7 +107,7 @@ export default function ChatbotForm({ chatbot }: Props) {
 
     // React Hook Form with Zod validation
     const form = useForm<ChatbotFormValues>({
-        resolver: zodResolver(formSchema),
+        resolver: zodResolver(getFormSchema(t)),
         defaultValues: inertiaData,
         mode: 'onBlur',
     });
@@ -148,18 +155,18 @@ export default function ChatbotForm({ chatbot }: Props) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`${isEditing ? 'Edit' : 'Create'} Agent`} />
+            <Head title={`${isEditing ? t('form.head.edit') : t('form.head.create')}`} />
             <AppContentDefaultLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <div className="w-full overflow-auto pb-12">
-                        <h2 className="text-2xl font-bold">{isEditing ? 'Edit Agent' : 'Create New Agent'}</h2>
+                        <h2 className="text-2xl font-bold">{isEditing ? t('form.titles.edit') : t('form.titles.create')}</h2>
 
                         {/* Form */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Agent Details</CardTitle>
+                                <CardTitle>{t('form.card.title')}</CardTitle>
                                 <CardDescription>
-                                    Configure your agent's basic information and behavior
+                                    {t('form.card.description')}
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -171,10 +178,10 @@ export default function ChatbotForm({ chatbot }: Props) {
                                             name="name"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Name *</FormLabel>
+                                                    <FormLabel>{t('form.fields.name')}</FormLabel>
                                                     <FormControl>
                                                         <Input
-                                                            placeholder="Enter agent name"
+                                                            placeholder={t('form.fields.name_placeholder')}
                                                             {...field}
                                                         />
                                                     </FormControl>
@@ -189,10 +196,10 @@ export default function ChatbotForm({ chatbot }: Props) {
                                             name="description"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Description *</FormLabel>
+                                                    <FormLabel>{t('form.fields.description')}</FormLabel>
                                                     <FormControl>
                                                         <Textarea
-                                                            placeholder="Describe what this agent does"
+                                                            placeholder={t('form.fields.description_placeholder')}
                                                             rows={3}
                                                             {...field}
                                                         />
@@ -208,7 +215,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                             name="agent_visibility"
                                             render={({ field }) => (
                                                 <FormItem className="space-y-3">
-                                                    <FormLabel>Agent Chat Visibility</FormLabel>
+                                                    <FormLabel>{t('form.fields.visibility')}</FormLabel>
                                                     <FormControl>
                                                         <RadioGroup
                                                             onValueChange={field.onChange}
@@ -220,7 +227,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                                     <RadioGroupItem value="all" />
                                                                 </FormControl>
                                                                 <FormLabel className="font-normal">
-                                                                    Agents can see all conversations in this chatbot.
+                                                                    {t('form.fields.visibility_all')}
                                                                 </FormLabel>
                                                             </FormItem>
                                                             <FormItem className="flex items-center space-x-3 space-y-0">
@@ -228,7 +235,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                                     <RadioGroupItem value="assigned_only" />
                                                                 </FormControl>
                                                                 <FormLabel className="font-normal">
-                                                                    Agents can only see conversations assigned to them.
+                                                                    {t('form.fields.visibility_assigned')}
                                                                 </FormLabel>
                                                             </FormItem>
                                                         </RadioGroup>
@@ -244,7 +251,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                             name="ai_enabled"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Enable AI</FormLabel>
+                                                    <FormLabel>{t('form.fields.enable_ai')}</FormLabel>
                                                     <div className="flex items-center space-x-2 relative">
                                                         <FormControl>
                                                             <Switch
@@ -253,11 +260,11 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                             />
                                                         </FormControl>
                                                         <Label className="text-sm font-normal">
-                                                            {field.value ? 'AI is Active' : 'AI is Inactive'}
+                                                            {field.value ? t('form.fields.ai_active') : t('form.fields.ai_inactive')}
                                                         </Label>
                                                     </div>
                                                     <FormDescription>
-                                                        If enabled, the AI will handle new conversations automatically.
+                                                        {t('form.fields.ai_description')}
                                                     </FormDescription>
                                                     <FormMessage />
                                                 </FormItem>
@@ -271,17 +278,17 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                 name="system_prompt"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>System Prompt</FormLabel>
+                                                        <FormLabel>{t('form.fields.system_prompt')}</FormLabel>
                                                         <FormControl>
                                                             <Textarea
-                                                                placeholder="Enter system instructions for the AI (optional)"
+                                                                placeholder={t('form.fields.system_prompt_placeholder')}
                                                                 rows={4}
                                                                 {...field}
                                                                 className="overflow-auto max-h-80"
                                                             />
                                                         </FormControl>
                                                         <FormDescription>
-                                                            Optional instructions that define how the AI should behave
+                                                            {t('form.fields.system_prompt_description')}
                                                         </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
@@ -296,7 +303,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                 name="response_delay_min"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Min Response Delay (seconds)</FormLabel>
+                                                        <FormLabel>{t('form.fields.min_delay')}</FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 type="number"
@@ -314,7 +321,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                 name="response_delay_max"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Max Response Delay (seconds)</FormLabel>
+                                                        <FormLabel>{t('form.fields.max_delay')}</FormLabel>
                                                         <FormControl>
                                                             <Input
                                                                 type="number"
@@ -336,7 +343,7 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                 name="status"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Status</FormLabel>
+                                                        <FormLabel>{t('form.fields.status')}</FormLabel>
                                                         <div className="flex items-center space-x-2 relative">
                                                             <FormControl>
                                                                 <Switch
@@ -345,11 +352,11 @@ export default function ChatbotForm({ chatbot }: Props) {
                                                                 />
                                                             </FormControl>
                                                             <Label className="text-sm font-normal">
-                                                                {field.value === 1 ? 'Active' : 'Inactive'}
+                                                                {field.value === 1 ? t('form.fields.active') : t('form.fields.inactive')}
                                                             </Label>
                                                         </div>
                                                         <FormDescription>
-                                                            Inactive agents won't respond to messages
+                                                            {t('form.fields.status_description')}
                                                         </FormDescription>
                                                         <FormMessage />
                                                     </FormItem>
@@ -360,12 +367,12 @@ export default function ChatbotForm({ chatbot }: Props) {
                                         {/* Actions */}
                                         <div className="flex items-center justify-end space-x-3 pt-4">
                                             <Button variant="outline" asChild>
-                                                <Link href={route('chatbots.index')}>Cancel</Link>
+                                                <Link href={route('chatbots.index')}>{t('form.actions.cancel')}</Link>
                                             </Button>
                                             <Button type="submit" disabled={processing}>
                                                 {processing
-                                                    ? (isEditing ? 'Updating...' : 'Creating...')
-                                                    : (isEditing ? 'Update Agent' : 'Create Agent')
+                                                    ? (isEditing ? t('form.actions.updating') : t('form.actions.creating'))
+                                                    : (isEditing ? t('form.actions.update') : t('form.actions.create'))
                                                 }
                                             </Button>
                                         </div>

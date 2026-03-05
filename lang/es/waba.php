@@ -4,7 +4,7 @@ return [
     'message' => [
         'sent' => [
             'errors' => [
-                '131042' => 'El mensaje no se pudo enviar debido a restricciones en la cuenta o saldo insuficiente. Por favor, verifica tu Meta Business Suite  (https://business.facebook.com/wa/manage/home/).',
+                '131042' => 'Error - Pago requerido. Agrega un método de pago válido en Meta para enviar mensajes con template. Haz clic aquí para resolverlo https://business.facebook.com/wa/manage/home/.',
                 'failure_ack' => 'Se recibió un ACK de fallo al Enviar.',
             ],
         ],

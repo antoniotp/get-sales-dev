@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Chat;
+namespace Tests\Feature\Chat;
 
 use App\Enums\MessageTemplate\HeaderType;
 use App\Enums\MessageTemplate\Status;

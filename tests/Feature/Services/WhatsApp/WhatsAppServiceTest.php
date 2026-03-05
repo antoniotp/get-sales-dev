@@ -1,6 +1,6 @@
 <?php
 
-namespace Feature\Services\WhatsApp;
+namespace Tests\Feature\Services\WhatsApp;
 
 use App\Enums\MessageTemplate\HeaderType;
 use App\Enums\MessageTemplate\Status;

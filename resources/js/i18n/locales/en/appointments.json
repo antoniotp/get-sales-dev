@@ -1,18 +1,46 @@
 {
   "title": "Schedule",
   "breadcrumbs": {
-    "chatbots": "Chatbots",
-    "agenda": "Schedule"
+        "chatbots": "Chatbots",
+        "agenda": "Schedule"
   },
   "calendar": {
-    "today": "Today",
-    "month": "Month",
-    "week": "Week",
-    "day": "Day",
-    "agenda": "Agenda",
-    "date": "Date",
-    "time": "Time",
-    "event": "Event",
-    "no_events": "No appointments in this range."
+        "today": "Today",
+        "month": "Month",
+        "week": "Week",
+        "day": "Day",
+        "agenda": "Agenda",
+        "date": "Date",
+        "time": "Time",
+        "event": "Event",
+        "no_events": "No appointments in this range."
+  },
+  "detailsModal": {
+        "validation": {
+            "appointmentRequired": "Appointment date is required."
+        },
+        "title": "Appointment Details",
+        "description": "View contact details and update the appointment time.",
+        "contact": "Contact",
+        "startTime": "Start Time",
+        "endTimeOptional": "End Time (Optional)",
+        "reminderTimeOptional": "Reminder Time (Optional)",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "update": "Update",
+        "updating": "Updating...",
+        "sendMessageToClient": "Send Message to Client",
+        "toast": {
+            "updateSuccess": "Appointment updated successfully.",
+            "updateError": "Failed to update appointment.",
+            "deleteSuccess": "Appointment deleted successfully.",
+            "deleteError": "Failed to delete appointment."
+        },
+        "deleteDialog": {
+            "title": "Are you absolutely sure?",
+            "description": "This action cannot be undone. This will permanently delete the appointment for {{firstName}} {{lastName}}.",
+            "deleting": "Deleting...",
+            "deleteAppointment": "Delete Appointment"
+        }
   }
 }

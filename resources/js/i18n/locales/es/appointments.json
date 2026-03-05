@@ -1,18 +1,46 @@
 {
   "title": "Agenda",
   "breadcrumbs": {
-    "chatbots": "Chatbots",
-    "agenda": "Agenda"
+        "chatbots": "Chatbots",
+        "agenda": "Agenda"
   },
   "calendar": {
-    "today": "Hoy",
-    "month": "Mes",
-    "week": "Semana",
-    "day": "Día",
-    "agenda": "Agenda",
-    "date": "Fecha",
-    "time": "Hora",
-    "event": "Evento",
-    "no_events": "No hay citas en este rango."
+        "today": "Hoy",
+        "month": "Mes",
+        "week": "Semana",
+        "day": "Día",
+        "agenda": "Agenda",
+        "date": "Fecha",
+        "time": "Hora",
+        "event": "Evento",
+        "no_events": "No hay citas en este rango."
+  },
+  "detailsModal": {
+        "validation": {
+            "appointmentRequired": "La fecha de la cita es obligatoria."
+        },
+        "title": "Detalles de la Cita",
+        "description": "Ver los datos del contacto y actualizar la hora de la cita.",
+        "contact": "Contacto",
+        "startTime": "Hora de Inicio",
+        "endTimeOptional": "Hora de Finalización (Opcional)",
+        "reminderTimeOptional": "Hora de Recordatorio (Opcional)",
+        "delete": "Eliminar",
+        "cancel": "Cancelar",
+        "update": "Actualizar",
+        "updating": "Actualizando...",
+        "sendMessageToClient": "Enviar Mensaje al Cliente",
+        "toast": {
+            "updateSuccess": "Cita actualizada correctamente.",
+            "updateError": "No se pudo actualizar la cita.",
+            "deleteSuccess": "Cita eliminada correctamente.",
+            "deleteError": "No se pudo eliminar la cita."
+        },
+        "deleteDialog": {
+            "title": "¿Estás completamente seguro?",
+            "description": "Esta acción no se puede deshacer. Esto eliminará permanentemente la cita de {{firstName}} {{lastName}}.",
+            "deleting": "Eliminando...",
+            "deleteAppointment": "Eliminar Cita"
+        }
   }
 }

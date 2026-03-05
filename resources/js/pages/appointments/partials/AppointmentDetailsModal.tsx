@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef } from 'react';
 import { usePage } from '@inertiajs/react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import * as z from 'zod';
 import axios from 'axios';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ interface Props {
 export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
     ({ isOpen, onClose, onUpdate, onDelete, appointment, organizationTimezone }, ref) => {
         const { chatbot } = usePage<PageProps>().props as { chatbot: Chatbot };
+        const { t } = useTranslation('appointments');
         const [isSubmitting, setIsSubmitting] = useState(false);
         const [isDeleting, setIsDeleting] = useState(false);
         const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -70,10 +72,10 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                 const response = await axios.put(route('appointments.update', { appointment: appointment.id }), data);
                 onUpdate(response.data);
                 onClose();
-                toast.success("Appointment updated successfully.");
+                toast.success(t('detailsModal.toast.updateSuccess'));
             } catch (error) {
                 console.error('Failed to update appointment:', error);
-                toast.error("Failed to update appointment.");
+                toast.error(t('detailsModal.toast.updateError'));
             } finally {
                 setIsSubmitting(false);
             }
@@ -86,12 +88,12 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
             try {
                 await axios.delete(route('appointments.destroy', { appointment: appointment.id }));
                 onDelete(appointment.id);
-                toast.success("Appointment deleted successfully.");
+                toast.success(t('detailsModal.toast.deleteSuccess'));
                 setDeleteDialogOpen(false);
                 onClose();
             } catch (error) {
                 console.error('Failed to delete appointment:', error);
-                toast.error("Failed to delete appointment.");
+                toast.error(t('detailsModal.toast.deleteError'));
             } finally {
                 setIsDeleting(false);
             }
@@ -114,13 +116,13 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                         }}
                     >
                         <DialogHeader>
-                            <DialogTitle>Appointment Details</DialogTitle>
-                            <DialogDescription>View contact details and update the appointment time.</DialogDescription>
+                            <DialogTitle>{t('detailsModal.title')}</DialogTitle>
+                            <DialogDescription>{t('detailsModal.description')}</DialogDescription>
                         </DialogHeader>
 
                         <div className="py-4 space-y-4">
                             <div className="p-3 border rounded-md bg-muted/50">
-                                <p className="text-sm font-medium text-muted-foreground">Contact</p>
+                                <p className="text-sm font-medium text-muted-foreground">{t('detailsModal.contact')}</p>
                                 <p className="font-semibold">{`${appointment.contact.first_name} ${appointment.contact.last_name || ''}`.trim()}</p>
                                 <p className="text-sm">{formatPhoneNumber(appointment.contact.phone_number)}</p>
                             </div>
@@ -129,7 +131,7 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                                 <form id="update-appointment-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                     <FormField control={form.control} name="appointment_at" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Start Time</FormLabel>
+                                            <FormLabel>{t('detailsModal.startTime')}</FormLabel>
                                             <FormControl><Input type="datetime-local" {...field} /></FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -137,7 +139,7 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
 
                                     <FormField control={form.control} name="end_at" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>End Time (Optional)</FormLabel>
+                                            <FormLabel>{t('detailsModal.endTimeOptional')}</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="datetime-local"
@@ -151,7 +153,7 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
 
                                     <FormField control={form.control} name="remind_at" render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Reminder Time (Optional)</FormLabel>
+                                            <FormLabel>{t('detailsModal.reminderTimeOptional')}</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="datetime-local"
@@ -174,12 +176,12 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                                     setDeleteDialogOpen(true);
                                 }}
                             >
-                                Delete
+                                {t('detailsModal.delete')}
                             </Button>
                             <div className="flex gap-2">
-                                <Button variant="ghost" onClick={onClose}>Cancel</Button>
+                                <Button variant="ghost" onClick={onClose}>{t('detailsModal.cancel')}</Button>
                                 <Button type="submit" form="update-appointment-form" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Updating...' : 'Update'}
+                                    {isSubmitting ? t('detailsModal.updating') : t('detailsModal.update')}
                                 </Button>
                             </div>
                         </DialogFooter>
@@ -195,7 +197,7 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 bg-blue-500 text-primary-foreground hover:bg-blue-600"
                                 >
-                                    Enviar Mensaje al Cliente
+                                    {t('detailsModal.sendMessageToClient')}
                                 </a>
                             </div>
                         )}
@@ -205,17 +207,20 @@ export const AppointmentDetailsModal = forwardRef<HTMLDivElement, Props>(
                 {/* Delete confirmation Dialog */}
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
-                        <DialogTitle>Are you absolutely sure?</DialogTitle>
+                        <DialogTitle>{t('detailsModal.deleteDialog.title')}</DialogTitle>
                         <DialogDescription>
-                            This action cannot be undone. This will permanently delete the appointment for {appointment.contact.first_name} {appointment.contact.last_name}.
+                            {t('detailsModal.deleteDialog.description', {
+                                firstName: appointment.contact.first_name,
+                                lastName: appointment.contact.last_name,
+                            })}
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex gap-2 sm:justify-end">
                         <Button variant="ghost" onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
-                            Cancel
+                            {t('detailsModal.cancel')}
                         </Button>
                         <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                            {isDeleting ? 'Deleting...' : 'Delete Appointment'}
+                            {isDeleting ? t('detailsModal.deleteDialog.deleting') : t('detailsModal.deleteDialog.deleteAppointment')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>

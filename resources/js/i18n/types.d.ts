@@ -14,6 +14,7 @@ import sideBar from './locales/es/sidebar.json';
 import settings from './locales/es/settings.json';
 import ui from './locales/es/ui.json';
 import common from './locales/es/common.json';
+import auth from './locales/es/auth.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -33,6 +34,7 @@ declare module 'i18next' {
       settings: typeof settings;
       ui: typeof ui;
       common: typeof common;
+      auth: typeof auth;
     };
   }
 }

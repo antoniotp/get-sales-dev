@@ -29,6 +29,8 @@ import esUi from './locales/es/ui.json';
 import enUi from './locales/en/ui.json';
 import esCommon from './locales/es/common.json';
 import enCommon from './locales/en/common.json';
+import esAuth from './locales/es/auth.json';
+import enAuth from './locales/en/auth.json';
 
 i18n
     .use(initReactI18next)
@@ -49,6 +51,7 @@ i18n
                 settings: esSettings,
                 ui: esUi,
                 common: esCommon,
+                auth: esAuth,
             },
             en: {
                 navigation: enNavigation,
@@ -65,6 +68,7 @@ i18n
                 settings: enSettings,
                 ui: enUi,
                 common: enCommon,
+                auth: enAuth,
             },
         },
 
@@ -83,7 +87,8 @@ i18n
             'sidebar',
             'settings',
             'ui',
-            'common'
+            'common',
+            'auth',
         ],
 
         defaultNS: 'navigation',

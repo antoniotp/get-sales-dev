@@ -33,6 +33,7 @@ interface Template {
     platformStatus: number;
     isDeleted: number;
     language: string;
+    channel_id: number;
 }
 
 interface TemplatesProps {
@@ -196,9 +197,11 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                                             <DropdownMenuItem asChild>
                                                 <Link href={route('message-templates.edit', template.id)}>{t('index.actions.edit')}</Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleSendToReview(template.id)}>
-                                                {t('index.actions.send_to_review')}
-                                            </DropdownMenuItem>
+                                            {template.channel_id === 1 && (template.status === 'draft' || template.status === 'rejected') && (
+                                                <DropdownMenuItem onClick={() => handleSendToReview(template.id)}>
+                                                    {t('index.actions.send_to_review')}
+                                                </DropdownMenuItem>
+                                            )}
                                             <DropdownMenuItem onClick={() => handleDelete(template.id)}>
                                                 {t('index.actions.delete.delete')}
                                             </DropdownMenuItem>

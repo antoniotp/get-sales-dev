@@ -16,6 +16,7 @@ class MessageTemplateData implements Arrayable
         public int $platformStatus,
         public bool $isDeleted,
         public string $language,
+        public int $channel_id,
     ) {}
 
     public static function fromMessageTemplate(MessageTemplate $template): self
@@ -28,6 +29,7 @@ class MessageTemplateData implements Arrayable
             platformStatus: $template->platform_status,
             isDeleted: (bool) $template->trashed(),
             language: $template->language,
+            channel_id: $template->chatbotChannel->channel_id,
         );
     }
 
@@ -41,6 +43,7 @@ class MessageTemplateData implements Arrayable
             'platformStatus' => $this->platformStatus,
             'isDeleted' => $this->isDeleted,
             'language' => $this->language,
+            'channel_id' => $this->channel_id,
         ];
     }
 }

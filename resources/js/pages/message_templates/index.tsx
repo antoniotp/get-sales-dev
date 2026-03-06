@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout'
 import MessageTemplateLayout from '@/layouts/message_templates/layout'
 import { Head, Link, useForm, usePage } from '@inertiajs/react'
+import { router } from '@inertiajs/react';
 import { useMemo } from 'react';
 import { BreadcrumbItem, PageProps } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -57,6 +58,25 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                 }
             });
         }
+    };
+
+    const handleSendToReview = (templateId: number) => {
+        if (!templateId) return; // Should only be available for existing templates
+
+        // Perform the Inertia POST request to the new endpoint
+        router.post(
+            route('message-templates.send-for-review', { template: templateId }),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // The backend redirect already handles the flash message
+                },
+                onError: (errors) => {
+                    console.error('Error sending for review:', errors);
+                },
+            },
+        );
     };
 
     // Function to render the platform status badge with its appropriate color and icon
@@ -176,7 +196,12 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                                             <DropdownMenuItem asChild>
                                                 <Link href={route('message-templates.edit', template.id)}>{t('index.actions.edit')}</Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>{t('index.actions.delete.delete')}</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleSendToReview(template.id)}>
+                                                {t('index.actions.send_to_review')}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>
+                                                {t('index.actions.delete.delete')}
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -185,12 +210,14 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">{t('index.table.no_templates')}</TableCell>
+                        <TableCell colSpan={5} className="text-center">
+                            {t('index.table.no_templates')}
+                        </TableCell>
                     </TableRow>
                 )}
             </TableBody>
         </Table>
-    )
+    );
 }
 
 export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {

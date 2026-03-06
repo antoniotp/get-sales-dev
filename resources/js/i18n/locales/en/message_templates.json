@@ -25,7 +25,8 @@
                 "delete": "Delete"
             },
             "edit": "Edit",
-            "create": "Create Template"
+            "create": "Create Template",
+            "send_to_review": "Sent to Review"
         },
         "table": {
             "name": "Name",

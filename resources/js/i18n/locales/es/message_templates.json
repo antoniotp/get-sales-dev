@@ -25,7 +25,8 @@
                 "delete": "Eliminar"
             },
             "edit": "Editar",
-            "create": "Crear Plantilla"
+            "create": "Crear Plantilla",
+            "send_to_review": "Enviar a Revisión"
         },
         "table": {
             "name": "Nombre",

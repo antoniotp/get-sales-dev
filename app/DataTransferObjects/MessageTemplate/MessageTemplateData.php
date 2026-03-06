@@ -17,6 +17,7 @@ class MessageTemplateData implements Arrayable
         public bool $isDeleted,
         public string $language,
         public int $channel_id,
+        public string $rejected_reason,
     ) {}
 
     public static function fromMessageTemplate(MessageTemplate $template): self
@@ -30,6 +31,7 @@ class MessageTemplateData implements Arrayable
             isDeleted: (bool) $template->trashed(),
             language: $template->language,
             channel_id: $template->chatbotChannel->channel_id,
+            rejected_reason: $template->rejected_reason ?? '',
         );
     }
 
@@ -44,6 +46,7 @@ class MessageTemplateData implements Arrayable
             'isDeleted' => $this->isDeleted,
             'language' => $this->language,
             'channel_id' => $this->channel_id,
+            'rejected_reason' => $this->rejected_reason,
         ];
     }
 }

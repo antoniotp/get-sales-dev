@@ -24,6 +24,7 @@ import {
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {useTranslation, Trans} from "react-i18next";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface Template {
     id: number;
@@ -34,6 +35,7 @@ interface Template {
     isDeleted: number;
     language: string;
     channel_id: number;
+    rejected_reason: string;
 }
 
 interface TemplatesProps {
@@ -82,7 +84,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
 
     // Function to render the platform status badge with its appropriate color and icon
     const getPlatformStatusBadge = useMemo(
-        () => (status: string) => {
+        () => (status: string, rejected_reason: string) => {
             const statusLower = status.toLowerCase();
             const label = t(`index.platform_status.${statusLower}`, { defaultValue: status });
 
@@ -110,10 +112,20 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     );
                 case 'rejected':
                     return (
-                        <Badge className="bg-red-500 text-white dark:bg-red-600">
-                            <XCircle className="mr-1 h-3 w-3" />
-                            {label}
-                        </Badge>
+                        <div className="flex items-center">
+                            <Badge className="bg-red-500 text-white dark:bg-red-600">
+                                <XCircle className="mr-1 h-3 w-3" />
+                                {label}
+                            </Badge>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Info className="ml-1.5 h-4 w-4 text-slate-400 hover:text-slate-600 cursor-help transition-color" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>{rejected_reason}</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
                     );
                 case 'paused':
                     return (
@@ -180,7 +192,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     templates.map((template) => (
                         <TableRow key={template.id}>
                             <TableCell className="font-medium">{template.name}</TableCell>
-                            <TableCell>{getPlatformStatusBadge(template.status)}</TableCell>
+                            <TableCell>{getPlatformStatusBadge(template.status, template.rejected_reason)}</TableCell>
                             <TableCell>{template.category}</TableCell>
                             <TableCell>{template.language}</TableCell>
                             <TableCell>{getLocalStatus(template)}</TableCell>

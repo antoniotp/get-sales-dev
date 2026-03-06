@@ -6,7 +6,7 @@ import { BreadcrumbItem, PageProps } from '@/types'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { DropdownMenu, DropdownMenuLabel, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu';
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge'
 import {
@@ -43,61 +43,69 @@ interface TemplatesProps {
 
 const TemplateTable = ({ templates }: { templates: Template[] }) => {
     const { delete: inertiaDelete } = useForm(); // Destructure delete method from useForm
+    const {t} = useTranslation('messageTemplates');
 
     const handleDelete = (templateId: number) => {
-        if (confirm('Are you sure you want to delete this template?')) {
+        if (confirm(t('index.actions.delete.confirm'))) {
             inertiaDelete(route('message-templates.destroy', templateId), { // Use inertiaDelete for DELETE request
                 onSuccess: () => {
-                    // Optionally, you can add some feedback here
                     // Inertia will automatically re-render the page with updated data.
                 },
                 onError: (errors) => {
                     console.error('Error deleting template:', errors);
-                    alert('Failed to delete template.');
+                    alert(t('index.actions.delete.error'));
                 }
             });
         }
     };
 
-    // Function to render platform status badge with appropriate color and icon
+    // Function to render the platform status badge with its appropriate color and icon
     const getPlatformStatusBadge = useMemo(
         () => (status: string) => {
             const statusLower = status.toLowerCase();
+            const label = t(`index.platform_status.${statusLower}`, { defaultValue: status });
 
             switch (statusLower) {
+                case 'draft':
+                    return (
+                        <Badge className="bg-slate-500 text-white">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {label}
+                        </Badge>
+                    )
                 case 'pending':
                     return (
                         <Badge className="bg-yellow-500 text-white dark:bg-yellow-600">
-                            <Clock className="w-3 h-3 mr-1" />
-                            Pending
+                            <Clock className="mr-1 h-3 w-3" />
+                            {label}
                         </Badge>
                     );
                 case 'approved':
                     return (
                         <Badge className="bg-green-500 text-white dark:bg-green-600">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Approved
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            {label}
                         </Badge>
                     );
                 case 'rejected':
                     return (
                         <Badge className="bg-red-500 text-white dark:bg-red-600">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Rejected
+                            <XCircle className="mr-1 h-3 w-3" />
+                            {label}
                         </Badge>
                     );
                 case 'paused':
                     return (
                         <Badge className="bg-orange-500 text-white dark:bg-orange-600">
-                            <PauseCircle className="w-3 h-3 mr-1" />
-                            Paused
+                            <PauseCircle className="mr-1 h-3 w-3" />
+                            {label}
                         </Badge>
                     );
                 case 'disabled':
                     return (
                         <Badge className="bg-gray-500 text-white dark:bg-gray-600">
-                            <Ban className="w-3 h-3 mr-1" />
-                            Disabled
+                            <Ban className="mr-1 h-3 w-3" />
+                            {label}
                         </Badge>
                     );
                 default:
@@ -108,42 +116,42 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     );
             }
         },
-        [],
+        [t],
     );
 
     const getLocalStatus = useMemo(
         () => (template: Template) => {
             if (template.isDeleted) return (
                 <Badge variant="destructive">
-                    <DeleteIcon className="w-3 h-3 mr-1" />
-                    Deleted
+                    <DeleteIcon className="mr-1 h-3 w-3" />
+                    {t('index.status.deleted')}
                 </Badge>
             );
             return template.platformStatus === 1 ? (
                 <Badge className="bg-green-500 text-white dark:bg-green-600">
-                    <CheckCircle className="w-3 h-3 mr-1" />
-                    Active
+                    <CheckCircle className="mr-1 h-3 w-3" />
+                    {t('index.status.active')}
                 </Badge>
             ) : (
                 <Badge className="bg-gray-500 text-white dark:bg-gray-600">
-                    <XCircle className="w-3 h-3 mr-1" />
-                    Inactive
+                    <XCircle className="mr-1 h-3 w-3" />
+                    {t('index.status.inactive')}
                 </Badge>
             );
         },
-        [],
+        [t],
     );
 
     return (
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="w-[100px]">Name</TableHead>
-                    <TableHead>Platform Status</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Language</TableHead>
-                    <TableHead>Active</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[100px]">{t('index.table.name')}</TableHead>
+                    <TableHead>{t('index.table.platform_status')}</TableHead>
+                    <TableHead>{t('index.table.category')}</TableHead>
+                    <TableHead>{t('index.table.language')}</TableHead>
+                    <TableHead>{t('index.table.active')}</TableHead>
+                    <TableHead className="text-right">{t('index.table.actions')}</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -160,16 +168,15 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Open menu</span>
+                                                <span className="sr-only">{t('index.table.open_menu')}</span>
                                                 <MoreHorizontal />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                             <DropdownMenuItem asChild>
-                                                <Link href={route('message-templates.edit', template.id)}>Edit</Link>
+                                                <Link href={route('message-templates.edit', template.id)}>{t('index.actions.edit')}</Link>
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>Delete</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDelete(template.id)}>{t('index.actions.delete.delete')}</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -178,7 +185,7 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">No templates found</TableCell>
+                        <TableCell colSpan={5} className="text-center">{t('index.table.no_templates')}</TableCell>
                     </TableRow>
                 )}
             </TableBody>
@@ -189,29 +196,29 @@ const TemplateTable = ({ templates }: { templates: Template[] }) => {
 export default function Templates({ allTemplates, activeTemplates, deletedTemplates }: TemplatesProps) {
     const { props } = usePage<PageProps>();
 
+    const { t } = useTranslation('messageTemplates');
+
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         {
             title: props.chatbot.name,
             href: route('chatbots.edit', props.chatbot.id),
         },
         {
-            title: 'Message templates management',
+            title: t('index.breadcrumbs.title'),
             href: route('message-templates.index', props.chatbot.id),
         },
-    ], [props.chatbot]);
-
-    const { t } = useTranslation('messageTemplates');
+    ], [props.chatbot,t]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Message templates | List" />
+            <Head title={t('index.page.head.title')} />
             <MessageTemplateLayout>
                 <div className="flex h-[calc(100vh-8rem)] w-full overflow-hidden">
                     <Card className="w-full p-3">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-2xl font-bold">Message Templates</h2>
+                            <h2 className="text-2xl font-bold">{t('index.page.title')}</h2>
                             <Link href={route('message-templates.create')}>
-                                <Button>Create Template</Button>
+                                <Button>{t('index.actions.create')}</Button>
                             </Link>
                         </div>
                         <div className="overflow-auto">
@@ -254,9 +261,9 @@ export default function Templates({ allTemplates, activeTemplates, deletedTempla
                             </Alert>
                             <Tabs defaultValue="template_library" className="w-full">
                                 <TabsList>
-                                    <TabsTrigger value="template_library">Template Library</TabsTrigger>
-                                    <TabsTrigger value="active_templates">Active</TabsTrigger>
-                                    <TabsTrigger value="deleted_templates">Deleted</TabsTrigger>
+                                    <TabsTrigger value="template_library">{t('index.page.tab_name.template_library')}</TabsTrigger>
+                                    <TabsTrigger value="active_templates">{t('index.page.tab_name.active_templates')}</TabsTrigger>
+                                    <TabsTrigger value="deleted_templates">{t('index.page.tab_name.deleted_templates')}</TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="template_library">
                                     <TemplateTable templates={allTemplates} />

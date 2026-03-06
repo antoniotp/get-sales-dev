@@ -3,6 +3,53 @@
         "description_part1": "To send bulk messages or contact a user after 24 hours since the last message, it is mandatory to use templates previously approved by Meta. This is required by Meta as part of its WhatsApp Business policies. Note: a template is a predefined message used for these types of communications.",
         "description_part2": "Create your templates and use them for marketing campaigns or utility messages for your customers (for example, appointment reminders, follow-ups, among others). Remember that once you create a template, you must submit it for review (you will see a button enabled for this action). The review process usually takes a few minutes.",
         "description_part3": "If you have any questions, you can contact support.",
-        "payment_notice": "<0>IMPORTANT:</0> To use templates, you must add a payment method in Meta Business Suite (<1>https://business.facebook.com/wa/manage/home/</1>). More info at <2>https://www.facebook.com/business/help/488291839463771</2>"
+        "payment_notice": "<0>IMPORTANT:</0> To use templates, you must add a payment method in Meta Business Suite (<1>https://business.facebook.com/wa/manage/home/</1>). More info at <2>https://www.facebook.com/business/help/488291839463771</2>",
+        "platform_status": {
+            "draft": "Draft",
+            "pending": "Pending Review",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "paused": "Paused",
+            "disabled": "Disabled"
+        },
+        "status": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "deleted": "Deleted"
+        },
+        "actions": {
+            "delete": {
+                "confirm": "Are you sure you want to delete this template?",
+                "error": "Failed to delete template",
+                "cancel": "Cancel",
+                "delete": "Delete"
+            },
+            "edit": "Edit",
+            "create": "Create Template"
+        },
+        "table": {
+            "name": "Name",
+            "platform_status": "Platform Status",
+            "category": "Category",
+            "language": "Language",
+            "active": "Active",
+            "actions": "Actions",
+            "no_templates": "No templates found",
+            "open_menu": "Open menu"
+        },
+        "breadcrumbs": {
+            "title": "Message templates management"
+        },
+        "page": {
+            "head": {
+                "title": "Message templates | List"
+            },
+            "title": "Message templates",
+            "tab_name": {
+                "template_library": "Template Library",
+                "active_templates": "Active",
+                "deleted_templates": "Deleted"
+            }
+        }
     }
 }

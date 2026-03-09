@@ -348,4 +348,74 @@ class WhatsAppServiceTest extends TestCase
             return true; // Indicate that this request matches our assertion criteria
         });
     }
+
+    #[Test]
+    public function it_skips_waba_deletion_if_external_id_is_missing(): void
+    {
+        // Arrange: Template without external_template_id
+        $template = MessageTemplate::factory()->for($this->channel)->create([
+            'external_template_id' => null,
+            'name' => 'test_to_delete',
+            'language' => 'en_US',
+            'category_id' => $this->marketingCategory->id,
+        ]);
+        $template->delete();
+
+        // Act
+        $result = $this->whatsAppService->deleteTemplate($template);
+
+        // Assert: Returns true (nothing to do) and does NOT send an HTTP request
+        $this->assertTrue($result);
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function it_fails_deletion_if_template_is_not_yet_deleted_in_db(): void
+    {
+        // Arrange: Template with external ID but NOT deleted (has no deleted_at)
+        $template = MessageTemplate::factory()->for($this->channel)->create([
+            'external_template_id' => '123456789',
+            'name' => 'test_to_delete',
+            'language' => 'en_US',
+            'category_id' => $this->marketingCategory->id,
+        ]);
+
+        // Act
+        $result = $this->whatsAppService->deleteTemplate($template);
+
+        // Assert: Returns false and DOES NOT send request
+        $this->assertFalse($result);
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function it_calls_the_correct_waba_endpoint_to_delete_a_template(): void
+    {
+        // 1. Arrange
+        $template = MessageTemplate::factory()->for($this->channel)->create([
+            'external_template_id' => '123456789',
+            'name' => 'test_to_delete',
+            'language' => 'en_US',
+            'category_id' => $this->marketingCategory->id,
+        ]);
+
+        $template->delete();
+
+        Http::fake([
+            '*/message_templates*' => Http::response(['success' => true], 200),
+        ]);
+
+        // 2. Act
+        $result = $this->whatsAppService->deleteTemplate($template);
+
+        // 3. Assert
+        $this->assertTrue($result);
+
+        Http::assertSent(function ($request) {
+            return $request->method() === 'DELETE' &&
+                str_contains($request->url(), 'message_templates') &&
+                $request->data()['hsm_id'] === '123456789' &&
+                $request->data()['name'] === 'test_to_delete';
+        });
+    }
 }

@@ -360,6 +360,59 @@ class WhatsAppService implements WhatsAppServiceInterface
         return $components;
     }
 
+    public function deleteTemplate(MessageTemplate $template): bool
+    {
+        if ($template->external_template_id === null) {
+            Log::info('Template has no external ID, skipping.', ['template_id' => $template->id]);
+
+            return true;
+        }
+        if ($template->deleted_at === null) {
+            Log::error('Template is not deleted in DB', ['template_id' => $template->id]);
+
+            return false;
+        }
+        $chatbotChannel = $template->chatbotChannel;
+        $credentials = $chatbotChannel->credentials;
+        $accessToken = $credentials['whatsapp_business_access_token'];
+
+        /*
+         curl -X DELETE 'https://graph.facebook.com/v23.0/102290129340398/message_templates?hsm_id=1407680676729941&name=order_confirmation' \
+-H 'Authorization: Bearer EAAJB...'
+        Response:
+            {
+              'success': true
+            }
+         */
+        try {
+            $baseApiUrl = $this->buildApiUrl($chatbotChannel->webhook_url, $credentials, 'template');
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->delete($baseApiUrl.'/message_templates', [
+                'hsm_id' => $template->external_template_id,
+                'name' => $template->name,
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('Failed to delete template from WABA: '.$response->body(), [
+                    'template_id' => $template->id,
+                    'external_id' => $template->external_template_id,
+                ]);
+
+                return false;
+            }
+
+            Log::info('Template deleted successfully from WABA', ['name' => $template->name]);
+
+            return true;
+
+        } catch (Exception $e) {
+            Log::error('Error deleting template from WABA: '.$e->getMessage(), ['template_id' => $template->id]);
+        }
+
+        return false;
+    }
+
     public function getMediaInfo(string $mediaId, ChatbotChannel $channel): ?array
     {
         try {

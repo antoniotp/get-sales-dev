@@ -8,6 +8,7 @@ use App\Contracts\Services\MessageTemplate\MessageTemplateServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Enums\MessageTemplate\HeaderType;
 use App\Enums\MessageTemplate\Status;
+use App\Events\MessageTemplate\MessageTemplateDeleted;
 use App\Events\MessageTemplateCreated;
 use App\Models\Chatbot;
 use App\Models\Conversation;
@@ -53,6 +54,16 @@ class MessageTemplateService implements MessageTemplateServiceInterface
         $template->update($processedData);
 
         return $template;
+    }
+
+    public function deleteTemplate(MessageTemplate $template): bool
+    {
+        $result = $template->delete();
+        if ($result) {
+            event(new MessageTemplateDeleted($template));
+        }
+
+        return $result;
     }
 
     /**

@@ -44,4 +44,6 @@ interface MessageTemplateServiceInterface
         array $manualValues,
         User $user
     ): Message;
+
+    public function deleteTemplate(MessageTemplate $template): bool;
 }

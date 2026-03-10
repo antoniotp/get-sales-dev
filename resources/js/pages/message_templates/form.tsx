@@ -217,7 +217,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     };
 
     // which chatbot_channel is related to WABA channel.
-    const watchedHeaderType = form.watch('header_type');
+    // const watchedHeaderType = form.watch('header_type');
     const watchedHeaderContent = form.watch('header_content');
     const watchedHeaderVariable = form.watch('header_variable');
     const watchedHeaderVariableType = form.watch('header_variable_type');
@@ -968,6 +968,17 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         </Button>*/}
                                                                     </div>
                                                                 </FormControl>
+                                                                <div className="flex flex-col gap-1 mt-1">
+                                                                    <div className={`text-xs text-right ${(watchedHeaderContent?.length || 0) > 60 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                                                                        {(watchedHeaderContent?.length || 0) > 60 && <span className="mr-1 uppercase font-bold tracking-tight">Limit exceeded — </span>}
+                                                                        {watchedHeaderContent?.length || 0}/60
+                                                                    </div>
+                                                                    {detectedHeaderPlaceholders.length > 0 && (
+                                                                        <p className="text-xs text-amber-600 font-medium leading-tight">
+                                                                            <strong>Note</strong>: The value of the placeholder also adds to the limit. The message might not be sent if it exceeds 60 characters.
+                                                                        </p>
+                                                                    )}
+                                                                </div>
                                                                 <FormMessage />
                                                             </FormItem>
                                                         )}
@@ -1130,6 +1141,17 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 }}
                                                             />
                                                         </FormControl>
+                                                        <div className="flex flex-col gap-1 mt-1">
+                                                            <div className={`text-xs text-right ${(watchedBodyContent?.length || 0) > 1024 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                                                                {(watchedBodyContent?.length || 0) > 1024 && <span className="mr-1 uppercase font-bold tracking-tight">Limit exceeded — </span>}
+                                                                {watchedBodyContent?.length || 0}/1024
+                                                            </div>
+                                                            {detectedPlaceholders.length > 0 && (
+                                                                <p className="text-xs text-amber-600 font-medium leading-tight">
+                                                                    <strong>Note</strong>: The values of the placeholders also add to the limit. The message might not be sent if it exceeds 1024 characters.
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}

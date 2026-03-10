@@ -139,6 +139,9 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     const [variableTypeError, setVariableTypeError] = useState<string | null>(null);
     const [dbSelectValue, setDbSelectValue] = useState<string>('');
     const [headerDbSelectValue, setHeaderDbSelectValue] = useState<string>('');
+    const [showManualHeaderVar, setShowManualHeaderVar] = useState(() => {
+        return template?.header_variable_mapping?.source === 'manual';
+    });
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
         { title: 'Message Templates', href: route('message-templates.index', props.chatbot.id) },
@@ -987,92 +990,114 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 {/*{watchedHeaderType === 'text' && (*/}
                                                     <div className="space-y-3">
                                                         <Label className="text-sm">Header Variable</Label>
-                                                        <div className="flex flex-wrap items-center gap-3 mt-2">
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 items-center">
-                                                                {watchedHeaderVariableType === 'named' && (
-                                                                    <Input
-                                                                        placeholder="variable_name"
-                                                                        value={namedHeaderVariableName}
-                                                                        onChange={(e) => setNamedHeaderVariableName(e.target.value)}
-                                                                        className="w-full"
-                                                                        disabled={hasHeaderVariable}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === 'Enter') {
-                                                                                e.preventDefault();
-                                                                                handleAddHeaderPlaceholder();
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                )}
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full"
-                                                                    onClick={handleAddHeaderPlaceholder}
-                                                                    disabled={
-                                                                        hasHeaderVariable ||
-                                                                        (watchedHeaderVariableType === 'named' && !namedVariableName.trim())
-                                                                    }
-                                                                >
-                                                                    + Add Placeholder
-                                                                    {watchedHeaderVariableType === 'positional' && ' {{1}}'}
-                                                                </Button>
-                                                                {availableVariables && availableVariables.length > 0 && (
-                                                                    <div
-                                                                        className={`
-                                                                            w-full
-                                                                            md:col-span-2
-                                                                            xl:col-span-1
-                                                                            ${watchedHeaderVariableType !== 'named' ? 'md:col-span-1 xl:col-span-1' : ''}
-                                                                        `}
-                                                                    >
-                                                                        <TooltipProvider>
-                                                                            <Tooltip delayDuration={250}>
-                                                                                <TooltipTrigger asChild>
-                                                                                    <div className="inline-block w-full">
-                                                                                        <Select
-                                                                                            value={headerDbSelectValue}
-                                                                                            onValueChange={(value) => {
-                                                                                                const selectedVar = availableVariables.find(
-                                                                                                    (v) => v.source_path === value,
-                                                                                                );
-                                                                                                if (selectedVar) {
-                                                                                                    handleAddDbHeaderPlaceholder(selectedVar);
-                                                                                                    setHeaderDbSelectValue("");
-                                                                                                }
-                                                                                            }}
-                                                                                            disabled={hasHeaderVariable}
-                                                                                        >
-                                                                                            <SelectTrigger className="w-full">
-                                                                                                <SelectValue placeholder="+ Insert DB Variable" />
-                                                                                            </SelectTrigger>
-                                                                                            <SelectContent>
-                                                                                                {availableVariables.map((variable) => (
-                                                                                                    <SelectItem
-                                                                                                        key={variable.source_path}
-                                                                                                        value={variable.source_path}
-                                                                                                    >
-                                                                                                        {variable.label}
-                                                                                                    </SelectItem>
-                                                                                                ))}
-                                                                                            </SelectContent>
-                                                                                        </Select>
-                                                                                    </div>
-                                                                                </TooltipTrigger>
-                                                                                {hasHeaderVariable && (
-                                                                                    <TooltipContent
-                                                                                        className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
-                                                                                        side="bottom"
-                                                                                    >
-                                                                                        <p>Remove the existing variable to add a new one.</p>
-                                                                                    </TooltipContent>
-                                                                                )}
-                                                                            </Tooltip>
-                                                                        </TooltipProvider>
+                                                        <div className="mt-2">
+                                                            {watchedHeaderVariableType === 'named' ? (
+                                                                <div className="space-y-3">
+                                                                    <div className="flex flex-col md:flex-row items-center gap-2 w-full">
+                                                                        {availableVariables && availableVariables.length > 0 && (
+                                                                            <div className="w-full md:flex-1">
+                                                                                <TooltipProvider>
+                                                                                    <Tooltip delayDuration={250}>
+                                                                                        <TooltipTrigger asChild>
+                                                                                            <div className="w-full">
+                                                                                                <Select
+                                                                                                    value={headerDbSelectValue}
+                                                                                                    onValueChange={(value) => {
+                                                                                                        const selectedVar = availableVariables.find(v => v.source_path === value);
+                                                                                                        if (selectedVar) {
+                                                                                                            handleAddDbHeaderPlaceholder(selectedVar);
+                                                                                                            setHeaderDbSelectValue('');
+                                                                                                        }
+                                                                                                    }}
+                                                                                                    disabled={hasHeaderVariable}
+                                                                                                >
+                                                                                                    <SelectTrigger className="w-full">
+                                                                                                        <SelectValue placeholder="+ Insert DB Variable" />
+                                                                                                    </SelectTrigger>
+                                                                                                    <SelectContent>
+                                                                                                        {availableVariables.map((variable) => (
+                                                                                                            <SelectItem
+                                                                                                                key={variable.source_path}
+                                                                                                                value={variable.source_path}
+                                                                                                            >
+                                                                                                                {variable.label}
+                                                                                                            </SelectItem>
+                                                                                                        ))}
+                                                                                                    </SelectContent>
+                                                                                                </Select>
+                                                                                            </div>
+                                                                                        </TooltipTrigger>
+                                                                                        {hasHeaderVariable && (
+                                                                                            <TooltipContent
+                                                                                                className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
+                                                                                                side="bottom"
+                                                                                            >
+                                                                                                <p>Remove the existing variable to add a new one.</p>
+                                                                                            </TooltipContent>
+                                                                                        )}
+                                                                                    </Tooltip>
+                                                                                </TooltipProvider>
+                                                                            </div>
+                                                                        )}
+
+                                                                        <>
+                                                                            <span className="text-sm text-muted-foreground italic w-full text-center md:w-auto md:px-1">or</span>
+                                                                            <div className="w-full md:flex-1">
+                                                                                <Button
+                                                                                    type="button"
+                                                                                    variant="outline"
+                                                                                    size="sm"
+                                                                                    className="w-full"
+                                                                                    onClick={() => setShowManualHeaderVar(!showManualHeaderVar)}
+                                                                                    disabled={hasHeaderVariable}
+                                                                                >
+                                                                                    {!showManualHeaderVar ? "Insert Manual Variable" : "Hide Manual Variable"}
+                                                                                </Button>
+                                                                            </div>
+                                                                        </>
                                                                     </div>
-                                                                )}
-                                                            </div>
+                                                                    {showManualHeaderVar && (
+                                                                        <div className="flex flex-col md:flex-row items-center gap-3">
+                                                                            <Input
+                                                                                placeholder="variable_name"
+                                                                                value={namedHeaderVariableName}
+                                                                                onChange={(e) => setNamedHeaderVariableName(e.target.value)}
+                                                                                className="w-full md:flex-1 h-9"
+                                                                                disabled={hasHeaderVariable}
+                                                                                onKeyDown={(e) => {
+                                                                                    if (e.key === 'Enter') {
+                                                                                        e.preventDefault();
+                                                                                        handleAddHeaderPlaceholder();
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="secondary"
+                                                                                size="sm"
+                                                                                className="w-full md:flex-1"
+                                                                                onClick={handleAddHeaderPlaceholder}
+                                                                                disabled={hasHeaderVariable || !namedHeaderVariableName.trim()}
+                                                                            >
+                                                                                + Add Placeholder
+                                                                            </Button>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex justify-start">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        className="w-auto"
+                                                                        onClick={handleAddHeaderPlaceholder}
+                                                                        disabled={hasHeaderVariable}
+                                                                    >
+                                                                        + Add Placeholder {'{{1}}'}
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                         {hasHeaderVariable && watchedHeaderVariable && (
                                                             <div className="space-y-3 rounded-lg border p-3">

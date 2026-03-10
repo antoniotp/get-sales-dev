@@ -768,6 +768,9 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
+                                                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+                                                            Select the type of message: <strong>Marketing</strong> (promotions, offers), <strong>Utility</strong> (updates, reminders), or <strong>Authentication</strong> (logins or verification codes). Choosing the wrong category may lead to rejection.
+                                                        </p>
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}

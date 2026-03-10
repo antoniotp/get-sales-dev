@@ -1,0 +1,56 @@
+{
+    "index": {
+        "description_part1": "Para enviar mensajes masivos o contactar a un usuario después de 24 horas desde el último mensaje, es obligatorio utilizar templates previamente aprobados por Meta. Esto es así porque Meta lo requiere como parte de sus políticas de uso de WhatsApp Business. Nota: un template es un mensaje predefinido que se utiliza para este tipo de envíos.",
+        "description_part2": "Crea tus templates y utilízalos para campañas de marketing o mensajes de utilidad para tus clientes (por ejemplo, recordatorios de citas, asistencia, entre otros). Recuerda que una vez que crees un template, debes enviarlo a revisión (verás un botón habilitado para esa acción). La revisión suele tardar unos pocos minutos.",
+        "description_part3": "Ante cualquier duda, puedes contactar a soporte.",
+        "payment_notice": "<0>IMPORTANTE:</0> Para utilizar los templates deberás agregar un método de pago en Meta Business Suite (<1>https://business.facebook.com/wa/manage/home/</1>). Mas info en <2>https://www.facebook.com/business/help/488291839463771</2>.",
+        "platform_status": {
+            "draft": "Borrador",
+            "pending": "Pendiente de Revisión",
+            "approved": "Aprobada",
+            "rejected": "Rechazada",
+            "paused": "Pausada",
+            "disabled": "Deshabilitada"
+        },
+        "status": {
+            "active": "Activa",
+            "inactive": "Inactiva",
+            "deleted": "Eliminada"
+        },
+        "actions": {
+            "delete": {
+                "confirm": "¿Está seguro de que deseas eliminar esta plantilla?",
+                "error": "Error al eliminar la plantilla",
+                "cancel": "Cancelar",
+                "delete": "Eliminar"
+            },
+            "edit": "Editar",
+            "create": "Crear Plantilla",
+            "send_to_review": "Enviar a Revisión"
+        },
+        "table": {
+            "name": "Nombre",
+            "platform_status": "Estado en la plataforma",
+            "category": "Categoría",
+            "language": "Idioma",
+            "active": "Activa",
+            "actions": "Acciones",
+            "no_templates": "No se encontraron templates",
+            "open_menu": "Abrir menú"
+        },
+        "breadcrumbs": {
+            "title": "Plantillas de Mensajes"
+        },
+        "page": {
+            "head": {
+                "title": "Plantillas de Mensajes | Lista"
+            },
+            "title": "Plantillas de Mensajes",
+            "tab_name": {
+                "template_library": "Plantillas",
+                "active_templates": "Activas",
+                "deleted_templates": "Eliminadas"
+            }
+        }
+    }
+}

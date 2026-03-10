@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,9 +19,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $external_template_id ID provided by the messaging platform (WhatsApp, Meta, etc.)
  * @property int $category_id Reference to the message_template_categories table
  * @property string $language Language code (es, en, pt, etc.) - max 10 chars, default 'es'
- * @property string $status Approval status from the messaging platform: pending|approved|rejected|paused|disabled
+ * @property Status $status Approval status from the messaging platform
  * @property int $platform_status Internal status (1=active, 0=inactive)
- * @property string $header_type Type of header content: none|text|image|video|document
+ * @property HeaderType $header_type Type of header content
  * @property string|null $header_content Header text or media URL
  * @property string $body_content Main message body with variable placeholders like {{1}}, {{2}}
  * @property string|null $footer_content Optional footer text
@@ -75,6 +77,8 @@ class MessageTemplate extends Model
         'platform_status' => 'integer',
         'last_used_at' => 'datetime',
         'approved_at' => 'datetime',
+        'status' => Status::class,
+        'header_type' => HeaderType::class,
     ];
 
     /**
@@ -114,7 +118,7 @@ class MessageTemplate extends Model
      */
     public function scopeApproved($query)
     {
-        return $query->where('status', 'approved');
+        return $query->where('status', Status::APPROVED);
     }
 
     /**
@@ -138,7 +142,15 @@ class MessageTemplate extends Model
      */
     public function isApproved(): bool
     {
-        return $this->status === 'approved';
+        return $this->status === Status::APPROVED;
+    }
+
+    /**
+     * Check if the template is draft
+     */
+    public function isDraft(): bool
+    {
+        return $this->status === Status::DRAFT;
     }
 
     /**

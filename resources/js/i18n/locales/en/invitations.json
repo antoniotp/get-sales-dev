@@ -1,0 +1,23 @@
+{
+    "accept": {
+        "headTitle": "Accept Invitation",
+        "title": "Invitation to Join",
+        "invitationMessage": "<strong>{{inviter}}</strong> has invited you to join the <strong>{{organization}}</strong> organization.",
+        "acceptInvitation": "Accept Invitation",
+        "accepting": "Accepting...",
+        "wrongUserMessage": "This invitation was sent to <strong>{{invitationEmail}}</strong>, but you are logged in as <strong>{{loggedInEmail}}</strong>.",
+        "logoutInstruction": "Please log out and log back in with the correct account to accept this invitation.",
+        "logout": "Log Out",
+        "accountExistsMessage": "An account already exists for <strong>{{email}}</strong>. Please log in to accept the invitation.",
+        "login": "Log In",
+        "createAccountMessage": "To accept this invitation, please create an account for <strong>{{email}}</strong>.",
+        "createAccount": "Create Account"
+    },
+
+    "invalid": {
+        "headTitle": "Invalid Invitation",
+        "title": "Invalid Invitation",
+        "description": "This invitation link is either invalid or has expired.",
+        "homeLink": "Go to Homepage"
+    }
+}

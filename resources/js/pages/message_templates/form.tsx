@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { Pilcrow, AlertCircle, Trash2/*, File, Image as ImageIcon, Video*/ } from 'lucide-react';
+import { AlertCircle, Trash2 /*, Pilcrow, File, Image as ImageIcon, Video*/ } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
     TemplateFormPageProps,
 } from '@/types/message-template.d';
-import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
+// import HeaderTypeButton from '@/components/message_templates/HeaderTypeButton';
 import { generateSlug } from '@/lib/utils';
 import MessagePreview from '@/components/message_templates/MessagePreview';
 import { ButtonsSection } from '@/components/message_templates/ButtonsSection';
@@ -188,6 +188,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
     useEffect(() => {
         const subscription = form.watch((value) => {
+            console.log('Form Values Changed:', value);
             setInertiaData(value as TemplateFormValues);
         });
         return () => subscription.unsubscribe();
@@ -225,6 +226,22 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     const watchedVariablesSchema = form.watch('variables_schema');
     const selectedChabotChannelId = form.watch('chatbot_channel_id');
     const watchedVariableMappings = form.watch('variable_mappings');
+
+    useEffect(() => {
+        const content = watchedHeaderContent?.trim() || '';
+        const currentType = form.getValues('header_type');
+
+        if (content !== '') {
+            if (currentType !== 'text') {
+                form.setValue('header_type', 'text', { shouldValidate: true });
+            }
+        } else {
+            if (currentType !== 'none') {
+                form.setValue('header_type', 'none', { shouldValidate: true });
+            }
+        }
+    }, [watchedHeaderContent, form]);
+
 
     // --- Header Variables Logic ---
     const detectedHeaderPlaceholders = useMemo(() => {
@@ -883,7 +900,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 <Label>
                                                     Header <span className="text-gray-500">(Optional)</span>
                                                 </Label>
-                                                <FormField
+                                                {/*<FormField
                                                     control={form.control}
                                                     name="header_type"
                                                     render={({ field }) => (
@@ -895,7 +912,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 label="Text"
                                                                 currentType={watchedHeaderType}
                                                             />
-                                                            {/*
+
                                                             TODO: Implement a file uploader and a file sender to send the uploaded file to WABA API.
                                                             <HeaderTypeButton
                                                                 field={field}
@@ -917,11 +934,11 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 icon={<File size={16} />}
                                                                 label="File"
                                                                 currentType={watchedHeaderType}
-                                                            />*/}
+                                                            />
                                                         </div>
                                                     )}
-                                                />
-                                                {watchedHeaderType && watchedHeaderType !== 'none' && (
+                                                />*/}
+                                                {/*{watchedHeaderType && watchedHeaderType !== 'none' && (*/}
                                                     <FormField
                                                         control={form.control}
                                                         name="header_content"
@@ -930,16 +947,12 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 <FormControl>
                                                                     <div className="flex items-center gap-2">
                                                                         <Input
-                                                                            placeholder={
-                                                                                watchedHeaderType === 'text'
-                                                                                    ? 'Enter header text...'
-                                                                                    : 'Enter media URL...'
-                                                                            }
+                                                                            placeholder="Enter header text... (Optional)"
                                                                             {...field}
                                                                             ref={headerInputRef}
                                                                             onBlur={syncHeaderVariable}
                                                                         />
-                                                                        <Button
+                                                                        {/*<Button
                                                                             type="button"
                                                                             variant="ghost"
                                                                             size="icon"
@@ -952,15 +965,15 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                             }}
                                                                         >
                                                                             <Trash2 className="h-4 w-4" />
-                                                                        </Button>
+                                                                        </Button>*/}
                                                                     </div>
                                                                 </FormControl>
                                                                 <FormMessage />
                                                             </FormItem>
                                                         )}
                                                     />
-                                                )}
-                                                {watchedHeaderType === 'text' && (
+                                                {/*)}*/}
+                                                {/*{watchedHeaderType === 'text' && (*/}
                                                     <div className="space-y-3">
                                                         <Label className="text-sm">Header Variable</Label>
                                                         <div className="flex flex-wrap items-center gap-3 mt-2">
@@ -1091,7 +1104,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                             </div>
                                                         )}
                                                     </div>
-                                                )}
+                                                {/*)}*/}
                                             </div>
 
                                             <hr/>

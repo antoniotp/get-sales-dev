@@ -823,7 +823,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 )}
                                             />
 
-                                            <div className="flex flex-col gap-2">
+                                            <div className="hidden md:flex flex-col gap-2">
                                                 <Button type="button" variant="outline" onClick={() => window.history.back()}>
                                                     Cancel
                                                 </Button>
@@ -1351,6 +1351,24 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                             <hr />
 
                                             <ButtonsSection control={form.control} />
+                                            <div className="flex md:hidden flex-col gap-2 mt-6">
+                                                <Button type="submit" disabled={processing}>
+                                                    {processing ? 'Saving...' : 'Save'}
+                                                </Button>
+                                                {template && isWabaChannelSelected && (
+                                                    <Button
+                                                        type="button"
+                                                        className="btn-whatsapp"
+                                                        onClick={handleSendToReview}
+                                                        disabled={processing}
+                                                    >
+                                                        {processing ? 'Sending...' : 'Send To Review'}
+                                                    </Button>
+                                                )}
+                                                <Button type="button" variant="outline" onClick={() => window.history.back()}>
+                                                    Cancel
+                                                </Button>
+                                            </div>
                                         </div>
                                     </CardContent>
                                 </Card>

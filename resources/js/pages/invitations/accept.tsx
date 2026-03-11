@@ -1,4 +1,5 @@
 import { Head, Link, usePage, useForm } from '@inertiajs/react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { PageProps } from '@/types';
 
@@ -15,6 +16,7 @@ interface AcceptPageProps {
 }
 
 export default function AcceptInvitation({ invitationDetails, token, userExists }: AcceptPageProps) {
+    const { t } = useTranslation('invitations');
     const { auth } = usePage<PageProps>().props;
     const { post, processing } = useForm();
 
@@ -30,18 +32,23 @@ export default function AcceptInvitation({ invitationDetails, token, userExists 
             if (loggedInUser?.email === invitationDetails.email) {
                 return (
                     <Button onClick={handleAccept} disabled={processing}>
-                        {processing ? 'Accepting...' : 'Accept Invitation'}
+                        {processing ? t('accept.accepting') : t('accept.acceptInvitation')}
                     </Button>
                 );
             }
             return (
                 <div>
                     <p className="mb-4 text-red-600">
-                        This invitation was sent to <strong>{invitationDetails.email}</strong>, but you are logged in as <strong>{loggedInUser?.email}</strong>.
+                        {t('accept.wrongUserMessage', {
+                            invitationEmail: invitationDetails.email,
+                            loggedInEmail: loggedInUser?.email
+                        })}
                     </p>
-                    <p className="mb-4">Please log out and log back in with the correct account to accept this invitation.</p>
+                    <p className="mb-4">
+                        {t('accept.logoutInstruction')}
+                    </p>
                     <Link href={route('logout')} method="post" as="button" className="underline">
-                        Log Out
+                        {t('accept.logout')}
                     </Link>
                 </div>
             );
@@ -51,9 +58,13 @@ export default function AcceptInvitation({ invitationDetails, token, userExists 
         if (userExists) {
             return (
                 <div>
-                    <p className="mb-4">An account already exists for <strong>{invitationDetails.email}</strong>. Please log in to accept the invitation.</p>
+                    <p className="mb-4">
+                        {t('accept.accountExistsMessage', { email: invitationDetails.email })}
+                    </p>
                     <Button asChild>
-                        <Link href={route('login')}>Log In</Link>
+                        <Link href={route('login')}>
+                            {t('accept.login')}
+                        </Link>
                     </Button>
                 </div>
             );
@@ -62,9 +73,13 @@ export default function AcceptInvitation({ invitationDetails, token, userExists 
         // User does not exist
         return (
             <div>
-                <p className="mb-4">To accept this invitation, please create an account for <strong>{invitationDetails.email}</strong>.</p>
+                <p className="mb-4">
+                    {t('accept.createAccountMessage', { email: invitationDetails.email })}
+                </p>
                 <Button asChild>
-                    <Link href={route('register', { email: invitationDetails.email, token: token })}>Create Account</Link>
+                    <Link href={route('register', { email: invitationDetails.email, token: token })}>
+                        {t('accept.createAccount')}
+                    </Link>
                 </Button>
             </div>
         );
@@ -72,12 +87,19 @@ export default function AcceptInvitation({ invitationDetails, token, userExists 
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <Head title="Accept Invitation" />
+            <Head title={t('accept.headTitle')} />
             <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md text-center">
-                <h1 className="text-2xl font-bold text-gray-800">Invitation to Join</h1>
+                <h1 className="text-2xl font-bold text-gray-800">
+                    {t('accept.title')}
+                </h1>
+
                 <p className="text-gray-600">
-                    <strong>{invitationDetails.inviter_name}</strong> has invited you to join the <strong>{invitationDetails.organization_name}</strong> organization.
+                    {t('accept.invitationMessage', {
+                        inviter: invitationDetails.inviter_name,
+                        organization: invitationDetails.organization_name
+                    })}
                 </p>
+
                 <div className="pt-4">
                     {renderContent()}
                 </div>

@@ -34,6 +34,8 @@ import enMessageTemplates from '@/i18n/locales/en/message_templates.json';
 import esMessageTemplates from '@/i18n/locales/es/message_templates.json';
 import esAuth from './locales/es/auth.json';
 import enAuth from './locales/en/auth.json';
+import esInvitations from '@/i18n/locales/es/invitations.json';
+import enInvitations from '@/i18n/locales/en/invitations.json';
 
 i18n
     .use(LanguageDetector)
@@ -57,6 +59,7 @@ i18n
                 common: esCommon,
                 messageTemplates: esMessageTemplates,
                 auth: esAuth,
+                invitations: esInvitations,
             },
             en: {
                 navigation: enNavigation,
@@ -75,6 +78,7 @@ i18n
                 common: enCommon,
                 messageTemplates: enMessageTemplates,
                 auth: enAuth,
+                invitations: enInvitations,
             },
         },
 

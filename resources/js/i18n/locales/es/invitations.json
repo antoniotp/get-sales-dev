@@ -1,0 +1,23 @@
+{
+    "accept": {
+        "headTitle": "Aceptar invitación",
+        "title": "Invitación para unirse",
+        "invitationMessage": "<strong>{{inviter}}</strong> te ha invitado a unirte a la organización <strong>{{organization}}</strong>.",
+        "acceptInvitation": "Aceptar invitación",
+        "accepting": "Aceptando...",
+        "wrongUserMessage": "Esta invitación fue enviada a <strong>{{invitationEmail}}</strong>, pero has iniciado sesión como <strong>{{loggedInEmail}}</strong>.",
+        "logoutInstruction": "Por favor cierra sesión e inicia sesión nuevamente con la cuenta correcta para aceptar esta invitación.",
+        "logout": "Cerrar sesión",
+        "accountExistsMessage": "Ya existe una cuenta para <strong>{{email}}</strong>. Por favor inicia sesión para aceptar la invitación.",
+        "login": "Iniciar sesión",
+        "createAccountMessage": "Para aceptar esta invitación, por favor crea una cuenta para <strong>{{email}}</strong>.",
+        "createAccount": "Crear cuenta"
+    },
+
+    "invalid": {
+        "headTitle": "Invalid Invitation",
+        "title": "Invitation Invalid",
+        "description": "This invitation link is either invalid or has expired.",
+        "homeLink": "Go to Homepage"
+    }
+}

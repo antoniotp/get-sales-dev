@@ -11,12 +11,15 @@ import {
 } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { TemplateFormValues } from '@/pages/message_templates/form';
+import { useTranslation } from 'react-i18next';
 
 interface ButtonsSectionProps {
     control: Control<TemplateFormValues>;
 }
 
 export function ButtonsSection({ control }: ButtonsSectionProps) {
+    const { t } = useTranslation('messageTemplates');
+
     const { fields, append, remove, replace } = useFieldArray({
         control,
         name: 'button_config',
@@ -47,7 +50,7 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
         <div className="flex flex-col gap-4">
             <div>
                 <Label htmlFor="button-type">
-                    Buttons <span className="text-muted-foreground">(optional)</span>
+                    {t('form.buttons_section.label')} <span className="text-muted-foreground">{t('form.buttons_section.optional')}</span>
                 </Label>
                 <Select
                     value={buttonType || 'none'}
@@ -60,17 +63,17 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                     }}
                 >
                     <SelectTrigger id="button-type" className="w-full">
-                        <SelectValue placeholder="Select a button type" />
+                        <SelectValue placeholder={t('form.buttons_section.select_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="none">No buttons</SelectItem>
-                        <SelectItem value="QUICK_REPLY">Quick Reply</SelectItem>
-                        <SelectItem value="URL">URL</SelectItem>
+                        <SelectItem value="none">{t('form.buttons_section.types.none')}</SelectItem>
+                        <SelectItem value="QUICK_REPLY">{t('form.buttons_section.types.quick_reply')}</SelectItem>
+                        <SelectItem value="URL">{t('form.buttons_section.types.url')}</SelectItem>
                     </SelectContent>
                 </Select>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    {isReplyType && 'You can add up to 3 quick reply buttons'}
-                    {isUrlType && 'You can only add 1 URL button'}
+                    {isReplyType && t('form.buttons_section.notices.quick_reply')}
+                    {isUrlType && t('form.buttons_section.notices.url')}
                 </p>
             </div>
 
@@ -92,17 +95,17 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
 
                             <div className="flex flex-col gap-2">
                                 <Label htmlFor={`button-text-${index}`}>
-                                    Button text {fields.length > 1 ? `#${index + 1}` : ''}
+                                    {t('form.buttons_section.button_text_label')} {fields.length > 1 ? `#${index + 1}` : ''}
                                     <span className="text-red-500">*</span>
                                 </Label>
                                 <Controller
                                     control={control}
                                     name={`button_config.${index}.text`}
                                     rules={{
-                                        required: 'Button text is required',
+                                        required: t('form.buttons_section.validation.text_required'),
                                         maxLength: {
                                             value: 25,
-                                            message: 'Text cannot exceed 25 characters',
+                                            message: t('form.buttons_section.validation.text_max'),
                                         },
                                     }}
                                     render={({ field: inputField, fieldState }) => (
@@ -110,14 +113,14 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                                             <Input
                                                 {...inputField}
                                                 id={`button-text-${index}`}
-                                                placeholder="e.g., Learn more, Contact us, etc."
+                                                placeholder={t('form.buttons_section.placeholders.text')}
                                                 maxLength={25}
                                             />
                                             {fieldState.error && (
                                                 <p className="text-sm text-red-500">{fieldState.error.message}</p>
                                             )}
                                             <p className="text-xs text-muted-foreground">
-                                                {inputField.value?.length || 0}/25 characters
+                                                {inputField.value?.length || 0}/25 {t('form.buttons_section.characters')}
                                             </p>
                                         </div>
                                     )}
@@ -127,16 +130,16 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                             {isUrlType && (
                                 <div className="flex flex-col gap-2">
                                     <Label htmlFor={`button-url-${index}`}>
-                                        URL <span className="text-red-500">*</span>
+                                        {t('form.buttons_section.url_label')} <span className="text-red-500">*</span>
                                     </Label>
                                     <Controller
                                         control={control}
                                         name={`button_config.${index}.url`}
                                         rules={{
-                                            required: isUrlType ? 'URL is required' : false,
+                                            required: isUrlType ? t('form.buttons_section.validation.url_required') : false,
                                             pattern: {
                                                 value: /^https?:\/\/.+/,
-                                                message: 'Must be a valid URL (http:// or https://)',
+                                                message: t('form.buttons_section.validation.url_invalid'),
                                             },
                                         }}
                                         render={({ field: inputField, fieldState }) => (
@@ -145,7 +148,7 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                                                     {...inputField}
                                                     id={`button-url-${index}`}
                                                     type="url"
-                                                    placeholder="https://example.com"
+                                                    placeholder={t('form.buttons_section.placeholders.url')}
                                                     value={inputField.value ?? ""}
                                                 />
                                                 {fieldState.error && (
@@ -162,7 +165,7 @@ export function ButtonsSection({ control }: ButtonsSectionProps) {
                     {canAddMore && (
                         <Button type="button" variant="outline" className="w-full" onClick={addButton}>
                             <Plus className="mr-2 h-4 w-4" />
-                            Add another button ({fields.length}/3)
+                            {t('form.buttons_section.add_button', { current: fields.length, max: 3 })}
                         </Button>
                     )}
                 </div>

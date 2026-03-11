@@ -223,7 +223,7 @@ class ConversationService implements ConversationServiceInterface
             ->with(['latestMessage', 'chatbotChannel.chatbot', 'assignedUser'])
             ->whereHas('chatbotChannel', function ($query) use ($chatbot) {
                 $query->where('chatbot_id', $chatbot->id);
-            });
+            })->limit(300);
 
         // Apply agent visibility filter
         $organization = $chatbot->organization;

@@ -14,8 +14,7 @@ Schedule::command('export:messages', [
     2,
     1,
     '1pQxgpUojIEVvaekjQTsM_y0qRs1y64U7w29TGZaqnFo',
-    'Hoja 1',
+    'chats',
 ])
-    ->hourly()
-    ->withoutOverlapping()
-    ->runInBackground();
+    ->everyMinute()
+    ->withoutOverlapping();

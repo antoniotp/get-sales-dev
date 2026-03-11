@@ -697,6 +697,20 @@ export default function Chat(
                                         </button>
                                     )}
                                 </div>
+                                {isWabaWindowClosed && (
+                                    <p className="mt-2 text-sm text-gray-500">
+                                        Or send your message via WhatsApp Web by {' '}
+                                        <a
+                                            href={`https://wa.me/${selectedChat.phone.replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 hover:underline font-medium"
+                                        >
+                                            clicking here
+                                        </a>
+                                        . <strong>Note</strong>: You'll need to be logged into WhatsApp Web if you haven't already.
+                                    </p>
+                                )}
                             </form>
                             <TemplateMessageSelector isOpen={isOpenTemplateMessageSelector} onClose={()=>setIsOpenTemplateMessageSelector(false)} chatbotId={chatbot.id} chatbotChannelId={selectedChat.chatbot_channel_id} contactId={selectedChat.contact_id} conversationId={selectedChat.id} onSent={(message)=>console.log('Template sent: ', message)}/>
                         </div>

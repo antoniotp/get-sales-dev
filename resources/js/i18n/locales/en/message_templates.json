@@ -1,0 +1,159 @@
+{
+    "index": {
+        "description_part1": "To send bulk messages or contact a user after 24 hours since the last message, it is mandatory to use templates previously approved by Meta. This is required by Meta as part of its WhatsApp Business policies. Note: a template is a predefined message used for these types of communications.",
+        "description_part2": "Create your templates and use them for marketing campaigns or utility messages for your customers (for example, appointment reminders, follow-ups, among others). Remember that once you create a template, you must submit it for review (you will see a button enabled for this action). The review process usually takes a few minutes.",
+        "description_part3": "If you have any questions, you can contact support.",
+        "payment_notice": "<0>IMPORTANT:</0> To use templates, you must add a payment method in Meta Business Suite (<1>https://business.facebook.com/wa/manage/home/</1>). More info at <2>https://www.facebook.com/business/help/488291839463771</2>",
+        "platform_status": {
+            "draft": "Draft",
+            "pending": "Pending Review",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "paused": "Paused",
+            "disabled": "Disabled"
+        },
+        "status": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "deleted": "Deleted"
+        },
+        "actions": {
+            "delete": {
+                "confirm": "Are you sure you want to delete this template?",
+                "error": "Failed to delete template",
+                "cancel": "Cancel",
+                "delete": "Delete"
+            },
+            "edit": "Edit",
+            "create": "Create Template",
+            "send_to_review": "Sent to Review"
+        },
+        "table": {
+            "name": "Name",
+            "platform_status": "Platform Status",
+            "category": "Category",
+            "language": "Language",
+            "active": "Active",
+            "actions": "Actions",
+            "no_templates": "No templates found",
+            "open_menu": "Open menu"
+        },
+        "breadcrumbs": {
+            "title": "Message templates management"
+        },
+        "page": {
+            "head": {
+                "title": "Message templates | List"
+            },
+            "title": "Message templates",
+            "tab_name": {
+                "template_library": "Template Library",
+                "active_templates": "Active",
+                "deleted_templates": "Deleted"
+            }
+        }
+    },
+    "form": {
+        "breadcrumb": {
+            "index": "Message Templates",
+            "edit": "Edit Template",
+            "create": "Create Template"
+        },
+        "validation": {
+            "example_required": "Example value is required",
+            "button_text_required": "Button text is required",
+            "url_required": "URL is required for URL buttons.",
+            "url_invalid": "Must be a valid URL.",
+            "channel_required": "Channel is required",
+            "display_name_required": "Display name is required",
+            "template_name_required": "Template name is required",
+            "category_required": "Category is required",
+            "language_required": "Language is required",
+            "body_content_required": "Message content is required",
+            "header_one_placeholder": "Only one placeholder is allowed in the header.",
+            "variable_name_invalid": "Variable name must start with a letter or underscore and contain only letters, numbers, and underscores.",
+            "variable_name_reserved": "The name \"{{name}}\" is reserved for a database variable. Please choose a different name.",
+            "variable_exists": "Variable {{placeholder}} already exists.",
+            "mixed_variables": "You cannot mix Positional ({{1}}) and Named ({{name}}) variables in the same template. Please use only one type.",
+            "mixed_variables_detected": "Mixed variable types detected."
+        },
+        "labels": {
+            "manual_prefix": "Manual: {{name}}",
+            "channel": "Channel",
+            "display_name": "Display Name",
+            "category": "Category",
+            "language": "Language",
+            "variable_format": "Variable Format",
+            "header": "Header",
+            "optional": "(Optional)",
+            "header_variable": "Header Variable",
+            "message": "Message",
+            "footer": "Footer",
+            "limit_exceeded": "Limit exceeded — ",
+            "placeholder_limit_notice": "<strong>Note</strong>: The values of the placeholders also add to the limit. The message might not be sent if it exceeds {{limit}} characters.",
+            "named_format": "<strong>Named:</strong> Use descriptive names like {{example}}. (Recommended)",
+            "positional_format": "<strong>Positional:</strong> Use numbers like {{example}}.",
+            "remove_vars_tooltip": "Remove all variables to change the format",
+            "insert_manual_var": "Insert Manual Variable",
+            "hide_manual_var": "Hide Manual Variable",
+            "or": "or",
+            "detected_variables": "Detected Variables ({{count}})",
+            "all_required": "All are required",
+            "example_placeholder": "Enter example value..."
+        },
+        "placeholders": {
+            "select_channel": "Select a channel",
+            "display_name": "My Template Name",
+            "select_category": "Select a category",
+            "select_language": "Select language",
+            "header_text": "Enter header text... (Optional)",
+            "insert_db_var": "+ Insert DB Variable",
+            "variable_name": "variable_name",
+            "message_content": "Enter message content...",
+            "footer_text": "Enter footer text..."
+        },
+        "buttons": {
+            "cancel": "Cancel",
+            "save": "Save",
+            "saving": "Saving...",
+            "send_to_review": "Send To Review",
+            "sending": "Sending...",
+            "add_placeholder": "+ Add Placeholder"
+        },
+        "category_help": "Select the type of message: <0>Marketing</0> (promotions, offers), <1>Utility</1> (updates, reminders), or <2>Authentication</2> (logins or verification codes). Choosing the wrong category may lead to rejection.",
+        "buttons_section": {
+            "label": "Buttons",
+            "optional": "(optional)",
+            "select_placeholder": "Select a button type",
+            "types": {
+                "none": "No buttons",
+                "quick_reply": "Quick Reply",
+                "url": "URL"
+            },
+            "notices": {
+                "quick_reply": "You can add up to 3 quick reply buttons",
+                "url": "You can only add 1 URL button"
+            },
+            "button_text_label": "Button text",
+            "validation": {
+                "text_required": "Button text is required",
+                "text_max": "Text cannot exceed 25 characters",
+                "url_required": "URL is required",
+                "url_invalid": "Must be a valid URL (http:// or https://)"
+            },
+            "placeholders": {
+                "text": "e.g., Learn more, Contact us, etc.",
+                "url": "https://example.com"
+            },
+            "characters": "characters",
+            "url_label": "URL",
+            "add_button": "Add another button ({{current}}/{{max}})"
+        },
+        "page": {
+            "title_update": "Update Template",
+            "title_create": "Create Template",
+            "head_update": "Edit Message Template",
+            "head_create": "Create Message Template"
+        }
+    }
+}

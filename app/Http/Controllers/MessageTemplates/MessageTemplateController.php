@@ -129,7 +129,12 @@ class MessageTemplateController extends Controller
 
     public function destroy(Chatbot $chatbot, MessageTemplate $template)
     {
-        $template->delete();
+        $result = $this->messageTemplateService->deleteTemplate($template);
+
+        if (! $result) {
+            return redirect()->route('message-templates.index', $chatbot->id)
+                ->with('error', 'Failed to delete template. Please try again.');
+        }
 
         return redirect()->route('message-templates.index', $chatbot->id)
             ->with('success', 'Template deleted successfully.');

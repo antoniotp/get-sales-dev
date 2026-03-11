@@ -2,6 +2,7 @@
 
 namespace App\DataTransferObjects\MessageTemplate;
 
+use App\Enums\MessageTemplate\HeaderType;
 use App\Models\MessageTemplate;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Arr;
@@ -16,7 +17,7 @@ class MessageTemplateFormData implements Arrayable
         public int $category_id,
         public int $chatbot_channel_id,
         public string $language,
-        public string $header_type,
+        public HeaderType $header_type,
         public ?string $header_content,
         public ?array $header_variable, // { placeholder: string, example: string }
         public ?string $header_variable_type, // 'positional' | 'named'
@@ -42,7 +43,7 @@ class MessageTemplateFormData implements Arrayable
         $exampleData = $template->example_data ?? [];
 
         // --- Header Variable Reconstruction ---
-        if ($template->header_type === 'text') {
+        if ($template->header_type === HeaderType::TEXT) {
             $headerTextExamples = Arr::get($exampleData, 'header_text');
             $headerTextNamedExamples = Arr::get($exampleData, 'header_text_named_params');
 
@@ -140,7 +141,7 @@ class MessageTemplateFormData implements Arrayable
             'category_id' => $this->category_id,
             'chatbot_channel_id' => $this->chatbot_channel_id,
             'language' => $this->language,
-            'header_type' => $this->header_type,
+            'header_type' => $this->header_type->value,
             'header_content' => $this->header_content,
             'header_variable' => $this->header_variable,
             'header_variable_type' => $this->header_variable_type,

@@ -4,6 +4,8 @@ namespace App\Services\WhatsApp;
 
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\DataTransferObjects\Chat\MessageSendResult;
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use App\Exceptions\MessageSendException;
 use App\Models\ChatbotChannel;
 use App\Models\Message;
@@ -96,7 +98,7 @@ class WhatsAppService implements WhatsAppServiceInterface
         // --- 1. Header Parameters ---
         if (! empty($resolvedValues['header'])) {
             $headerIsNamed = isset($exampleData['header_text_named_params']);
-            $headerType = $template->header_type === 'text' ? 'text' : $template->header_type;
+            $headerType = $template->header_type === HeaderType::TEXT ? 'text' : $template->header_type->value;
 
             $headerParam = [
                 'type' => $headerType,
@@ -255,15 +257,18 @@ class WhatsAppService implements WhatsAppServiceInterface
                 $categorySlug = strtolower($responseData['category'] ?? '');
                 $category = MessageTemplateCategory::where('slug', $categorySlug)->first();
 
+                // Map Meta status string to our Enum safely
+                $metaStatus = isset($responseData['status']) ? strtolower($responseData['status']) : 'pending';
+
                 $template->update([
                     'external_template_id' => $responseData['id'],
-                    'status' => isset($responseData['status']) ? strtolower($responseData['status']) : 'pending',
+                    'status' => Status::tryFrom($metaStatus) ?? Status::PENDING,
                     'category_id' => $category?->id ?? $template->category_id,
                 ]);
             } elseif ($isUpdate && isset($responseData['success']) && $responseData['success'] === true) {
                 // Template updated successfully.
                 // We set status to 'pending' because it usually goes back to review
-                $template->update(['status' => 'pending']);
+                $template->update(['status' => Status::PENDING]);
             }
 
             // Update last activity
@@ -286,13 +291,13 @@ class WhatsAppService implements WhatsAppServiceInterface
         $exampleData = $template->example_data ?? [];
 
         // --- HEADER Component ---
-        if ($template->header_type !== 'none' && ! empty($template->header_content)) {
+        if ($template->header_type !== HeaderType::NONE && ! empty($template->header_content)) {
             $headerComponent = [
                 'type' => 'HEADER',
-                'format' => strtoupper($template->header_type),
+                'format' => strtoupper($template->header_type->value),
             ];
 
-            if ($template->header_type === 'text') {
+            if ($template->header_type === HeaderType::TEXT) {
                 $headerComponent['text'] = $template->header_content;
             }
 
@@ -353,6 +358,59 @@ class WhatsAppService implements WhatsAppServiceInterface
         }
 
         return $components;
+    }
+
+    public function deleteTemplate(MessageTemplate $template): bool
+    {
+        if ($template->external_template_id === null) {
+            Log::info('Template has no external ID, skipping.', ['template_id' => $template->id]);
+
+            return true;
+        }
+        if ($template->deleted_at === null) {
+            Log::error('Template is not deleted in DB', ['template_id' => $template->id]);
+
+            return false;
+        }
+        $chatbotChannel = $template->chatbotChannel;
+        $credentials = $chatbotChannel->credentials;
+        $accessToken = $credentials['whatsapp_business_access_token'];
+
+        /*
+         curl -X DELETE 'https://graph.facebook.com/v23.0/102290129340398/message_templates?hsm_id=1407680676729941&name=order_confirmation' \
+-H 'Authorization: Bearer EAAJB...'
+        Response:
+            {
+              'success': true
+            }
+         */
+        try {
+            $baseApiUrl = $this->buildApiUrl($chatbotChannel->webhook_url, $credentials, 'template');
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer '.$accessToken,
+            ])->delete($baseApiUrl.'/message_templates', [
+                'hsm_id' => $template->external_template_id,
+                'name' => $template->name,
+            ]);
+
+            if (! $response->successful()) {
+                Log::error('Failed to delete template from WABA: '.$response->body(), [
+                    'template_id' => $template->id,
+                    'external_id' => $template->external_template_id,
+                ]);
+
+                return false;
+            }
+
+            Log::info('Template deleted successfully from WABA', ['name' => $template->name]);
+
+            return true;
+
+        } catch (Exception $e) {
+            Log::error('Error deleting template from WABA: '.$e->getMessage(), ['template_id' => $template->id]);
+        }
+
+        return false;
     }
 
     public function getMediaInfo(string $mediaId, ChatbotChannel $channel): ?array

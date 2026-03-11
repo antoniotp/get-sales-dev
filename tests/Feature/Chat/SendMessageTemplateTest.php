@@ -1,7 +1,9 @@
 <?php
 
-namespace Feature\Chat;
+namespace Tests\Feature\Chat;
 
+use App\Enums\MessageTemplate\HeaderType;
+use App\Enums\MessageTemplate\Status;
 use App\Http\Controllers\Chat\ChatController;
 use App\Models\Chatbot;
 use App\Models\ChatbotChannel;
@@ -71,7 +73,7 @@ class SendMessageTemplateTest extends TestCase
         // Create an approved template with mappings
         $this->template = MessageTemplate::factory()->create([
             'chatbot_channel_id' => $this->conversation->chatbot_channel_id,
-            'status' => 'approved',
+            'status' => Status::APPROVED,
             'variable_mappings' => [
                 'body' => [
                     ['placeholder' => '{{name}}', 'source' => 'manual', 'label' => 'Name'],
@@ -165,8 +167,8 @@ class SendMessageTemplateTest extends TestCase
             'chatbot_channel_id' => $this->conversation->chatbot_channel_id,
             'name' => 'reservation_confirmation',
             'language' => 'en_US',
-            'header_type' => 'image',
-            'status' => 'approved',
+            'header_type' => HeaderType::IMAGE,
+            'status' => Status::APPROVED,
             'example_data' => [
                 'header_handle' => ['4::aW...'],
                 'body_text_named_params' => [
@@ -249,8 +251,8 @@ class SendMessageTemplateTest extends TestCase
             'chatbot_channel_id' => $this->conversation->chatbot_channel_id,
             'name' => 'positional_template_test',
             'language' => 'en_US',
-            'header_type' => 'text',
-            'status' => 'approved',
+            'header_type' => HeaderType::TEXT,
+            'status' => Status::APPROVED,
             'example_data' => [
                 'header_text' => ['Cris'],
                 'body_text' => [['JoboGroup', 'Erika']],

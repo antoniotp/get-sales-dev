@@ -1,5 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
 import esNavigation from './locales/es/navigation.json';
 import esHome from './locales/es/home.json';
@@ -29,10 +30,15 @@ import esUi from './locales/es/ui.json';
 import enUi from './locales/en/ui.json';
 import esCommon from './locales/es/common.json';
 import enCommon from './locales/en/common.json';
+import enMessageTemplates from '@/i18n/locales/en/message_templates.json';
+import esMessageTemplates from '@/i18n/locales/es/message_templates.json';
 import esAuth from './locales/es/auth.json';
 import enAuth from './locales/en/auth.json';
+import esInvitations from '@/i18n/locales/es/invitations.json';
+import enInvitations from '@/i18n/locales/en/invitations.json';
 
 i18n
+    .use(LanguageDetector)
     .use(initReactI18next)
     .init({
         resources: {
@@ -51,7 +57,9 @@ i18n
                 settings: esSettings,
                 ui: esUi,
                 common: esCommon,
+                messageTemplates: esMessageTemplates,
                 auth: esAuth,
+                invitations: esInvitations,
             },
             en: {
                 navigation: enNavigation,
@@ -68,7 +76,9 @@ i18n
                 settings: enSettings,
                 ui: enUi,
                 common: enCommon,
+                messageTemplates: enMessageTemplates,
                 auth: enAuth,
+                invitations: enInvitations,
             },
         },
 
@@ -94,8 +104,12 @@ i18n
         defaultNS: 'navigation',
         fallbackNS: 'general',
 
-        lng: 'es',
         fallbackLng: 'en',
+
+        detection: {
+            order: ['localStorage', 'navigator'],
+            caches: ['localStorage'],
+        },
 
         interpolation: {
             escapeValue: false,

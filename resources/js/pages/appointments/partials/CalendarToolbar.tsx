@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { type View, type ToolbarProps, type Event } from 'react-big-calendar';
 import { ChevronLeft, ChevronRight, PlusCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // Define the type for the custom onCreate prop, making it generic
 interface CustomToolbarProps<TEvent extends Event = Event> extends ToolbarProps<TEvent> {
@@ -17,6 +18,8 @@ export const CalendarToolbar = <TEvent extends Event>({
     views,
     onCreate,
 }: CustomToolbarProps<TEvent>) => {
+    const { t } = useTranslation('appointments');
+
     const navigate = (action: 'PREV' | 'NEXT' | 'TODAY') => {
         onNavigate(action);
     };
@@ -62,7 +65,7 @@ export const CalendarToolbar = <TEvent extends Event>({
                 </div>
                 <Button onClick={onCreate}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Crear
+                    {t('calendarToolbar.create')}
                 </Button>
             </div>
         </div>

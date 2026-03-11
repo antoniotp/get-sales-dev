@@ -4,7 +4,7 @@ return [
     'message' => [
         'sent' => [
             'errors' => [
-                '131042' => 'The message could not be sent due to account restrictions or insufficient balance. Please check your Meta Business Suite (https://business.facebook.com/wa/manage/home/).',
+                '131042' => 'Warning - Payment Failed. Add a valid payment method in Meta to send template messages. Click here to resolve it https://business.facebook.com/wa/manage/home/.',
                 'failure_ack' => 'Received failure ACK from channel.',
             ],
         ],

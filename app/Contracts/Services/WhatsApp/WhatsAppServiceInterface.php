@@ -27,4 +27,6 @@ interface WhatsAppServiceInterface extends ChannelMessageSenderInterface
      * @return string|null The binary content of the media file, or null if download fails.
      */
     public function downloadMedia(string $mediaUrl, ChatbotChannel $channel): ?string;
+
+    public function deleteTemplate(MessageTemplate $template): bool;
 }

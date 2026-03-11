@@ -15,6 +15,7 @@ import settings from './locales/es/settings.json';
 import ui from './locales/es/ui.json';
 import common from './locales/es/common.json';
 import auth from './locales/es/auth.json';
+import invitations from './locales/es/invitations.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -35,6 +36,7 @@ declare module 'i18next' {
       ui: typeof ui;
       common: typeof common;
       auth: typeof auth;
+      invitations: typeof invitations;
     };
   }
 }

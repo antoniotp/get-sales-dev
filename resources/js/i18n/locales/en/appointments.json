@@ -1,10 +1,10 @@
 {
-  "title": "Schedule",
-  "breadcrumbs": {
+    "title": "Schedule",
+    "breadcrumbs": {
         "chatbots": "Chatbots",
         "agenda": "Schedule"
-  },
-  "calendar": {
+    },
+    "index": {
         "today": "Today",
         "month": "Month",
         "week": "Week",
@@ -14,8 +14,8 @@
         "time": "Time",
         "event": "Event",
         "no_events": "No appointments in this range."
-  },
-  "detailsModal": {
+    },
+    "detailsModal": {
         "validation": {
             "appointmentRequired": "Appointment date is required."
         },
@@ -42,5 +42,36 @@
             "deleting": "Deleting...",
             "deleteAppointment": "Delete Appointment"
         }
-  }
+    },
+    "calendarToolbar": {
+        "create": "Create"
+    },
+    "newAppointmentModal": {
+        "title": "Schedule New Appointment",
+        "description": "Select or create a contact, then confirm the appointment time.",
+        "contact": "Contact",
+        "change": "Change",
+        "phoneNumber": "Phone Number",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "backToSearch": "Back to Search",
+        "searchPlaceholder": "Search by name or phone...",
+        "searching": "Searching...",
+        "noResults": "No results found.",
+        "newContact": "New Contact",
+        "channel": "Channel",
+        "selectChannel": "Select a channel...",
+        "startTime": "Start Time",
+        "endTime": "End Time (Optional)",
+        "reminderTime": "Reminder Time (Optional)",
+        "cancel": "Cancel",
+        "scheduling": "Scheduling...",
+        "scheduleAppointment": "Schedule Appointment",
+        "validation": {
+            "channelRequired": "A channel must be selected.",
+            "appointmentRequired": "Appointment date is required.",
+            "phoneRequired": "Phone number is required for a new contact.",
+            "endAfterStart": "End time must be after start time."
+        }
+    }
 }

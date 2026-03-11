@@ -1,10 +1,10 @@
 {
-  "title": "Agenda",
-  "breadcrumbs": {
+    "title": "Agenda",
+    "breadcrumbs": {
         "chatbots": "Chatbots",
         "agenda": "Agenda"
-  },
-  "calendar": {
+    },
+    "index": {
         "today": "Hoy",
         "month": "Mes",
         "week": "Semana",
@@ -14,8 +14,8 @@
         "time": "Hora",
         "event": "Evento",
         "no_events": "No hay citas en este rango."
-  },
-  "detailsModal": {
+    },
+    "detailsModal": {
         "validation": {
             "appointmentRequired": "La fecha de la cita es obligatoria."
         },
@@ -42,5 +42,36 @@
             "deleting": "Eliminando...",
             "deleteAppointment": "Eliminar Cita"
         }
-  }
+    },
+    "calendarToolbar": {
+        "create": "Crear"
+    },
+    "newAppointmentModal": {
+        "title": "Programar Nueva Cita",
+        "description": "Seleccione o cree un contacto, luego confirme la hora de la cita.",
+        "contact": "Contacto",
+        "change": "Cambiar",
+        "phoneNumber": "Número de Teléfono",
+        "firstName": "Nombre",
+        "lastName": "Apellido",
+        "backToSearch": "Volver a la Búsqueda",
+        "searchPlaceholder": "Buscar por nombre o teléfono...",
+        "searching": "Buscando...",
+        "noResults": "No se encontraron resultados.",
+        "newContact": "Nuevo Contacto",
+        "channel": "Canal",
+        "selectChannel": "Seleccione un canal...",
+        "startTime": "Hora de Inicio",
+        "endTime": "Hora de Fin (Opcional)",
+        "reminderTime": "Hora de Recordatorio (Opcional)",
+        "cancel": "Cancelar",
+        "scheduling": "Programando...",
+        "scheduleAppointment": "Programar Cita",
+        "validation": {
+            "channelRequired": "Debe seleccionar un canal.",
+            "appointmentRequired": "La fecha de la cita es obligatoria.",
+            "phoneRequired": "El número de teléfono es obligatorio para un nuevo contacto.",
+            "endAfterStart": "La hora de finalización debe ser posterior a la hora de inicio."
+        }
+    }
 }

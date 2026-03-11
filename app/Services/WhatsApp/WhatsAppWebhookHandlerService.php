@@ -6,6 +6,7 @@ use App\Contracts\Services\Chat\ConversationServiceInterface;
 use App\Contracts\Services\Chat\MessageServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppServiceInterface;
 use App\Contracts\Services\WhatsApp\WhatsAppWebhookHandlerServiceInterface;
+use App\Enums\MessageTemplate\Status;
 use App\Models\Channel;
 use App\Models\ChatbotChannel;
 use App\Models\Conversation;
@@ -234,11 +235,16 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
             $templateId = $value['message_template_id'] ?? null;
             $templateName = $value['message_template_name'] ?? null;
             $templateLanguage = $value['message_template_language'] ?? null;
-            $newStatus = strtolower($value['event'] ?? ''); // Convert APPROVED to approved
-            $rejectedReason = $value['reason'] !== 'NONE' ? $value['reason'] : null;
+            $metaEvent = strtolower($value['event'] ?? '');
+            $newStatus = Status::tryFrom($metaEvent);
+
+            $rejectedReason = ($value['reason'] ?? 'NONE') !== 'NONE' ? $value['reason'] : null;
 
             if (! $templateId || ! $newStatus) {
-                Log::warning('Incomplete template status update payload', $value);
+                Log::warning('Incomplete or invalid template status update payload', [
+                    'payload' => $value,
+                    'detected_status' => $metaEvent,
+                ]);
 
                 return;
             }
@@ -262,24 +268,25 @@ class WhatsAppWebhookHandlerService implements WhatsAppWebhookHandlerServiceInte
             ];
 
             // Set approved_at timestamp if status is approved
-            if ($newStatus === 'approved') {
+            if ($newStatus === Status::APPROVED) {
                 $updateData['approved_at'] = now();
                 $updateData['rejected_reason'] = null; // Clear any previous rejection reason
             }
 
+            $oldStatusValue = $template->status->value; // Get value before update
             $template->update($updateData);
 
-            Log::info('Template status updated', [
+            Log::info('Template status updated via Webhook', [
                 'template_id' => $template->id,
                 'external_template_id' => $templateId,
                 'template_name' => $templateName,
-                'old_status' => $template->getOriginal('status'),
-                'new_status' => $newStatus,
+                'old_status' => $oldStatusValue,
+                'new_status' => $newStatus->value,
                 'rejected_reason' => $rejectedReason,
             ]);
 
             // Dispatch event for real-time updates
-            //            event(new WhatsAppTemplateStatusUpdate($template, $newStatus, $rejectedReason));
+            //            event(new WhatsAppTemplateStatusUpdate($template, $newStatus->value, $rejectedReason));
 
         } catch (\Exception $e) {
             Log::error('Error handling template status update', [

@@ -11,5 +11,43 @@
         "enabling": "Enabling...",
         "receive_label": "Receive new message notifications",
         "error_prefix": "Error:"
+    },
+
+    "appearance": {
+        "breadcrumb": "Appearance settings",
+        "headTitle": "Appearance settings",
+        "title": "Appearance settings",
+        "description": "Update your account's appearance settings"
+    },
+
+    "password": {
+        "breadcrumb": "Password settings",
+        "headTitle": "Password settings",
+        "title": "Update password",
+        "description": "Ensure your account is using a long, random password to stay secure",
+        "currentPassword": "Current password",
+        "currentPasswordPlaceholder": "Current password",
+        "newPassword": "New password",
+        "newPasswordPlaceholder": "New password",
+        "confirmPassword": "Confirm password",
+        "confirmPasswordPlaceholder": "Confirm password",
+        "saveButton": "Save password",
+        "saved": "Saved"
+    },
+
+    "profile": {
+        "breadcrumb": "Profile settings",
+        "headTitle": "Profile settings",
+        "title": "Profile information",
+        "description": "Update your name and email address",
+        "name": "Name",
+        "namePlaceholder": "Full name",
+        "email": "Email address",
+        "emailPlaceholder": "Email address",
+        "unverifiedEmail": "Your email address is unverified.",
+        "resendVerification": "Click here to resend the verification email.",
+        "verificationLinkSent": "A new verification link has been sent to your email address.",
+        "saveButton": "Save",
+        "saved": "Saved"
     }
 }

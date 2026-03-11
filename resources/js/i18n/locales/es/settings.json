@@ -11,5 +11,43 @@
         "enabling": "Activando...",
         "receive_label": "Recibir notificaciones de nuevos mensajes",
         "error_prefix": "Error:"
+    },
+
+    "appearance": {
+        "breadcrumb": "Appearance settings",
+        "headTitle": "Appearance settings",
+        "title": "Appearance settings",
+        "description": "Update your account's appearance settings"
+    },
+
+    "password": {
+        "breadcrumb": "Configuración de contraseña",
+        "headTitle": "Configuración de contraseña",
+        "title": "Actualizar contraseña",
+        "description": "Asegúrate de que tu cuenta utilice una contraseña larga y aleatoria para mantenerse segura",
+        "currentPassword": "Contraseña actual",
+        "currentPasswordPlaceholder": "Contraseña actual",
+        "newPassword": "Nueva contraseña",
+        "newPasswordPlaceholder": "Nueva contraseña",
+        "confirmPassword": "Confirmar contraseña",
+        "confirmPasswordPlaceholder": "Confirmar contraseña",
+        "saveButton": "Guardar contraseña",
+        "saved": "Guardado"
+    },
+
+    "profile": {
+        "breadcrumb": "Configuración de perfil",
+        "headTitle": "Configuración de perfil",
+        "title": "Información del perfil",
+        "description": "Actualiza tu nombre y dirección de correo electrónico",
+        "name": "Nombre",
+        "namePlaceholder": "Nombre completo",
+        "email": "Dirección de correo electrónico",
+        "emailPlaceholder": "Correo electrónico",
+        "unverifiedEmail": "Tu dirección de correo electrónico no está verificada.",
+        "resendVerification": "Haz clic aquí para reenviar el correo de verificación.",
+        "verificationLinkSent": "Se ha enviado un nuevo enlace de verificación a tu correo electrónico.",
+        "saveButton": "Guardar",
+        "saved": "Guardado"
     }
 }

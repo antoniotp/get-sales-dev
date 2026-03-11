@@ -18,6 +18,8 @@ import { AlertCircle, Trash2 /*, Pilcrow, File, Image as ImageIcon, Video*/ } fr
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import i18n from '@/i18n/index'
+import {useTranslation, Trans} from "react-i18next";
 
 import {
     TemplateFormPageProps,
@@ -30,12 +32,12 @@ import { ButtonsSection } from '@/components/message_templates/ButtonsSection';
 // --- Zod Schemas ---
 const variableSchemaItem = z.object({
     placeholder: z.string(),
-    example: z.string().min(1, 'Example value is required'),
+    example: z.string().min(1, i18n.t('messageTemplates:form.validation.example_required')),
 });
 
 const buttonConfigItem = z.object({
     type: z.enum(['QUICK_REPLY', 'URL', 'PHONE_NUMBER', 'COPY_CODE']),
-    text: z.string().min(1, 'Button text is required'),
+    text: z.string().min(1, i18n.t('messageTemplates:form.validation.button_text_required')),
     url: z.string().nullable().optional(),
     phone_number: z.string().optional(),
 }).superRefine((data, ctx) => {
@@ -43,7 +45,7 @@ const buttonConfigItem = z.object({
         if (!data.url || data.url.trim() === '') {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: 'URL is required for URL buttons.',
+                message: i18n.t('messageTemplates:form.validation.url_required'),
                 path: ['url'],
             });
         } else {
@@ -52,7 +54,7 @@ const buttonConfigItem = z.object({
             if (!result.success) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    message: 'Must be a valid URL.',
+                    message: i18n.t('messageTemplates:form.validation.url_invalid'),
                     path: ['url'],
                 });
             }
@@ -61,11 +63,11 @@ const buttonConfigItem = z.object({
 });
 
 const formSchema = z.object({
-    chatbot_channel_id: z.number({ required_error: 'Channel is required' }).min(1, 'Channel is required'),
-    display_name: z.string().min(1, 'Display name is required'),
-    name: z.string().min(1, 'Template name is required'),
-    category_id: z.number({ required_error: 'Category is required' }).min(1, 'Category is required'),
-    language: z.string().min(1, 'Language is required'),
+    chatbot_channel_id: z.number({ required_error: i18n.t('messageTemplates:form.validation.channel_required') }).min(1, i18n.t('messageTemplates:form.validation.channel_required')),
+    display_name: z.string().min(1, i18n.t('messageTemplates:form.validation.display_name_required')),
+    name: z.string().min(1, i18n.t('messageTemplates:form.validation.template_name_required')),
+    category_id: z.number({ required_error: i18n.t('messageTemplates:form.validation.category_required') }).min(1, i18n.t('messageTemplates:form.validation.category_required')),
+    language: z.string().min(1, i18n.t('messageTemplates:form.validation.language_required')),
     header_type: z.enum(['none', 'text', 'image', 'video', 'document']),
     header_content: z.string().optional(),
     header_variable: variableSchemaItem.nullable().optional(),
@@ -76,7 +78,7 @@ const formSchema = z.object({
         label: z.string(),
         fallback_value: z.string().nullable().optional(),
     }).nullable().optional(),
-    body_content: z.string().min(1, 'Message content is required'),
+    body_content: z.string().min(1, i18n.t('messageTemplates:form.validation.body_content_required')),
     footer_content: z.string().optional(),
     button_config: z.array(buttonConfigItem).nullable(),
     variables_schema: z.array(variableSchemaItem).nullable(),
@@ -131,6 +133,7 @@ const WABA_CHANNEL_ID = 1;
 
 // --- Main Component ---
 export default function TemplateForm({ categories, chatbotChannels, template, availableLanguages, availableVariables }: TemplateFormPageProps) {
+    const { t } = useTranslation('messageTemplates');
     const { props } = usePage<PageProps>();
     const headerInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -147,9 +150,9 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
     });
 
     const breadcrumbs: BreadcrumbItem[] = useMemo(() => [
-        { title: 'Message Templates', href: route('message-templates.index', props.chatbot.id) },
-        { title: template ? 'Edit Template' : 'Create Template', href: template ? route('message-templates.edit', { id: template.id }) : route('message-templates.create') },
-    ], [props.chatbot, template]);
+        { title: t('form.breadcrumb.index'), href: route('message-templates.index', props.chatbot.id) },
+        { title: template ? t('form.breadcrumb.edit') : t('form.breadcrumb.create'), href: template ? route('message-templates.edit', { id: template.id }) : route('message-templates.create') },
+    ], [props.chatbot, template, t]);
 
     const { data: inertiaData, setData: setInertiaData, post, put, processing } = useInertiaForm<TemplateFormValues>(
         template
@@ -275,7 +278,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
     const handleAddHeaderPlaceholder = () => {
         if (detectedHeaderPlaceholders.length > 0) {
-            form.setError('header_content', { type: 'manual', message: 'Only one placeholder is allowed in the header.' });
+            form.setError('header_content', { type: 'manual', message: t('form.validation.header_one_placeholder') });
             return;
         }
 
@@ -290,7 +293,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(placeholderName)) {
                 form.setError('header_content', {
                     type: 'manual',
-                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores.'
+                    message: t('form.validation.variable_name_invalid')
                 });
                 return;
             }
@@ -299,7 +302,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             if (isDbVariableConflict) {
                 form.setError('header_content', {
                     type: 'manual',
-                    message: `The name "${placeholderName}" is reserved for a database variable. Please choose a different name.`
+                    message: t('form.validation.variable_name_reserved', { name: placeholderName })
                 });
                 return;
             }
@@ -314,7 +317,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             form.setValue('header_variable_mapping', {
                 placeholder: placeholder,
                 source: 'manual',
-                label: `Manual: ${placeholderName}`,
+                label: t('form.labels.manual_prefix', { name: placeholderName }),
                 fallback_value: null,
             }, { shouldValidate: true });
 
@@ -363,7 +366,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         const placeholders = extractPlaceholders(watchedHeaderContent || '');
 
         if (placeholders.length > 1) {
-            form.setError('header_content', { type: 'manual', message: 'Only one placeholder is allowed in the header.' });
+            form.setError('header_content', { type: 'manual', message: t('form.validation.header_one_placeholder') });
             return;
         }
 
@@ -492,7 +495,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(placeholderName)) {
                 form.setError('body_content', {
                     type: 'manual',
-                    message: 'Variable name must start with a letter or underscore and contain only letters, numbers, and underscores',
+                    message: t('form.validation.variable_name_invalid'),
                 });
                 return;
             }
@@ -504,7 +507,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             if (currentSchema.some(v => v.placeholder === placeholder)) {
                 form.setError('body_content', {
                     type: 'manual',
-                    message: `Variable ${placeholder} already exists`
+                    message: t('form.validation.variable_exists', { placeholder })
                 });
                 return;
             }
@@ -513,7 +516,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
             if (isDbVariableConflict) {
                 form.setError('body_content', {
                     type: 'manual',
-                    message: `The name "${placeholderName}" is reserved for a database variable. Please choose a different name.`
+                    message: t('form.validation.variable_name_reserved', { name: placeholderName })
                 });
                 return;
             }
@@ -537,7 +540,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                     {
                         placeholder: placeholder,
                         source: 'manual',
-                        label: `Manual: ${placeholderName}`, // Etiqueta descriptiva
+                        label: t('form.labels.manual_prefix', { name: placeholderName }), // Etiqueta descriptiva
                         fallback_value: null,
                     },
                 ],
@@ -598,10 +601,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
         // Detect mixed variable types
         const detectedType = detectVariableType(placeholders);
         if (detectedType === 'mixed') {
-            setVariableTypeError('You cannot mix Positional ({{1}}) and Named ({{name}}) variables in the same template. Please use only one type.');
+            setVariableTypeError(t('form.validation.mixed_variables'));
             form.setError('body_content', {
                 type: 'manual',
-                message: 'Mixed variable types detected'
+                message: t('form.validation.mixed_variables_detected')
             });
             return;
         } else {
@@ -706,9 +709,9 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
     return (
         <AppLayout breadcrumbs={breadcrumbs} customMainClassName="overflow-y-hidden">
-            <Head title={template ? 'Edit Message Template' : 'Create Message Template'} />
+            <Head title={template ? t('form.page.head_update') : t('form.page.head_create')} />
             <MessageTemplateLayout>
-                <h2 className="text-2xl font-bold mb-2">{template ? 'Update Template' : 'Create Template'}</h2>
+                <h2 className="text-2xl font-bold mb-2">{template ? t('form.page.title_update') : t('form.page.title_create')}</h2>
                 <div className="h-[calc(100vh-9rem)] w-full overflow-auto">
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-row gap-2 w-full">
@@ -724,7 +727,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 name="chatbot_channel_id"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Channel</FormLabel>
+                                                        <FormLabel>{t('form.labels.channel')}</FormLabel>
                                                         <Select
                                                             onValueChange={(value) => field.onChange(Number(value))}
                                                             value={field.value?.toString()}
@@ -732,7 +735,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                         >
                                                             <FormControl>
                                                                 <SelectTrigger>
-                                                                    <SelectValue placeholder="Select a channel" />
+                                                                    <SelectValue placeholder={t('form.placeholders.select_channel')} />
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
@@ -752,10 +755,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 name="display_name"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Display Name</FormLabel>
+                                                        <FormLabel>{t('form.labels.display_name')}</FormLabel>
                                                         <FormControl>
                                                             <Input
-                                                                placeholder="My Template Name"
+                                                                placeholder={t('form.placeholders.display_name')}
                                                                 {...field}
                                                                 onChange={(e) => {
                                                                     field.onChange(e);
@@ -773,14 +776,14 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 name="category_id"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Category</FormLabel>
+                                                        <FormLabel>{t('form.labels.category')}</FormLabel>
                                                         <Select
                                                             onValueChange={(value) => field.onChange(Number(value))}
                                                             value={field.value?.toString()}
                                                         >
                                                             <FormControl>
                                                                 <SelectTrigger>
-                                                                    <SelectValue placeholder="Select a category" />
+                                                                    <SelectValue placeholder={t('form.placeholders.select_category')} />
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
@@ -791,9 +794,13 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 ))}
                                                             </SelectContent>
                                                         </Select>
-                                                        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                                                            Select the type of message: <strong>Marketing</strong> (promotions, offers), <strong>Utility</strong> (updates, reminders), or <strong>Authentication</strong> (logins or verification codes). Choosing the wrong category may lead to rejection.
-                                                        </p>
+                                                        <Trans
+                                                            t={t}
+                                                            i18nKey="form.category_help"
+                                                            parent="p"
+                                                            className="mt-1 text-xs text-muted-foreground leading-relaxed"
+                                                            components={[<strong key="0" />, <strong key="1" />, <strong key="2" />]}
+                                                        />
                                                         <FormMessage />
                                                     </FormItem>
                                                 )}
@@ -803,11 +810,11 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 name="language"
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <FormLabel>Language</FormLabel>
+                                                        <FormLabel>{t('form.labels.language')}</FormLabel>
                                                         <Select onValueChange={field.onChange} value={field.value}>
                                                             <FormControl>
                                                                 <SelectTrigger>
-                                                                    <SelectValue placeholder="Select language" />
+                                                                    <SelectValue placeholder={t('form.placeholders.select_language')} />
                                                                 </SelectTrigger>
                                                             </FormControl>
                                                             <SelectContent>
@@ -825,10 +832,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
                                             <div className="hidden md:flex flex-col gap-2">
                                                 <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                                                    Cancel
+                                                    {t('form.buttons.cancel')}
                                                 </Button>
                                                 <Button type="submit" disabled={processing}>
-                                                    {processing ? 'Saving...' : 'Save'}
+                                                    {processing ? t('form.buttons.saving') : t('form.buttons.save')}
                                                 </Button>
 
                                                 {template && isWabaChannelSelected && (
@@ -838,7 +845,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                         onClick={handleSendToReview}
                                                         disabled={processing}
                                                     >
-                                                        {processing ? 'Sending...' : 'Send To Review'}
+                                                        {processing ? t('form.buttons.sending') : t('form.buttons.send_to_review')}
                                                     </Button>
                                                 )}
                                             </div>
@@ -854,7 +861,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
                                             <div className="space-y-3 border-b pb-6 mb-6">
                                                 <div>
-                                                    <Label className="text-base font-semibold">Variable Format</Label>
+                                                    <Label className="text-base font-semibold">{t('form.labels.variable_format')}</Label>
                                                 </div>
                                                 <TooltipProvider>
                                                     <Tooltip delayDuration={250}>
@@ -876,13 +883,23 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                             <div className="flex items-center space-x-3">
                                                                                 <RadioGroupItem value="named" id="master-named" />
                                                                                 <Label htmlFor="master-named" className="font-normal cursor-pointer">
-                                                                                    <strong>Named:</strong> Use descriptive names like {"{{customer_name}}"}. (Recommended)
+                                                                                    <Trans
+                                                                                        t={t}
+                                                                                        i18nKey="form.labels.named_format"
+                                                                                        values={{ example: "{{customer_name}}" }}
+                                                                                        components={[<strong key="0" />]}
+                                                                                    />
                                                                                 </Label>
                                                                             </div>
                                                                             <div className="flex items-center space-x-3">
                                                                                 <RadioGroupItem value="positional" id="master-positional" />
                                                                                 <Label htmlFor="master-positional" className="font-normal cursor-pointer">
-                                                                                    <strong>Positional:</strong> Use numbers like {"{{1}}"}.
+                                                                                    <Trans
+                                                                                        t={t}
+                                                                                        i18nKey="form.labels.positional_format"
+                                                                                        values={{ example: "{{1}}" }}
+                                                                                        components={[<strong key="0" />]}
+                                                                                    />
                                                                                 </Label>
                                                                             </div>
                                                                         </RadioGroup>
@@ -895,7 +912,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
                                                                 side="bottom"
                                                             >
-                                                                <p>Remove all variables to change the format</p>
+                                                                <p>{t('form.labels.remove_vars_tooltip')}</p>
                                                             </TooltipContent>
                                                         )}
                                                     </Tooltip>
@@ -904,7 +921,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
 
                                             <div className="space-y-2">
                                                 <Label>
-                                                    Header <span className="text-gray-500">(Optional)</span>
+                                                    {t('form.labels.header')} <span className="text-gray-500">{t('form.labels.optional')}</span>
                                                 </Label>
                                                 {/*<FormField
                                                     control={form.control}
@@ -953,7 +970,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 <FormControl>
                                                                     <div className="flex items-center gap-2">
                                                                         <Input
-                                                                            placeholder="Enter header text... (Optional)"
+                                                                            placeholder={t('form.placeholders.header_text')}
                                                                             {...field}
                                                                             ref={headerInputRef}
                                                                             onBlur={syncHeaderVariable}
@@ -976,13 +993,18 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 </FormControl>
                                                                 <div className="flex flex-col gap-1 mt-1">
                                                                     <div className={`text-xs text-right ${(watchedHeaderContent?.length || 0) > 60 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-                                                                        {(watchedHeaderContent?.length || 0) > 60 && <span className="mr-1 uppercase font-bold tracking-tight">Limit exceeded — </span>}
+                                                                        {(watchedHeaderContent?.length || 0) > 60 && <span className="mr-1 uppercase font-bold tracking-tight">{t('form.labels.limit_exceeded')}</span>}
                                                                         {watchedHeaderContent?.length || 0}/60
                                                                     </div>
                                                                     {detectedHeaderPlaceholders.length > 0 && (
-                                                                        <p className="text-xs text-amber-600 font-medium leading-tight">
-                                                                            <strong>Note</strong>: The value of the placeholder also adds to the limit. The message might not be sent if it exceeds 60 characters.
-                                                                        </p>
+                                                                        <Trans
+                                                                            t={t}
+                                                                            i18nKey="form.labels.placeholder_limit_notice"
+                                                                            values={{ limit: 60 }}
+                                                                            parent="p"
+                                                                            className="text-xs text-amber-600 font-medium leading-tight"
+                                                                            components={[<strong key="0" />]}
+                                                                        />
                                                                     )}
                                                                 </div>
                                                                 <FormMessage />
@@ -992,7 +1014,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 {/*)}*/}
                                                 {/*{watchedHeaderType === 'text' && (*/}
                                                     <div className="space-y-3">
-                                                        <Label className="text-sm">Header Variable</Label>
+                                                        <Label className="text-sm">{t('form.labels.header_variable')}</Label>
                                                         <div className="mt-2">
                                                             {watchedHeaderVariableType === 'named' ? (
                                                                 <div className="space-y-3">
@@ -1015,7 +1037,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                                     disabled={hasHeaderVariable}
                                                                                                 >
                                                                                                     <SelectTrigger className="w-full">
-                                                                                                        <SelectValue placeholder="+ Insert DB Variable" />
+                                                                                                        <SelectValue placeholder={t('form.placeholders.insert_db_var')} />
                                                                                                     </SelectTrigger>
                                                                                                     <SelectContent>
                                                                                                         {availableVariables.map((variable) => (
@@ -1035,7 +1057,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                                 className="border-amber-600 bg-amber-500 text-white [&_svg]:!bg-amber-500 [&_svg]:!fill-amber-500"
                                                                                                 side="bottom"
                                                                                             >
-                                                                                                <p>Remove the existing variable to add a new one.</p>
+                                                                                                <p>{t('form.labels.remove_vars_tooltip')}</p>
                                                                                             </TooltipContent>
                                                                                         )}
                                                                                     </Tooltip>
@@ -1044,7 +1066,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         )}
 
                                                                         <>
-                                                                            <span className="text-sm text-muted-foreground italic w-full text-center md:w-auto md:px-1">or</span>
+                                                                            <span className="text-sm text-muted-foreground italic w-full text-center md:w-auto md:px-1">{t('form.labels.or')}</span>
                                                                             <div className="w-full md:flex-1">
                                                                                 <Button
                                                                                     type="button"
@@ -1054,7 +1076,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                     onClick={() => setShowManualHeaderVar(!showManualHeaderVar)}
                                                                                     disabled={hasHeaderVariable}
                                                                                 >
-                                                                                    {!showManualHeaderVar ? "Insert Manual Variable" : "Hide Manual Variable"}
+                                                                                    {!showManualHeaderVar ? t('form.labels.insert_manual_var') : t('form.labels.hide_manual_var')}
                                                                                 </Button>
                                                                             </div>
                                                                         </>
@@ -1062,7 +1084,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                     {showManualHeaderVar && (
                                                                         <div className="flex flex-col md:flex-row items-center gap-3">
                                                                             <Input
-                                                                                placeholder="variable_name"
+                                                                                placeholder={t('form.placeholders.variable_name')}
                                                                                 value={namedHeaderVariableName}
                                                                                 onChange={(e) => setNamedHeaderVariableName(e.target.value)}
                                                                                 className="w-full md:flex-1 h-9"
@@ -1082,7 +1104,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                 onClick={handleAddHeaderPlaceholder}
                                                                                 disabled={hasHeaderVariable || !namedHeaderVariableName.trim()}
                                                                             >
-                                                                                + Add Placeholder
+                                                                                {t('form.buttons.add_placeholder')}
                                                                             </Button>
                                                                         </div>
                                                                     )}
@@ -1097,7 +1119,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         onClick={handleAddHeaderPlaceholder}
                                                                         disabled={hasHeaderVariable}
                                                                     >
-                                                                        + Add Placeholder {'{{1}}'}
+                                                                        {t('form.buttons.add_placeholder')} {'{{1}}'}
                                                                     </Button>
                                                                 </div>
                                                             )}
@@ -1117,7 +1139,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                 <FormItem className="flex-grow space-y-0">
                                                                                     <FormControl>
                                                                                         <Input
-                                                                                            placeholder="Enter example value..."
+                                                                                            placeholder={t('form.labels.example_placeholder')}
                                                                                             value={field.value}
                                                                                             onChange={(e) => {
                                                                                                 handleHeaderExampleChange(e.target.value);
@@ -1153,10 +1175,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 name="body_content"
                                                 render={({ field }) => (
                                                     <FormItem className="mb-0">
-                                                        <Label>Message</Label>
+                                                        <Label>{t('form.labels.message')}</Label>
                                                         <FormControl>
                                                             <Textarea
-                                                                placeholder="Enter message content..."
+                                                                placeholder={t('form.placeholders.message_content')}
                                                                 className="min-h-[150px]"
                                                                 {...field}
                                                                 ref={(e) => {
@@ -1171,13 +1193,18 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                         </FormControl>
                                                         <div className="flex flex-col gap-1 mt-1">
                                                             <div className={`text-xs text-right ${(watchedBodyContent?.length || 0) > 1024 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
-                                                                {(watchedBodyContent?.length || 0) > 1024 && <span className="mr-1 uppercase font-bold tracking-tight">Limit exceeded — </span>}
+                                                                {(watchedBodyContent?.length || 0) > 1024 && <span className="mr-1 uppercase font-bold tracking-tight">{t('form.labels.limit_exceeded')}</span>}
                                                                 {watchedBodyContent?.length || 0}/1024
                                                             </div>
                                                             {detectedPlaceholders.length > 0 && (
-                                                                <p className="text-xs text-amber-600 font-medium leading-tight">
-                                                                    <strong>Note</strong>: The values of the placeholders also add to the limit. The message might not be sent if it exceeds 1024 characters.
-                                                                </p>
+                                                                <Trans
+                                                                    t={t}
+                                                                    i18nKey="form.labels.placeholder_limit_notice"
+                                                                    values={{ limit: 1024 }}
+                                                                    parent="p"
+                                                                    className="text-xs text-amber-600 font-medium leading-tight"
+                                                                    components={[<strong key="0" />]}
+                                                                />
                                                             )}
                                                         </div>
                                                         <FormMessage />
@@ -1212,7 +1239,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                 }}
                                                                             >
                                                                                 <SelectTrigger className="w-full">
-                                                                                    <SelectValue placeholder="+ Insert DB Variable" />
+                                                                                    <SelectValue placeholder={t('form.placeholders.insert_db_var')} />
                                                                                 </SelectTrigger>
                                                                                 <SelectContent>
                                                                                     {availableVariables.map((variable) => (
@@ -1225,7 +1252,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         </div>
                                                                     </div>
                                                                 )}
-                                                                <span className="text-sm text-muted-foreground italic w-full text-center md:w-auto md:px-1">or</span>
+                                                                <span className="text-sm text-muted-foreground italic w-full text-center md:w-auto md:px-1">{t('form.labels.or')}</span>
                                                                 <div className="w-full md:flex-1">
                                                                     <Button
                                                                         type="button"
@@ -1234,14 +1261,14 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         className="w-full"
                                                                         onClick={() => setShowManualBodyVar(!showManualBodyVar)}
                                                                     >
-                                                                        {!showManualBodyVar ? "Insert Manual Variable" : "Hide Manual Variable"}
+                                                                        {!showManualBodyVar ? t('form.labels.insert_manual_var') : t('form.labels.hide_manual_var')}
                                                                     </Button>
                                                                 </div>
                                                             </div>
                                                             {showManualBodyVar && (
                                                                 <div className="flex flex-col md:flex-row items-center gap-3">
                                                                     <Input
-                                                                        placeholder="variable_name"
+                                                                        placeholder={t('form.placeholders.variable_name')}
                                                                         value={namedVariableName}
                                                                         onChange={(e) => setNamedVariableName(e.target.value)}
                                                                         className="w-full md:flex-1 h-9"
@@ -1260,7 +1287,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                         onClick={handleAddPlaceholder}
                                                                         disabled={!namedVariableName.trim()}
                                                                     >
-                                                                        + Add Placeholder
+                                                                        {t('form.buttons.add_placeholder')}
                                                                     </Button>
                                                                 </div>
                                                             )}
@@ -1274,7 +1301,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                 className="w-auto"
                                                                 onClick={handleAddPlaceholder}
                                                             >
-                                                                + Add Placeholder {`{{${nextPositionalNumber}}}`}
+                                                                {t('form.buttons.add_placeholder')} {`{{${nextPositionalNumber}}}`}
                                                             </Button>
                                                         </div>
                                                     )}
@@ -1283,7 +1310,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 {/* Variables List */}
                                                 {watchedVariablesSchema && watchedVariablesSchema.length > 0 && (
                                                     <div className="space-y-3">
-                                                        <Label className="text-sm">Detected Variables ({watchedVariablesSchema.length})</Label> *<small>All are required</small>
+                                                        <Label className="text-sm">{t('form.labels.detected_variables', { count: watchedVariablesSchema.length })}</Label> *<small>{t('form.labels.all_required')}</small>
                                                         <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] gap-2 items-center rounded-lg border p-3">
                                                             {watchedVariablesSchema.map((variable, index) => (
                                                                 <Fragment key={index}>
@@ -1299,7 +1326,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                                                     <FormItem className="space-y-0">
                                                                                         <FormControl>
                                                                                             <Input
-                                                                                                placeholder="Enter example value..."
+                                                                                                placeholder={t('form.labels.example_placeholder')}
                                                                                                 value={field.value}
                                                                                                 onChange={(e) => {
                                                                                                     handleExampleChange(variable.placeholder, e.target.value)
@@ -1338,10 +1365,10 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <Label>
-                                                            Footer <span className="text-gray-500">(Optional)</span>
+                                                            {t('form.labels.footer')} <span className="text-gray-500">{t('form.labels.optional')}</span>
                                                         </Label>
                                                         <FormControl>
-                                                            <Input placeholder="Enter footer text..." {...field} />
+                                                            <Input placeholder={t('form.placeholders.footer_text')} {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>
@@ -1353,7 +1380,7 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                             <ButtonsSection control={form.control} />
                                             <div className="flex md:hidden flex-col gap-2 mt-6">
                                                 <Button type="submit" disabled={processing}>
-                                                    {processing ? 'Saving...' : 'Save'}
+                                                    {processing ? t('form.buttons.saving') : t('form.buttons.save')}
                                                 </Button>
                                                 {template && isWabaChannelSelected && (
                                                     <Button
@@ -1362,11 +1389,11 @@ export default function TemplateForm({ categories, chatbotChannels, template, av
                                                         onClick={handleSendToReview}
                                                         disabled={processing}
                                                     >
-                                                        {processing ? 'Sending...' : 'Send To Review'}
+                                                        {processing ? t('form.buttons.sending') : t('form.buttons.send_to_review')}
                                                     </Button>
                                                 )}
                                                 <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                                                    Cancel
+                                                    {t('form.buttons.cancel')}
                                                 </Button>
                                             </div>
                                         </div>

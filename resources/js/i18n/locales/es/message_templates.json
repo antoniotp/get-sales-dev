@@ -52,5 +52,108 @@
                 "deleted_templates": "Eliminadas"
             }
         }
+    },
+    "form": {
+        "breadcrumb": {
+            "index": "Plantillas de Mensajes",
+            "edit": "Editar Plantilla",
+            "create": "Crear Plantilla"
+        },
+        "validation": {
+            "example_required": "El valor de ejemplo es requerido",
+            "button_text_required": "El texto del botón es requerido",
+            "url_required": "La URL es requerida para botones de tipo URL.",
+            "url_invalid": "Debe ser una URL válida.",
+            "channel_required": "El canal es requerido",
+            "display_name_required": "El nombre a mostrar es requerido",
+            "template_name_required": "El nombre de la plantilla es requerido",
+            "category_required": "La categoría es requerida",
+            "language_required": "El idioma es requerido",
+            "body_content_required": "El contenido del mensaje es requerido",
+            "header_one_placeholder": "Solo se permite un marcador de posición en el encabezado.",
+            "variable_name_invalid": "El nombre de la variable debe comenzar con una letra o guion bajo y contener solo letras, números y guiones bajos.",
+            "variable_name_reserved": "El nombre \"{{name}}\" está reservado para una variable de base de datos. Por favor elige un nombre diferente.",
+            "variable_exists": "La variable {{placeholder}} ya existe.",
+            "mixed_variables": "No puedes mezclar variables de Posición ({{1}}) y Nombradas ({{name}}) en la misma plantilla. Por favor usa solo un tipo.",
+            "mixed_variables_detected": "Se detectaron tipos de variables mezclados."
+        },
+        "labels": {
+            "manual_prefix": "Manual: {{name}}",
+            "channel": "Canal",
+            "display_name": "Nombre a mostrar",
+            "category": "Categoría",
+            "language": "Idioma",
+            "variable_format": "Formato de variables",
+            "header": "Encabezado",
+            "optional": "(Opcional)",
+            "header_variable": "Variable del encabezado",
+            "message": "Mensaje",
+            "footer": "Pie de página",
+            "limit_exceeded": "Límite excedido — ",
+            "placeholder_limit_notice": "<strong>Nota</strong>: Los valores de los marcadores de posición también suman al límite. El mensaje podría no enviarse si supera los {{limit}} caracteres.",
+            "named_format": "<strong>Nombrada:</strong> Usa nombres descriptivos como {{example}}. (Recomendado)",
+            "positional_format": "<strong>Posicional:</strong> Usa números como {{example}}.",
+            "remove_vars_tooltip": "Elimina todas las variables para cambiar el formato",
+            "insert_manual_var": "Insertar Variable Manual",
+            "hide_manual_var": "Ocultar Variable Manual",
+            "or": "o",
+            "detected_variables": "Variables Detectadas ({{count}})",
+            "all_required": "Todas son requeridas",
+            "example_placeholder": "Ingresa un valor de ejemplo..."
+        },
+        "placeholders": {
+            "select_channel": "Selecciona un canal",
+            "display_name": "Nombre de mi plantilla",
+            "select_category": "Selecciona una categoría",
+            "select_language": "Selecciona un idioma",
+            "header_text": "Ingresa el texto del encabezado... (Opcional)",
+            "insert_db_var": "+ Insertar Variable de BD",
+            "variable_name": "nombre_variable",
+            "message_content": "Ingresa el contenido del mensaje...",
+            "footer_text": "Ingresa el texto del pie de página..."
+        },
+        "buttons": {
+            "cancel": "Cancelar",
+            "save": "Guardar",
+            "saving": "Guardando...",
+            "send_to_review": "Enviar a revisión",
+            "sending": "Enviando...",
+            "add_placeholder": "+ Agregar Marcador"
+        },
+        "category_help": "Selecciona el tipo de mensaje: <0>Marketing</0> (promociones, ofertas), <1>Utility</1> (actualizaciones, recordatorios), o <2>Authentication</2> (logueos o códigos de verificación). Elegir la categoría incorrecta puede llevar al rechazo.",
+        "buttons_section": {
+            "label": "Botones",
+            "optional": "(opcional)",
+            "select_placeholder": "Selecciona un tipo de botón",
+            "types": {
+                "none": "Sin botones",
+                "quick_reply": "Respuesta rápida",
+                "url": "URL"
+            },
+            "notices": {
+                "quick_reply": "Puedes agregar hasta 3 botones de respuesta rápida",
+                "url": "Solo puedes agregar 1 botón de URL"
+            },
+            "button_text_label": "Texto del botón",
+            "validation": {
+                "text_required": "El texto del botón es requerido",
+                "text_max": "El texto no puede exceder los 25 caracteres",
+                "url_required": "La URL es requerida",
+                "url_invalid": "Debe ser una URL válida (http:// o https://)"
+            },
+            "placeholders": {
+                "text": "ej. Saber más, Contáctanos, etc.",
+                "url": "https://ejemplo.com"
+            },
+            "characters": "caracteres",
+            "url_label": "URL",
+            "add_button": "Agregar otro botón ({{current}}/{{max}})"
+        },
+        "page": {
+            "title_update": "Actualizar Plantilla",
+            "title_create": "Crear Plantilla",
+            "head_update": "Editar Plantilla de Mensaje",
+            "head_create": "Crear Plantilla de Mensaje"
+        }
     }
 }
